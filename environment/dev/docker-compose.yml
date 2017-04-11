@@ -1,0 +1,17 @@
+version: "2"
+services:
+  ragnarok:
+    build:
+      context: ../..
+      dockerfile: environment/dev/Dockerfile
+    volumes:
+      - ../..:/go/src/github.com/slok/ragnarok
+      - ~/.gitconfig:/home/exs-exporter/.gitignore:ro
+      - ~/.ssh:/home/ragnarok/.ssh:ro
+      - ~/.bash_history.ragnarok:/home/ragnarok/.bash_history
+    environment:
+      - ENVIRONMENT=local
+
+    command: "build.sh"
+    ports:
+      - "8561:8561"
