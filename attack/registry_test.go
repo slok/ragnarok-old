@@ -9,13 +9,13 @@ import (
 )
 
 // Test functions.
-func createTest(opts map[string]interface{}) (Attacker, error) { return nil, nil }
+func createTest(opts Opts) (Attacker, error) { return nil, nil }
 
 type mockTest struct {
 	mock.Mock
 }
 
-func (m *mockTest) fakedCreator(opts map[string]interface{}) (Attacker, error) {
+func (m *mockTest) fakedCreator(opts Opts) (Attacker, error) {
 	m.Called(opts) // Track call.
 	return nil, nil
 }
@@ -34,7 +34,7 @@ func TestRegister(t *testing.T) {
 
 	for _, test := range tests {
 		// Flush registry.
-		registry = make(map[string]Creator)
+		registry = make(map[string]CreatorFunc)
 
 		err := Register(test.id, createTest)
 		if !test.wantErr {
@@ -62,7 +62,7 @@ func TestDeregister(t *testing.T) {
 
 	for _, test := range tests {
 		// Setup registry.
-		registry = map[string]Creator{test.regID: createTest}
+		registry = map[string]CreatorFunc{test.regID: createTest}
 
 		// Check.
 		err := Deregister(test.deregID)
@@ -89,7 +89,7 @@ func TestExists(t *testing.T) {
 	}
 	for _, test := range tests {
 		// Setup registry.
-		registry = map[string]Creator{}
+		registry = map[string]CreatorFunc{}
 		for _, id := range test.ids {
 			registry[id] = createTest
 		}
@@ -102,7 +102,7 @@ func TestFactory(t *testing.T) {
 	mocks := make(map[string]*mockTest)
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
-		opts := map[string]interface{}{"id": id, "idx": i}
+		opts := Opts{"id": id, "idx": i}
 
 		m := &mockTest{}
 		m.On("fakedCreator", opts).Return(nil, nil)
@@ -113,7 +113,7 @@ func TestFactory(t *testing.T) {
 	// Use the factory and check it called the mocks
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
-		opts := map[string]interface{}{"id": id, "idx": i}
+		opts := Opts{"id": id, "idx": i}
 		New(id, opts)
 		mocks[id].AssertExpectations(t)
 	}

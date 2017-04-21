@@ -5,13 +5,16 @@ import (
 	"fmt"
 )
 
-var registry = make(map[string]Creator)
+var registry = make(map[string]CreatorFunc)
 
-// Creator is a custom type used for attack creation.
-type Creator func(opts map[string]interface{}) (Attacker, error)
+// Opts are the option map of an attack
+type Opts map[string]interface{}
+
+// CreatorFunc is a custom type used for attack creation.
+type CreatorFunc func(opts Opts) (Attacker, error)
 
 // Register registers a attack creator.
-func Register(id string, c Creator) error {
+func Register(id string, c CreatorFunc) error {
 	if id == "" {
 		return errors.New("invalid id for attacker registration")
 	}
@@ -35,7 +38,7 @@ func Exists(id string) bool {
 }
 
 // New is the factory of the attacks based on IDs and options.
-func New(id string, opts map[string]interface{}) (Attacker, error) {
+func New(id string, opts Opts) (Attacker, error) {
 	c, ok := registry[id]
 	if !ok {
 		return nil, fmt.Errorf("%s is not a correct Attack", id)
