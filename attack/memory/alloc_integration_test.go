@@ -15,7 +15,9 @@ func TestMemoryAllocationAttack(t *testing.T) {
 	assert := assert.New(t)
 	var size uint64 = 200 * MiB
 
-	ma := NewMemAllocation(size)
+	ma, err := NewMemAllocation(size)
+	assert.NoError(err, "Creation of memory allocator shouldn't error")
+
 	// Get current memory
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
