@@ -27,8 +27,8 @@ const (
 )
 
 const (
-	// ID is the identifier of the attack
-	ID = "memory_allocation"
+	// AllocID is the identifier of the attack
+	AllocID = "memory_allocation"
 
 	// Options
 	sizeKey = "size"
@@ -36,7 +36,7 @@ const (
 
 // Register the creator of the attack
 func init() {
-	attack.Register(ID, attack.CreatorFunc(func(o attack.Opts) (attack.Attacker, error) {
+	attack.Register(AllocID, attack.CreatorFunc(func(o attack.Opts) (attack.Attacker, error) {
 		return NewMemAllocationOpts(o)
 	}))
 }
