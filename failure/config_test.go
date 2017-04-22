@@ -137,3 +137,31 @@ attacks:
 		assert.EqualValues(expectY, string(d), "YAML values should be equal after redering config")
 	}
 }
+
+func TestMultipleAttacksOnMapRenderConfig(t *testing.T) {
+	assert := assert.New(t)
+	c := Config{
+		Timeout: 30 * time.Second,
+		Attacks: []AttackMap{
+			{
+				"attack1": attack.Opts{
+					"size": 524288000,
+				},
+				"wrong-attack": attack.Opts{
+					"size": 524288000,
+				},
+			},
+			{
+				"attack1": attack.Opts{
+					"size": 100,
+				},
+			},
+		},
+	}
+
+	_, err := c.Render()
+	if assert.Error(err, "YAML marshalling should return an attack format error") {
+		assert.Equal(err, errors.New("each attack map of the attack list needs to be a single map"))
+	}
+
+}
