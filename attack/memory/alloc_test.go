@@ -22,6 +22,18 @@ func TestCreationWithOpts(t *testing.T) {
 		},
 		{
 			opts: attack.Opts{
+				"size": 524288000, // 500MiB
+			},
+			expectErr: false,
+		},
+		{
+			opts: attack.Opts{
+				"size": 536870912000, // 500GiB
+			},
+			expectErr: false,
+		},
+		{
+			opts: attack.Opts{
 				"Size": 1000,
 			},
 			expectErr: true,
