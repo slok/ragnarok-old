@@ -8,14 +8,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Test functions.
-func createTest(opts Opts) (Attacker, error) { return nil, nil }
-
-type mockTest struct {
+type CreaterMock struct {
 	mock.Mock
 }
 
-func (m *mockTest) fakedCreator(opts Opts) (Attacker, error) {
+func (m *CreaterMock) Create(opts Opts) (Attacker, error) {
 	m.Called(opts) // Track call.
 	return nil, nil
 }
@@ -33,13 +30,12 @@ func TestRegister(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Flush registry.
-		registry = make(map[string]CreatorFunc)
+		r := NewSimpleRegistry()
 
-		err := Register(test.id, createTest)
+		err := r.Register(test.id, &CreaterMock{})
 		if !test.wantErr {
 			assert.NoError(err, "An error was't expected")
-			assert.Contains(registry, test.id, "%s should be registered but is missing", test.id)
+			assert.Contains(r, test.id, "%s should be registered but is missing", test.id)
 		} else {
 			assert.Error(err, "An error was expected")
 		}
@@ -62,13 +58,15 @@ func TestDeregister(t *testing.T) {
 
 	for _, test := range tests {
 		// Setup registry.
-		registry = map[string]CreatorFunc{test.regID: createTest}
+		r := SimpleRegistry(map[string]Creater{
+			test.regID: &CreaterMock{},
+		})
 
 		// Check.
-		err := Deregister(test.deregID)
+		err := r.Deregister(test.deregID)
 		if !test.wantErr {
 			assert.NoError(err, "An error was't expected")
-			assert.NotContains(registry, test.regID, "%s should be deregistered but is present", test.deregID)
+			assert.NotContains(r, test.regID, "%s should be deregistered but is present", test.deregID)
 		} else {
 			assert.Error(err, "An error was expected")
 		}
@@ -89,32 +87,33 @@ func TestExists(t *testing.T) {
 	}
 	for _, test := range tests {
 		// Setup registry.
-		registry = map[string]CreatorFunc{}
+		r := SimpleRegistry(map[string]Creater{})
 		for _, id := range test.ids {
-			registry[id] = createTest
+			r[id] = &CreaterMock{}
 		}
-		assert.Equal(test.want, Exists(test.checkID))
+		assert.Equal(test.want, r.Exists(test.checkID))
 	}
 }
 
 func TestFactory(t *testing.T) {
+	r := SimpleRegistry(map[string]Creater{})
 	// Prepare 10 mocks on the registry
-	mocks := make(map[string]*mockTest)
+	mocks := make(map[string]*CreaterMock)
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
 		opts := Opts{"id": id, "idx": i}
 
-		m := &mockTest{}
-		m.On("fakedCreator", opts).Return(nil, nil)
+		m := &CreaterMock{}
+		m.On("Create", opts).Return(nil, nil)
 		mocks[id] = m
-		registry[id] = m.fakedCreator
+		r[id] = m
 	}
 
 	// Use the factory and check it called the mocks
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
 		opts := Opts{"id": id, "idx": i}
-		New(id, opts)
+		r.New(id, opts)
 		mocks[id].AssertExpectations(t)
 	}
 
