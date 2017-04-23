@@ -1,21 +1,14 @@
-package attack
+package attack_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+
+	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/mocks"
 )
-
-type CreaterMock struct {
-	mock.Mock
-}
-
-func (m *CreaterMock) Create(opts Opts) (Attacker, error) {
-	m.Called(opts) // Track call.
-	return nil, nil
-}
 
 func TestRegister(t *testing.T) {
 	assert := assert.New(t)
@@ -30,9 +23,10 @@ func TestRegister(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		r := NewSimpleRegistry()
+		r := attack.NewSimpleRegistry()
 
-		err := r.Register(test.id, &CreaterMock{})
+		m := &mocks.Creater{}
+		err := r.Register(test.id, m)
 		if !test.wantErr {
 			assert.NoError(err, "An error was't expected")
 			assert.Contains(r, test.id, "%s should be registered but is missing", test.id)
@@ -58,8 +52,8 @@ func TestDeregister(t *testing.T) {
 
 	for _, test := range tests {
 		// Setup registry.
-		r := SimpleRegistry(map[string]Creater{
-			test.regID: &CreaterMock{},
+		r := attack.SimpleRegistry(map[string]attack.Creater{
+			test.regID: &mocks.Creater{},
 		})
 
 		// Check.
@@ -87,34 +81,34 @@ func TestExists(t *testing.T) {
 	}
 	for _, test := range tests {
 		// Setup registry.
-		r := SimpleRegistry(map[string]Creater{})
+		r := attack.SimpleRegistry(map[string]attack.Creater{})
 		for _, id := range test.ids {
-			r[id] = &CreaterMock{}
+			r[id] = &mocks.Creater{}
 		}
 		assert.Equal(test.want, r.Exists(test.checkID))
 	}
 }
 
 func TestFactory(t *testing.T) {
-	r := SimpleRegistry(map[string]Creater{})
+	r := attack.SimpleRegistry(map[string]attack.Creater{})
 	// Prepare 10 mocks on the registry
-	mocks := make(map[string]*CreaterMock)
+	creaters := make(map[string]*mocks.Creater)
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
-		opts := Opts{"id": id, "idx": i}
+		opts := attack.Opts{"id": id, "idx": i}
 
-		m := &CreaterMock{}
+		m := &mocks.Creater{}
 		m.On("Create", opts).Return(nil, nil)
-		mocks[id] = m
+		creaters[id] = m
 		r[id] = m
 	}
 
 	// Use the factory and check it called the mocks
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
-		opts := Opts{"id": id, "idx": i}
+		opts := attack.Opts{"id": id, "idx": i}
 		r.New(id, opts)
-		mocks[id].AssertExpectations(t)
+		creaters[id].AssertExpectations(t)
 	}
 
 }
