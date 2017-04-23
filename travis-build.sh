@@ -7,4 +7,4 @@ make vet
 make test
 
 # Push latest build
-make push
+#make push
