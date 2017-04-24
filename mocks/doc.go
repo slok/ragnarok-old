@@ -5,4 +5,6 @@ testing and integration tests whenever is possible.
 package mocks // import "github.com/slok/ragnarok/mocks"
 
 // Attack mocks
+//go:generate mockery -output . -dir ../attack -name Registry
 //go:generate mockery -output . -dir ../attack -name Creater
+//go:generate mockery -output . -dir ../attack -name Attacker
