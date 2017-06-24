@@ -3,6 +3,7 @@ package failure
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -26,10 +27,25 @@ const (
 	Unknown
 )
 
+func (s State) String() string {
+	switch s {
+	case Created:
+		return "created"
+	case Executing:
+		return "executing"
+	case Reverted:
+		return "reverted"
+	case Error:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
 // Failer will implement the way of making a failure of a kind on a system (high level error).
 type Failer interface {
-	// Fail applies the failure to the system for a desired time (or forever if is 0).
-	Fail(duration time.Duration) error
+	// Fail applies the failure to the system
+	Fail() error
 
 	// Revert will disable the failure.
 	Revert() error
@@ -41,12 +57,16 @@ type SystemFailure struct {
 	timeout  time.Duration
 	attacks  []attack.Attacker
 	ctx      context.Context
+	ctxC     context.CancelFunc
 	creation time.Time
 	executed time.Time
 	finished time.Time
 	State    State
 	sync.Mutex
 	log log.Logger
+
+	erroredAtts []attack.Attacker // Used to track the failured attacks
+	appliedAtts []attack.Attacker // Used to track the correct applied attacks
 }
 
 // NewSystemFailure Creates a new SystemFailure object from a failure definition
@@ -92,7 +112,90 @@ func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger) (*Syst
 		creation: time.Now().UTC(),
 		ctx:      context.Background(),
 		State:    Created,
+		log:      l,
 	}
 
 	return f, nil
+}
+
+// Fail implements Failer interface. Locked operation
+func (s *SystemFailure) Fail() error {
+
+	// Set correct state and only allow execution of not executed failures
+	s.Lock()
+	if s.State != Created {
+		return fmt.Errorf("invalid state. The only valid state for execution is: %s", Created)
+	}
+	s.State = Executing
+	defer s.Unlock()
+
+	s.ctx, s.ctxC = context.WithTimeout(s.ctx, s.timeout)
+
+	// channels for the attack results
+	errCh := make(chan attack.Attacker)
+	applyCh := make(chan attack.Attacker)
+
+	for _, a := range s.attacks {
+		go func(a attack.Attacker) {
+			if err := a.Apply(s.ctx); err != nil {
+				// Process the error, if there is any error then we need to revert
+				log.Errorf("error aplying attack: %s", err)
+				errCh <- a
+			} else {
+				applyCh <- a
+			}
+		}(a)
+	}
+
+	// Check for errors, sync with channels
+	for i := 0; i < len(s.attacks); i++ {
+		select {
+		case a := <-errCh:
+			s.erroredAtts = append(s.erroredAtts, a)
+		case a := <-applyCh:
+			s.appliedAtts = append(s.appliedAtts, a)
+		}
+	}
+
+	// Check if there are any errors, if there are errors then revert the applied ones
+	if len(s.erroredAtts) > 0 {
+		// If reverting correct applied ones then return different error
+		if err := s.Revert(); err != nil {
+			log.Error(err)
+			return fmt.Errorf("error aplying failure & error when trying to revert the applied ones")
+		}
+		return fmt.Errorf("error aplying failure")
+	}
+
+	s.executed = time.Now().UTC()
+	s.log.Infof("Execution of '%s' failure started", s.id)
+	return nil
+}
+
+// Revert implements Revert interface.
+func (s *SystemFailure) Revert() error {
+	s.log.Infof("Reverting '%s' failure", s.id)
+	defer s.ctxC()
+
+	// Only revert the applied attacks
+	errsCh := make(chan error)
+	for _, a := range s.appliedAtts {
+		// TODO: Retry
+		go func(a attack.Attacker) {
+			errsCh <- a.Revert()
+		}(a)
+	}
+
+	errStr := ""
+	for i := 0; i < len(s.appliedAtts); i++ {
+		if err := <-errsCh; err != nil {
+			errStr = fmt.Sprintf("%s; %s", errStr, err)
+		}
+	}
+
+	var err error
+	if errStr != "" {
+		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
+	}
+	return err
 }

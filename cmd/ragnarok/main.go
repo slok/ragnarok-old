@@ -1,28 +1,31 @@
 package main
 
 import (
-	"context"
-	"log"
 	"time"
 
-	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/attack/memory"
+	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/log"
+
+	_ "github.com/slok/ragnarok/attack/memory"
 )
 
 func main() {
-	opts := attack.Opts{
-		"size": 256 * memory.MiB,
-	}
 
-	a, err := attack.New(memory.AllocID, opts)
+	logger := log.Base()
+	cfg, _ := failure.ReadConfig([]byte(`
+timeout: 30s
+attacks:
+  - memory_allocation:
+      size: 104857600`))
 
+	f, err := failure.NewSystemFailure(cfg, logger)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatalf("Error creating system failure: %s", err)
 	}
 
-	if err := a.Apply(context.TODO()); err != nil {
-		log.Fatal(err)
+	if err := f.Fail(); err != nil {
+		logger.Fatalf("Error Apying  system failure: %s", err)
 	}
-	defer a.Revert()
-	time.Sleep(30 * time.Second)
+
+	time.Sleep(1 * time.Minute)
 }
