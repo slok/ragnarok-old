@@ -58,6 +58,7 @@ func TestNewSystemFailure(t *testing.T) {
 	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
 	if assert.NoError(err) {
 		assert.NotNil(f, "A succesful creation shoudln't be an error")
+		assert.Equal(failure.Created, f.State)
 		reg.AssertExpectations(t)
 	}
 
@@ -152,6 +153,11 @@ func TestSystemFailureFailState(t *testing.T) {
 			expectedState: failure.Error,
 		},
 		{
+			state:         failure.ErrorReverting,
+			expectedErr:   expectedErr,
+			expectedState: failure.ErrorReverting,
+		},
+		{
 			state:         failure.Unknown,
 			expectedErr:   expectedErr,
 			expectedState: failure.Unknown,
@@ -194,12 +200,48 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
+			assert.Equal(failure.Executing, f.State)
 			at.AssertExpectations(t)
 		}
 	}
 }
 
-func TestSystemFailureFailAttacksRevert(t *testing.T) {
+func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
+	assert := assert.New(t)
+	c := failure.Config{
+		Timeout: 1 * time.Hour,
+		Attacks: []failure.AttackMap{
+			{"attack1": attack.Opts{}},
+			{"attack2": attack.Opts{}},
+			{"attack3": attack.Opts{}},
+		},
+	}
+
+	// Mock attackers
+	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
+	at := &mocks.Attacker{}
+	at.On("Apply", ctxMatcher).Times(3).Return(nil)
+	at.On("Revert").Times(3).Return(nil)
+
+	// Mock Registry
+	reg := &mocks.Registry{}
+	reg.On("New", "attack1", attack.Opts{}).Return(at, nil)
+	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
+	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
+
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	if assert.NoError(err) {
+		if assert.NoError(f.Fail()) {
+			assert.Equal(failure.Executing, f.State)
+			if assert.NoError(f.Revert()) {
+				assert.Equal(failure.Reverted, f.State)
+				at.AssertExpectations(t)
+			}
+		}
+	}
+}
+
+func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	assert := assert.New(t)
 	c := failure.Config{
 		Timeout: 1 * time.Hour,
@@ -230,6 +272,7 @@ func TestSystemFailureFailAttacksRevert(t *testing.T) {
 		err = f.Fail()
 		if assert.Error(err) {
 			assert.Equal(errors.New("error aplying failure"), err)
+			assert.Equal(failure.Error, f.State)
 			at1.AssertExpectations(t)
 			at2.AssertExpectations(t)
 			at3.AssertExpectations(t)
@@ -237,7 +280,7 @@ func TestSystemFailureFailAttacksRevert(t *testing.T) {
 	}
 }
 
-func TestSystemFailureFailAttacksRevertError(t *testing.T) {
+func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	assert := assert.New(t)
 	c := failure.Config{
 		Timeout: 1 * time.Hour,
@@ -268,6 +311,7 @@ func TestSystemFailureFailAttacksRevertError(t *testing.T) {
 		err = f.Fail()
 		if assert.Error(err) {
 			assert.Equal(errors.New("error aplying failure & error when trying to revert the applied ones"), err)
+			assert.Equal(failure.ErrorReverting, f.State)
 			at1.AssertExpectations(t)
 			at2.AssertExpectations(t)
 			at3.AssertExpectations(t)

@@ -23,6 +23,8 @@ const (
 	Reverted
 	// Error means a failure that errored.
 	Error
+	// ErrorReverting means a failure that errored reverting it.
+	ErrorReverting
 	// Unknown means a staet of the failure that is unknown.
 	Unknown
 )
@@ -37,6 +39,8 @@ func (s State) String() string {
 		return "reverted"
 	case Error:
 		return "error"
+	case ErrorReverting:
+		return "error reverting"
 	default:
 		return "unknown"
 	}
@@ -127,7 +131,7 @@ func (s *SystemFailure) Fail() error {
 		return fmt.Errorf("invalid state. The only valid state for execution is: %s", Created)
 	}
 	s.State = Executing
-	defer s.Unlock()
+	s.Unlock()
 
 	s.ctx, s.ctxC = context.WithTimeout(s.ctx, s.timeout)
 
@@ -164,6 +168,9 @@ func (s *SystemFailure) Fail() error {
 			log.Error(err)
 			return fmt.Errorf("error aplying failure & error when trying to revert the applied ones")
 		}
+		s.Lock()
+		s.State = Error
+		s.Unlock()
 		return fmt.Errorf("error aplying failure")
 	}
 
@@ -186,6 +193,7 @@ func (s *SystemFailure) Revert() error {
 		}(a)
 	}
 
+	s.State = Reverted
 	errStr := ""
 	for i := 0; i < len(s.appliedAtts); i++ {
 		if err := <-errsCh; err != nil {
@@ -195,6 +203,9 @@ func (s *SystemFailure) Revert() error {
 
 	var err error
 	if errStr != "" {
+		s.Lock()
+		s.State = ErrorReverting
+		s.Unlock()
 		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
 	}
 	return err
