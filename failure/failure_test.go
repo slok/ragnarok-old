@@ -321,7 +321,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	}
 }
 
-func TestSystemFailureFailAttacksFinish(t *testing.T) {
+func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -361,5 +361,38 @@ func TestSystemFailureFailAttacksFinish(t *testing.T) {
 			at1.AssertExpectations(t)
 		}
 
+	}
+}
+
+func TestSystemFailureFailAttacksFinishForced(t *testing.T) {
+	assert := assert.New(t)
+
+	c := failure.Config{
+		Timeout: 1 * time.Hour,
+		Attacks: []failure.AttackMap{
+			{"attack1": attack.Opts{}},
+		},
+	}
+
+	// Mock attackers
+	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
+	at1 := &mocks.Attacker{}
+	at1.On("Apply", ctxMatcher).Once().Return(nil)
+	at1.On("Revert").Once().Return(nil)
+
+	// Mock Registry
+	reg := &mocks.Registry{}
+	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
+
+	// Mock clock
+	cl := &mocks.Clock{}
+	cl.On("After", c.Timeout).Return(time.After(9999 * time.Hour)) // Never
+	cl.On("Now").Return(time.Now())
+
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, cl)
+	if assert.NoError(err) {
+		err = f.Fail()
+		f.Revert()
+		at1.AssertExpectations(t)
 	}
 }
