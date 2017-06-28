@@ -9,8 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/mocks"
 )
@@ -55,7 +57,7 @@ func TestNewSystemFailure(t *testing.T) {
 	reg.On("New", "attack3", c.Attacks[3]["attack3"]).Return(at4, nil)
 
 	// Test.
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.NoError(err) {
 		assert.NotNil(f, "A succesful creation shoudln't be an error")
 		assert.Equal(failure.Created, f.State)
@@ -89,7 +91,7 @@ func TestNewSystemFailureError(t *testing.T) {
 	reg.On("New", "attack2", c.Attacks[1]["attack2"]).Return(nil, errors.New("error test"))
 
 	// Test.
-	_, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	_, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	reg.AssertNotCalled(t, "New", "attack3", c.Attacks[2]["attack3"])
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
@@ -118,7 +120,7 @@ func TestNewSystemFailureMultipleAttacksOnBlock(t *testing.T) {
 	reg := &mocks.Registry{}
 	reg.AssertNotCalled(t, "New")
 	// Test.
-	_, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	_, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
 	}
@@ -165,7 +167,7 @@ func TestSystemFailureFailState(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		f, err := failure.NewSystemFailure(failure.Config{}, nil)
+		f, err := failure.NewSystemFailure(failure.Config{}, nil, nil)
 		f.State = test.state
 		if assert.NoError(err) {
 			err = f.Fail()
@@ -197,7 +199,7 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
 			assert.Equal(failure.Executing, f.State)
@@ -229,7 +231,7 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
 			assert.Equal(failure.Executing, f.State)
@@ -267,7 +269,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.NoError(err) {
 		err = f.Fail()
 		if assert.Error(err) {
@@ -306,7 +308,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil)
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
 	if assert.NoError(err) {
 		err = f.Fail()
 		if assert.Error(err) {
@@ -316,5 +318,48 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 			at2.AssertExpectations(t)
 			at3.AssertExpectations(t)
 		}
+	}
+}
+
+func TestSystemFailureFailAttacksFinish(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	c := failure.Config{
+		Timeout: 1 * time.Hour,
+		Attacks: []failure.AttackMap{
+			{"attack1": attack.Opts{}},
+		},
+	}
+
+	// Mock attackers
+	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
+	at1 := &mocks.Attacker{}
+	at1.On("Apply", ctxMatcher).Once().Return(nil)
+	reverted := make(chan struct{})
+	at1.On("Revert").Once().Return(nil).Run(func(args mock.Arguments) {
+		reverted <- struct{}{}
+	})
+
+	// Mock Registry
+	reg := &mocks.Registry{}
+	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
+
+	// Mock clock
+	cl := &mocks.Clock{}
+	cl.On("After", c.Timeout).Return(time.After(0))
+	cl.On("Now").Return(time.Now())
+
+	f, err := failure.NewSystemFailureFromReg(c, reg, nil, cl)
+	if assert.NoError(err) {
+		err = f.Fail()
+		// Wait until clock timeout to check revert called
+		select {
+		case <-clock.After(5 * time.Millisecond):
+			require.Fail("Timeout calling revert after a timeout")
+		case <-reverted:
+			at1.AssertExpectations(t)
+		}
+
 	}
 }

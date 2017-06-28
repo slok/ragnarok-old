@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 )
 
@@ -67,7 +68,8 @@ type SystemFailure struct {
 	finished time.Time
 	State    State
 	sync.Mutex
-	log log.Logger
+	log   log.Logger
+	clock clock.Clock
 
 	erroredAtts []attack.Attacker // Used to track the failured attacks
 	appliedAtts []attack.Attacker // Used to track the correct applied attacks
@@ -75,16 +77,20 @@ type SystemFailure struct {
 
 // NewSystemFailure Creates a new SystemFailure object from a failure definition
 // using the base global registry.
-func NewSystemFailure(c Config, l log.Logger) (*SystemFailure, error) {
-	return NewSystemFailureFromReg(c, attack.BaseReg(), l)
+func NewSystemFailure(c Config, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
+	return NewSystemFailureFromReg(c, attack.BaseReg(), l, cl)
 }
 
 // NewSystemFailureFromReg Creates a new SystemFailure object from a failure definition
 // and a custom registry.
-func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger) (*SystemFailure, error) {
+func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
 	// Set global logger if no logger
 	if l == nil {
 		l = log.Base()
+	}
+
+	if cl == nil {
+		cl = clock.New()
 	}
 
 	// Create the attacks.
@@ -113,10 +119,11 @@ func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger) (*Syst
 		id:       id,
 		timeout:  c.Timeout,
 		attacks:  atts,
-		creation: time.Now().UTC(),
+		creation: cl.Now().UTC(),
 		ctx:      context.Background(),
 		State:    Created,
 		log:      l,
+		clock:    cl,
 	}
 
 	return f, nil
@@ -124,16 +131,16 @@ func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger) (*Syst
 
 // Fail implements Failer interface. Locked operation
 func (s *SystemFailure) Fail() error {
-
 	// Set correct state and only allow execution of not executed failures
 	s.Lock()
 	if s.State != Created {
 		return fmt.Errorf("invalid state. The only valid state for execution is: %s", Created)
 	}
 	s.State = Executing
+	s.executed = s.clock.Now().UTC()
 	s.Unlock()
 
-	s.ctx, s.ctxC = context.WithTimeout(s.ctx, s.timeout)
+	s.ctx, s.ctxC = context.WithCancel(s.ctx)
 
 	// channels for the attack results
 	errCh := make(chan attack.Attacker)
@@ -174,7 +181,24 @@ func (s *SystemFailure) Fail() error {
 		return fmt.Errorf("error aplying failure")
 	}
 
-	s.executed = time.Now().UTC()
+	// Set execution timer and start the countdown until the revert
+	go func() {
+		select {
+		case <-s.ctx.Done():
+			s.log.Info("Context on system failure done")
+		case <-s.clock.After(s.timeout):
+			s.log.Info("System failure finished")
+		}
+		s.Lock()
+		// Don't revert if not executing
+		if s.State != Executing {
+			s.log.Warnf("System failure attempt to finish but this is not in running state: %s", s.State)
+			return
+		}
+		s.Unlock()
+		s.Revert()
+	}()
+	s.executed = s.clock.Now().UTC()
 	s.log.Infof("Execution of '%s' failure started", s.id)
 	return nil
 }
@@ -202,11 +226,12 @@ func (s *SystemFailure) Revert() error {
 	}
 
 	var err error
+	s.Lock()
+	s.finished = s.clock.Now().UTC()
 	if errStr != "" {
-		s.Lock()
 		s.State = ErrorReverting
-		s.Unlock()
 		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
 	}
+	s.Unlock()
 	return err
 }

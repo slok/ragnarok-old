@@ -26,6 +26,7 @@ attacks:
 	if err := f.Fail(); err != nil {
 		logger.Fatalf("Error Apying  system failure: %s", err)
 	}
-
+	time.Sleep(5 * time.Second)
+	f.Revert()
 	time.Sleep(1 * time.Minute)
 }
