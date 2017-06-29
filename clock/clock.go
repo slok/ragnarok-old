@@ -41,7 +41,7 @@ func (c *clock) NewTimer(d time.Duration) *time.Timer {
 	return time.NewTimer(d)
 }
 
-var base = New()
+var base = &clock{}
 
 // Base returns the base clock
 func Base() Clock {

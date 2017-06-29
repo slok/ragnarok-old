@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 
@@ -12,13 +13,14 @@ import (
 func main() {
 
 	logger := log.Base()
+	clk := clock.Base()
 	cfg, _ := failure.ReadConfig([]byte(`
 timeout: 30s
 attacks:
   - memory_allocation:
       size: 104857600`))
 
-	f, err := failure.NewSystemFailure(cfg, logger)
+	f, err := failure.NewSystemFailure(cfg, logger, clk)
 	if err != nil {
 		logger.Fatalf("Error creating system failure: %s", err)
 	}
