@@ -31,6 +31,7 @@ type FailureNode struct {
 // NewFailureNode returns a new FailureNode instnace
 func NewFailureNode(cfg config.Config, logger log.Logger) *FailureNode {
 	id := uuid.New().String()
+
 	logger = logger.WithField("id", id)
 
 	f := &FailureNode{
