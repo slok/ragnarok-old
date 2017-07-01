@@ -33,7 +33,12 @@ type Logger interface {
 	Fatalln(...interface{})
 	Fatalf(string, ...interface{})
 
+	Panic(...interface{})
+	Panicln(...interface{})
+	Panicf(string, ...interface{})
+
 	With(key string, value interface{}) Logger
+	WithField(key string, value interface{}) Logger
 	Set(level Level) error
 }
 
@@ -100,8 +105,21 @@ func (l logger) Fatalln(args ...interface{}) {
 func (l logger) Fatalf(format string, args ...interface{}) {
 	l.sourced().Fatalf(format, args...)
 }
+func (l logger) Panic(args ...interface{}) {
+	l.sourced().Panic(args...)
+}
+func (l logger) Panicln(args ...interface{}) {
+	l.sourced().Panicln(args...)
+}
+func (l logger) Panicf(format string, args ...interface{}) {
+	l.sourced().Panicf(format, args...)
+}
 
 func (l logger) With(key string, value interface{}) Logger {
+	return &logger{l.entry.WithField(key, value)}
+}
+
+func (l logger) WithField(key string, value interface{}) Logger {
 	return &logger{l.entry.WithField(key, value)}
 }
 
@@ -217,7 +235,27 @@ func With(key string, value interface{}) Logger {
 	return baseLogger.With(key, value)
 }
 
+// WithField adds a key:value to the logger
+func WithField(key string, value interface{}) Logger {
+	return baseLogger.WithField(key, value)
+}
+
 // Set will set the logger level
 func Set(level Level) error {
 	return baseLogger.Set(level)
+}
+
+// Panic logs panic message
+func Panic(args ...interface{}) {
+	baseLogger.Panic(args...)
+}
+
+// Panicln logs panicln message
+func Panicln(args ...interface{}) {
+	baseLogger.Panicln(args...)
+}
+
+// Panicf logs panicln message
+func Panicf(format string, args ...interface{}) {
+	baseLogger.Panicf(format, args...)
 }
