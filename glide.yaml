@@ -5,3 +5,4 @@ import:
 - package: github.com/sirupsen/logrus
   version: 3d4380f53a34dcdc95f0c1db702615992b38d9a4
 - package: gopkg.in/yaml.v2
+- package: github.com/google/uuid
