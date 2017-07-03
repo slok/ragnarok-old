@@ -27,7 +27,8 @@ func Main() error {
 	}
 
 	// Create the node
-	n := node.NewFailureNode(*cfg, logger)
+	// TODO: GRPC client, for now nil
+	n := node.NewFailureNode(*cfg, nil, logger)
 	n.GetID()
 
 	return nil
