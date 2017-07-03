@@ -1,10 +1,15 @@
-hash: 467aa294dbed2982648e823ebe4cfad66e82756bfa2269281a9e507990b0c9be
-updated: 2017-07-02T09:06:45.675244408Z
+hash: 9ec351b31dc5ecc05d13e39e2ffdbaea52ea73dc1907a8f1e67feeebc26c8c11
+updated: 2017-07-03T17:30:23.457825087Z
 imports:
 - name: github.com/davecgh/go-spew
   version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
+- name: github.com/golang/protobuf
+  version: 6a1fa9404c0aebf36c879bc50152edcc953910d2
+  subpackages:
+  - proto
+  - ptypes/any
 - name: github.com/google/uuid
   version: 6a5e28554805e78ea6141142aba763936c4761c0
 - name: github.com/pmezard/go-difflib
@@ -21,12 +26,47 @@ imports:
   - assert
   - mock
   - require
+- name: golang.org/x/net
+  version: 1f9224279e98554b6a6432d4dd998a739f8b2b7c
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
 - name: golang.org/x/sys
-  version: d18155cb60f6162f5e706d7f26e4e50a3d4da857
+  version: 0e0164865330d5cf1c00247be08330bf96e2f87c
   subpackages:
   - unix
+- name: golang.org/x/text
+  version: 2bf8f2a19ec09c670e931282edfe6567f6be21c9
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/genproto
+  version: aa2eb687b4d3e17154372564ad8d6bf11c3cf21f
+  subpackages:
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
   version: b15215fb911b24a5d61d57feec4233d610530464
+  subpackages:
+  - codes
+  - credentials
+  - grpclb/grpc_lb_v1
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - stats
+  - status
+  - tap
+  - transport
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []

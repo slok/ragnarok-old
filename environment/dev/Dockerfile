@@ -1,8 +1,15 @@
 FROM slok/ragnarok_base:latest
 USER root
-RUN apk add --no-cache g++
+RUN set -eux && \
+    apk add --no-cache \
+        g++ \
+        protobuf
 
 USER ragnarok
 
-RUN go get github.com/Masterminds/glide
-RUN go get github.com/vektra/mockery/.../
+# golang dependencies
+RUN go get github.com/Masterminds/glide && \
+    go get github.com/vektra/mockery/.../ && \
+    go get github.com/golang/protobuf/protoc-gen-go
+
+
