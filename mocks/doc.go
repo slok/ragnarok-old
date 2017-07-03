@@ -12,5 +12,8 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 // Clock mocks
 //go:generate mockery -output . -dir ../clock -name Clock
 
-// LoggerMock
+// Logger mock
 //go:generate mockery -output . -dir ../log -name Logger
+
+// Node mocks
+//go:generate mockery -output . -dir ../node/service -name StatusClient

@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/slok/ragnarok/log"
+	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/node/config"
 )
 
@@ -23,22 +24,24 @@ type Node interface {
 type FailureNode struct {
 	id string
 
-	log    log.Logger
-	dryRun bool
-	debug  bool
+	log          log.Logger
+	dryRun       bool
+	debug        bool
+	statusClient client.Status // client to communicate with node status service
 }
 
 // NewFailureNode returns a new FailureNode instnace
-func NewFailureNode(cfg config.Config, logger log.Logger) *FailureNode {
+func NewFailureNode(cfg config.Config, statusClient client.Status, logger log.Logger) *FailureNode {
 	id := uuid.New().String()
 
 	logger = logger.WithField("id", id)
 
 	f := &FailureNode{
-		id:     id,
-		log:    logger,
-		dryRun: cfg.DryRun,
-		debug:  cfg.Debug,
+		id:           id,
+		log:          logger,
+		dryRun:       cfg.DryRun,
+		debug:        cfg.Debug,
+		statusClient: statusClient,
 	}
 
 	logger.Info("System failure node ready")
@@ -50,7 +53,12 @@ func NewFailureNode(cfg config.Config, logger log.Logger) *FailureNode {
 	return f
 }
 
-// GetID satisfies Node interface
+// GetID satisfies FailureNode interface
 func (f *FailureNode) GetID() string {
 	return f.id
+}
+
+// RegisterOnMaster satisfies FailureNode interface
+func (f *FailureNode) RegisterOnMaster() error {
+	return f.statusClient.RegisterNode(f.id, map[string]string{})
 }
