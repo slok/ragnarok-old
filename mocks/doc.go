@@ -16,4 +16,7 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 //go:generate mockery -output . -dir ../log -name Logger
 
 // Node mocks
-//go:generate mockery -output . -dir ../node/service -name StatusClient
+//go:generate mockery -output . -dir ../node/client -name Status
+
+// GRPC clients
+//go:generate mockery -output ./grpc -outpkg grpc -dir ../grpc/nodestatus -name NodeStatusClient
