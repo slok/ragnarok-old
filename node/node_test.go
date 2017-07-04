@@ -17,8 +17,8 @@ import (
 func TestFailureNodeCreation(t *testing.T) {
 	assert := assert.New(t)
 
-	scm := &mocks.StatusClient{}
-	n := node.NewFailureNode(config.Config{}, scm, log.Nil)
+	scm := &mocks.Status{}
+	n := node.NewFailureNode(config.Config{}, scm, log.Dummy)
 	if assert.NotNil(n) {
 		assert.NotEmpty(n.GetID())
 
@@ -29,7 +29,7 @@ func TestFailureNodeCreationDryRun(t *testing.T) {
 	assert := assert.New(t)
 
 	// Mocks
-	scm := &mocks.StatusClient{}
+	scm := &mocks.Status{}
 	logger := &mocks.Logger{}
 	logger.On("WithField", "id", mock.AnythingOfType("string")).Once().Return(logger)
 	logger.On("Info", "System failure node ready").Once()
@@ -47,10 +47,10 @@ func TestFailureNodeRegisterOnMasterOK(t *testing.T) {
 	require := require.New(t)
 
 	// Create the mock
-	scm := &mocks.StatusClient{}
+	scm := &mocks.Status{}
 
 	// Create fNode and get the ID
-	n := node.NewFailureNode(config.Config{DryRun: true}, scm, log.Nil)
+	n := node.NewFailureNode(config.Config{DryRun: true}, scm, log.Dummy)
 	require.NotNil(n)
 	id := n.GetID()
 
@@ -69,10 +69,10 @@ func TestFailureNodeRegisterOnMasterError(t *testing.T) {
 	require := require.New(t)
 
 	// Create the mock
-	scm := &mocks.StatusClient{}
+	scm := &mocks.Status{}
 
 	// Create fNode and get the ID
-	n := node.NewFailureNode(config.Config{DryRun: true}, scm, log.Nil)
+	n := node.NewFailureNode(config.Config{DryRun: true}, scm, log.Dummy)
 	require.NotNil(n)
 	id := n.GetID()
 
