@@ -23,7 +23,7 @@ type Config struct {
 
 // ReadConfig Reads a config yaml defition and returns a config object.
 func ReadConfig(data []byte) (Config, error) {
-	log.Debug("Reading config")
+	log.Debug("reading config")
 	c := &Config{}
 	err := yaml.Unmarshal(data, c)
 	return *c, err
@@ -31,7 +31,7 @@ func ReadConfig(data []byte) (Config, error) {
 
 // Render renders a yaml form a Config object.
 func (c *Config) Render() ([]byte, error) {
-	log.Debug("Rendering config")
+	log.Debug("rendering config")
 
 	// Check if there are more then one elements on the maps of the list.
 	for _, a := range c.Attacks {

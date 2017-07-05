@@ -51,7 +51,7 @@ func (r SimpleRegistry) Register(id string, c Creater) error {
 		return errors.New("invalid id for attacker registration")
 	}
 	r[id] = c
-	log.With("attack", id).Info("Attack registered")
+	log.With("attack", id).Info("attack registered")
 	return nil
 }
 

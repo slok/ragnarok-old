@@ -84,7 +84,7 @@ func (m *MemAllocation) Apply(ctx context.Context) error {
 	if m.done {
 		return errors.New("memory allocation already applied")
 	}
-	log.With("MiB", m.Size/MiB).Infof("Allocated memory")
+	log.With("MiB", m.Size/MiB).Infof("allocated memory")
 	m.b.Write(make([]byte, m.Size))
 	m.done = true
 	return nil
@@ -98,7 +98,7 @@ func (m *MemAllocation) Revert() error {
 
 	// Return memory to the OS (Way better to do?)
 	debug.FreeOSMemory()
-	log.With("MiB", m.Size/MiB).Infof("Reverted allocated memory")
+	log.With("MiB", m.Size/MiB).Infof("reverted allocated memory")
 	m.done = false
 	return nil
 }

@@ -185,27 +185,27 @@ func (s *SystemFailure) Fail() error {
 	go func() {
 		select {
 		case <-s.ctx.Done():
-			s.log.Info("Context on system failure done")
+			s.log.Info("context on system failure done")
 		case <-s.clock.After(s.timeout):
-			s.log.Info("System failure finished")
+			s.log.Info("system failure finished")
 		}
 		s.Lock()
 		// Don't revert if not executing
 		if s.State != Executing {
-			s.log.Warnf("System failure attempt to finish but this is not in running state: %s", s.State)
+			s.log.Warnf("system failure attempt to finish but this is not in running state: %s", s.State)
 			return
 		}
 		s.Unlock()
 		s.Revert()
 	}()
 	s.executed = s.clock.Now().UTC()
-	s.log.Infof("Execution of '%s' failure started", s.id)
+	s.log.Infof("execution of '%s' failure started", s.id)
 	return nil
 }
 
 // Revert implements Revert interface.
 func (s *SystemFailure) Revert() error {
-	s.log.Infof("Reverting '%s' failure", s.id)
+	s.log.Infof("reverting '%s' failure", s.id)
 	defer s.ctxC()
 
 	// Only revert the applied attacks
