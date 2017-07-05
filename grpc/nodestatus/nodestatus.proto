@@ -5,7 +5,7 @@ package nodestatus;
 
 // The node status definition
 service NodeStatus {
-  rpc Register(NodeInfo) returns (RegisteredReply) {}
+  rpc Register(NodeInfo) returns (RegisteredResponse) {}
 }
 
 message NodeInfo {
@@ -14,8 +14,8 @@ message NodeInfo {
   map<string, string> tags = 3;   
 }
 
-message RegisteredReply {
-  string error = 1;
+message RegisteredResponse {
+  string message = 1;
 }
 
 message node {
