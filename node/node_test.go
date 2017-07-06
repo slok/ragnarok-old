@@ -21,7 +21,6 @@ func TestFailureNodeCreation(t *testing.T) {
 	n := node.NewFailureNode(config.Config{}, scm, log.Dummy)
 	if assert.NotNil(n) {
 		assert.NotEmpty(n.GetID())
-
 	}
 }
 
