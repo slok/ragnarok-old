@@ -55,7 +55,7 @@ func (m *MasterGRPCServiceServer) registerServices() {
 
 // Serve implements the GRPCServiceServiceServer interface.
 func (m *MasterGRPCServiceServer) Serve() error {
-	m.logger.Infof("ready to listen GRPC service calls on %s", m.listener.Addr().String)
+	m.logger.Infof("ready to listen GRPC service calls on %s", m.listener.Addr().String())
 
 	// Start serving our GRPC service.
 	return m.server.Serve(m.listener)
