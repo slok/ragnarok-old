@@ -10,8 +10,8 @@ import (
 
 const (
 	// defaults values
-	defaultHTTPListenAddress = ":9413"
-	defaultRPCListenAddress  = ":9414"
+	defaultHTTPListenAddress = ":10443"
+	defaultRPCListenAddress  = ":50443"
 	defaultDebug             = false
 	defaultDryRun            = false
 )

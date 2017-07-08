@@ -22,8 +22,8 @@ func TestCofiguration(t *testing.T) {
 		{
 			[]string{"--run.debug"},
 			config.Config{
-				HTTPListenAddress: ":9413",
-				RPCListenAddress:  ":9414",
+				HTTPListenAddress: ":10443",
+				RPCListenAddress:  ":50443",
 				Debug:             true,
 				DryRun:            false,
 			},
@@ -32,8 +32,8 @@ func TestCofiguration(t *testing.T) {
 		{
 			[]string{"--run.dry-run"},
 			config.Config{
-				HTTPListenAddress: ":9413",
-				RPCListenAddress:  ":9414",
+				HTTPListenAddress: ":10443",
+				RPCListenAddress:  ":50443",
 				Debug:             false,
 				DryRun:            true,
 			},
@@ -43,7 +43,7 @@ func TestCofiguration(t *testing.T) {
 			[]string{"-run.dry-run", "-http.listen-address", "127.0.0.1:9999"},
 			config.Config{
 				HTTPListenAddress: "127.0.0.1:9999",
-				RPCListenAddress:  ":9414",
+				RPCListenAddress:  ":50443",
 				Debug:             false,
 				DryRun:            true,
 			},
@@ -52,7 +52,7 @@ func TestCofiguration(t *testing.T) {
 		{
 			[]string{"-run.dry-run", "-rpc.listen-address", "127.0.0.1:9999"},
 			config.Config{
-				HTTPListenAddress: ":9413",
+				HTTPListenAddress: ":10443",
 				RPCListenAddress:  "127.0.0.1:9999",
 				Debug:             false,
 				DryRun:            true,
