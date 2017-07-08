@@ -5,31 +5,51 @@ import (
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+
+	"fmt"
+
 	"github.com/slok/ragnarok/cmd/node/flags"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
+	"github.com/slok/ragnarok/node/client"
 )
 
-// Main run main logic
+// Main run main logic.
 func Main() error {
 	logger := log.Base()
 
-	// Get the command line arguments
+	// Get the command line arguments.
 	cfg, err := flags.GetNodeConfig(os.Args[1:])
 	if err != nil {
 		logger.Error(err)
 		return err
 	}
 
-	// Set debug mode
+	// Set debug mode.
 	if cfg.Debug {
 		logger.Set("debug")
 	}
 
-	// Create the node
-	// TODO: GRPC client, for now nil
-	n := node.NewFailureNode(*cfg, nil, logger)
-	n.GetID()
+	// Create node status client
+	conn, err := grpc.Dial(cfg.MasterAddress, grpc.WithInsecure()) // TODO: secured.
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	nsCli, err := client.NewStatusGRPCFromConnection(conn, logger)
+	if err != nil {
+		return err
+	}
+	// Create the node.
+	n := node.NewFailureNode(*cfg, nsCli, logger)
+
+	// Register node.
+	if err := n.RegisterOnMaster(); err != nil {
+		return fmt.Errorf("node not registered on master: %v", err)
+	}
+
+	// TODO: Listen for service calls
 
 	return nil
 }

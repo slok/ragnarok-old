@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// defaults values
+	// Default values.
 	defaultHTTPListenAddress = ":10443"
 	defaultRPCListenAddress  = ":50443"
 	defaultDebug             = false
@@ -30,7 +30,7 @@ func new() *config {
 		fs: flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
 
-	// Set flags
+	// Set flags.
 	cfg.fs.StringVar(
 		&cfg.httpListenAddress, "http.listen-address", defaultHTTPListenAddress,
 		"Address to listen for HTTP communication",
@@ -76,7 +76,7 @@ func (c *config) parse(args []string) error {
 	return err
 }
 
-// GetNodeConfig will return a new node configuration from the cmd flags
+// GetNodeConfig will return a new node configuration from the cmd flags.
 func GetNodeConfig(args []string) (*nodeconfig.Config, error) {
 	cfg := new()
 
