@@ -20,6 +20,7 @@ type config struct {
 	fs                *flag.FlagSet
 	httpListenAddress string
 	rpcListenAddress  string
+	masterAddress     string
 	debug             bool
 	dryRun            bool
 }
@@ -38,6 +39,11 @@ func new() *config {
 	cfg.fs.StringVar(
 		&cfg.rpcListenAddress, "rpc.listen-address", defaultRPCListenAddress,
 		"Address to listen for RPC communication",
+	)
+
+	cfg.fs.StringVar(
+		&cfg.masterAddress, "master.address", "",
+		"Address where the master is listening",
 	)
 
 	cfg.fs.BoolVar(
@@ -59,7 +65,12 @@ func (c *config) parse(args []string) error {
 	}
 
 	if len(c.fs.Args()) != 0 {
-		err = fmt.Errorf("Invalid command line arguments. Help: %s -h", os.Args[0])
+		err = fmt.Errorf("invalid command line arguments. Help: %s -h", os.Args[0])
+	}
+
+	// Check master address is set.
+	if c.masterAddress == "" {
+		err = fmt.Errorf("master address is required")
 	}
 
 	return err
@@ -76,6 +87,7 @@ func GetNodeConfig(args []string) (*nodeconfig.Config, error) {
 	nodeCfg := &nodeconfig.Config{
 		HTTPListenAddress: cfg.httpListenAddress,
 		RPCListenAddress:  cfg.rpcListenAddress,
+		MasterAddress:     cfg.masterAddress,
 		Debug:             cfg.debug,
 		DryRun:            cfg.dryRun,
 	}

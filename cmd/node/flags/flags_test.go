@@ -20,47 +20,77 @@ func TestCofiguration(t *testing.T) {
 		shouldError bool
 	}{
 		{
-			[]string{"--run.debug"},
+			[]string{
+				"--run.debug",
+				"-master.address", "127.0.0.1:8080",
+			},
 			config.Config{
 				HTTPListenAddress: ":10443",
 				RPCListenAddress:  ":50443",
+				MasterAddress:     "127.0.0.1:8080",
 				Debug:             true,
 				DryRun:            false,
 			},
 			false,
 		},
 		{
-			[]string{"--run.dry-run"},
+			[]string{
+				"--run.dry-run",
+				"-master.address", "127.0.0.1:8080",
+			},
 			config.Config{
 				HTTPListenAddress: ":10443",
 				RPCListenAddress:  ":50443",
+				MasterAddress:     "127.0.0.1:8080",
 				Debug:             false,
 				DryRun:            true,
 			},
 			false,
 		},
 		{
-			[]string{"-run.dry-run", "-http.listen-address", "127.0.0.1:9999"},
+			[]string{
+				"-run.dry-run",
+				"-http.listen-address", "127.0.0.1:9999",
+				"-master.address", "127.0.0.1:8080",
+			},
 			config.Config{
 				HTTPListenAddress: "127.0.0.1:9999",
 				RPCListenAddress:  ":50443",
+				MasterAddress:     "127.0.0.1:8080",
 				Debug:             false,
 				DryRun:            true,
 			},
 			false,
 		},
 		{
-			[]string{"-run.dry-run", "-rpc.listen-address", "127.0.0.1:9999"},
+			[]string{
+				"-run.dry-run",
+				"-rpc.listen-address", "127.0.0.1:9999",
+				"--master.address", "127.0.0.1:8080",
+			},
 			config.Config{
 				HTTPListenAddress: ":10443",
 				RPCListenAddress:  "127.0.0.1:9999",
+				MasterAddress:     "127.0.0.1:8080",
 				Debug:             false,
 				DryRun:            true,
 			},
 			false,
 		},
 		{
-			[]string{"-run.dry-run", "-http.listen-address", "127.0.0.1:9999", "-rpc.listen-address", "127.0.0.1:9999"},
+			[]string{
+				"-run.dry-run",
+				"-http.listen-address", "127.0.0.1:9999",
+				"-rpc.listen-address", "127.0.0.1:9999",
+				"-master.address", "127.0.0.1:8080",
+			},
+			config.Config{},
+			true,
+		},
+		{
+			[]string{
+				"-run.dry-run",
+			},
 			config.Config{},
 			true,
 		},
