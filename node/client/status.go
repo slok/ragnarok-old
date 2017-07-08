@@ -60,7 +60,7 @@ func (s *StatusGRPC) RegisterNode(id string, tags map[string]string) error {
 	}
 	// If we have a response then (we should, just checking)
 	if resp != nil {
-		logger.Debug("call response: %s", resp.Message)
+		logger.Debugf("call response: %s", resp.Message)
 	}
 
 	return nil
