@@ -25,7 +25,7 @@ func NewNodeStatusGRPC(master master.Master, logger log.Logger) *NodeStatusGRPC 
 }
 
 // Register registers a node on the master.
-func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.NodeInfo) (*pb.RegisteredResponse, error) {
+func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.Node) (*pb.RegisteredResponse, error) {
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
@@ -35,16 +35,13 @@ func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.NodeInfo) (*pb.R
 	default:
 	}
 
-	// TODO: manage tags.
-	id := node.Node.Id
-
-	if err := n.master.RegisterNode(id, node.Address); err != nil {
+	if err := n.master.RegisterNode(node.Id, node.Tags); err != nil {
 		return &pb.RegisteredResponse{
-			Message: fmt.Sprintf("couldn't register node '%s' on master: %v", id, err),
+			Message: fmt.Sprintf("couldn't register node '%s' on master: %v", node.Id, err),
 		}, err
 	}
 
 	return &pb.RegisteredResponse{
-		Message: fmt.Sprintf("node '%s' registered on master", id),
+		Message: fmt.Sprintf("node '%s' registered on master", node.Id),
 	}, nil
 }

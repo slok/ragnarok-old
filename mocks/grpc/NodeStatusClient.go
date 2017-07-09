@@ -12,7 +12,7 @@ type NodeStatusClient struct {
 }
 
 // Register provides a mock function with given fields: ctx, in, opts
-func (_m *NodeStatusClient) Register(ctx context.Context, in *nodestatus.NodeInfo, opts ...grpc.CallOption) (*nodestatus.RegisteredResponse, error) {
+func (_m *NodeStatusClient) Register(ctx context.Context, in *nodestatus.Node, opts ...grpc.CallOption) (*nodestatus.RegisteredResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -23,7 +23,7 @@ func (_m *NodeStatusClient) Register(ctx context.Context, in *nodestatus.NodeInf
 	ret := _m.Called(_ca...)
 
 	var r0 *nodestatus.RegisteredResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *nodestatus.NodeInfo, ...grpc.CallOption) *nodestatus.RegisteredResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *nodestatus.Node, ...grpc.CallOption) *nodestatus.RegisteredResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -32,7 +32,7 @@ func (_m *NodeStatusClient) Register(ctx context.Context, in *nodestatus.NodeInf
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *nodestatus.NodeInfo, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *nodestatus.Node, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

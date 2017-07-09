@@ -8,13 +8,13 @@ type Master struct {
 	mock.Mock
 }
 
-// RegisterNode provides a mock function with given fields: id, address
-func (_m *Master) RegisterNode(id string, address string) error {
-	ret := _m.Called(id, address)
+// RegisterNode provides a mock function with given fields: id, tags
+func (_m *Master) RegisterNode(id string, tags map[string]string) error {
+	ret := _m.Called(id, tags)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(id, address)
+	if rf, ok := ret.Get(0).(func(string, map[string]string) error); ok {
+		r0 = rf(id, tags)
 	} else {
 		r0 = ret.Error(0)
 	}

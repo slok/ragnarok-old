@@ -26,7 +26,7 @@ func TestFailureMasterNodeRegistration(t *testing.T) {
 
 	n := &master.Node{
 		ID:      "test1",
-		Address: "127.0.0.1:1234",
+		Tags: map[string]string{"address": "127.0.0.45"},
 	}
 
 	// Get our registry mock
@@ -38,7 +38,7 @@ func TestFailureMasterNodeRegistration(t *testing.T) {
 	require.NotNil(n)
 
 	// Check our registered node
-	err := m.RegisterNode(n.ID, n.Address)
+	err := m.RegisterNode(n.ID, n.Tags)
 	if assert.NoError(err) {
 		mReg.AssertExpectations(t)
 	}
@@ -49,8 +49,8 @@ func TestFailureMasterNodeRegistrationError(t *testing.T) {
 	require := require.New(t)
 
 	n := &master.Node{
-		ID:      "test1",
-		Address: "127.0.0.1:1234",
+		ID:   "test1",
+		Tags: map[string]string{"address": "127.0.0.45"},
 	}
 
 	// Get our registry mock
@@ -62,7 +62,7 @@ func TestFailureMasterNodeRegistrationError(t *testing.T) {
 	require.NotNil(n)
 
 	// Check our registered node
-	err := m.RegisterNode(n.ID, n.Address)
+	err := m.RegisterNode(n.ID, n.Tags)
 	if assert.Error(err) {
 		mReg.AssertExpectations(t)
 	}

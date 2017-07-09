@@ -35,15 +35,12 @@ func TestRegisterNode(t *testing.T) {
 			expectErr = errors.New("wanted error")
 		}
 
-		expectNI := &pb.NodeInfo{
-			Node: &pb.Node{
-				Id: test.id,
-			},
-			Address: "0.0.0.0",
-			Tags:    test.tags,
+		expectN := &pb.Node{
+			Id:   test.id,
+			Tags: test.tags,
 		}
 		resp := &pb.RegisteredResponse{Message: "called"}
-		mc.On("Register", mock.Anything, expectNI).Once().Return(resp, expectErr)
+		mc.On("Register", mock.Anything, expectN).Once().Return(resp, expectErr)
 
 		// Create our client and make our service call
 		s, err := client.NewStatusGRPC(mc, log.Dummy)

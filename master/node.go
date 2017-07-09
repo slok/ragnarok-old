@@ -7,8 +7,8 @@ import (
 // Node is an internal and simplified representation of a failure node on the masters
 // TODO: Rethink the reuse of node
 type Node struct {
-	ID      string // ID is the id of the node
-	Address string // Address is the address of the node
+	ID   string            // ID is the id of the node
+	Tags map[string]string // Tags are the tags related with the node
 }
 
 // NodeRegistry is the way the master should store the nodes

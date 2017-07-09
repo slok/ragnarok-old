@@ -27,8 +27,8 @@ func TestMemNodeRegistryRegisterNode(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := &master.Node{
-				ID:      fmt.Sprintf("id-%d", i),
-				Address: fmt.Sprintf("127.0.0.%d", i),
+				ID:   fmt.Sprintf("id-%d", i),
+				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 			}
 			nodes = append(nodes, n)
 			err := reg.AddNode(n.ID, n)
@@ -59,8 +59,8 @@ func TestMemNodeRegistryDelete(t *testing.T) {
 	reg := master.NewMemNodeRegistry()
 
 	n := &master.Node{
-		ID:      "test1",
-		Address: "127.0.0.1:2314",
+		ID:   "test1",
+		Tags: map[string]string{"address": "127.0.0.1"},
 	}
 	err := reg.AddNode(n.ID, n)
 	require.NoError(err)
@@ -91,8 +91,8 @@ func TestMemNodeRegistryAddGetAll(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := &master.Node{
-				ID:      fmt.Sprintf("id-%d", i),
-				Address: fmt.Sprintf("127.0.0.%d", i),
+				ID:   fmt.Sprintf("id-%d", i),
+				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 			}
 			nodes = append(nodes, n)
 			err := reg.AddNode(n.ID, n)

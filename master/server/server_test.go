@@ -22,12 +22,12 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 
 	tests := []struct {
 		id        string
-		address   string
+		tags      map[string]string
 		shouldErr bool
 	}{
-		{"test1", "10.234.012:9876", false},
-		{"test1", "10.234.012:9876", true},
-		{"test1", "10.234.012:9876", false},
+		{"test1", nil, false},
+		{"test1", map[string]string{"address": "10.234.012"}, true},
+		{"test1", map[string]string{"address": "10.234.013", "kind": "complex"}, false},
 	}
 
 	for _, test := range tests {
@@ -37,7 +37,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 		if test.shouldErr {
 			expErr = errors.New("wanted error")
 		}
-		mm.On("RegisterNode", test.id, test.address).Once().Return(expErr)
+		mm.On("RegisterNode", test.id, test.tags).Once().Return(expErr)
 
 		// Create our server.
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
@@ -55,9 +55,9 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 		defer testCli.Close()
 
 		// Make call.
-		n := &pbns.NodeInfo{
-			Node:    &pbns.Node{Id: test.id},
-			Address: test.address,
+		n := &pbns.Node{
+			Id:   test.id,
+			Tags: test.tags,
 		}
 		_, err = testCli.NodeStatusRegister(context.Background(), n)
 

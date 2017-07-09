@@ -10,7 +10,7 @@ import (
 // Master is the master node that sends attacks to the nodes interface
 type Master interface {
 	// RegisterNode registers a new node on the master
-	RegisterNode(id string, address string) error
+	RegisterNode(id string, tags map[string]string) error
 	//GetRegisteredNodes() []string
 }
 
@@ -33,14 +33,14 @@ func NewFailureMaster(cfg config.Config, registry NodeRegistry, logger log.Logge
 }
 
 // RegisterNode implements Master interface
-func (f *FailureMaster) RegisterNode(id string, address string) error {
+func (f *FailureMaster) RegisterNode(id string, tags map[string]string) error {
 	f.logger.WithField("nodeID", id).Infof("node registered on master")
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
 	n := &Node{
-		ID:      id,
-		Address: address,
+		ID:   id,
+		Tags: tags,
 	}
 
 	return f.reg.AddNode(id, n)

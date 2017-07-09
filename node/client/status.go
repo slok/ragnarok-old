@@ -43,16 +43,13 @@ func (s *StatusGRPC) RegisterNode(id string, tags map[string]string) error {
 	logger.Debug("making GRPC service call")
 
 	// Create the request objects
-	ni := &pb.NodeInfo{
-		Node: &pb.Node{
-			Id: id,
-		},
-		Address: "0.0.0.0", // TODO: Set up correct address
-		Tags:    tags,
+	n := &pb.Node{
+		Id:   id,
+		Tags: tags,
 	}
 
 	// Make the request synchronously
-	resp, err := s.c.Register(context.Background(), ni)
+	resp, err := s.c.Register(context.Background(), n)
 
 	// Call error
 	if err != nil {

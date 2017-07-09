@@ -35,6 +35,6 @@ func (t *TestClient) Close() error {
 }
 
 // NodeStatusRegister wraps the call to nodestatus service
-func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.NodeInfo) (*pbns.RegisteredResponse, error) {
+func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.Node) (*pbns.RegisteredResponse, error) {
 	return t.nsCli.Register(ctx, ni)
 }
