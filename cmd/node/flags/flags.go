@@ -10,36 +10,21 @@ import (
 
 const (
 	// Default values.
-	defaultHTTPListenAddress = ":10443"
-	defaultRPCListenAddress  = ":50443"
-	defaultDebug             = false
-	defaultDryRun            = false
+	defaultDebug  = false
+	defaultDryRun = false
 )
 
 type config struct {
-	fs                *flag.FlagSet
-	httpListenAddress string
-	rpcListenAddress  string
-	masterAddress     string
-	debug             bool
-	dryRun            bool
+	fs            *flag.FlagSet
+	masterAddress string
+	debug         bool
+	dryRun        bool
 }
 
 func new() *config {
 	cfg := &config{
 		fs: flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
-
-	// Set flags.
-	cfg.fs.StringVar(
-		&cfg.httpListenAddress, "http.listen-address", defaultHTTPListenAddress,
-		"Address to listen for HTTP communication",
-	)
-
-	cfg.fs.StringVar(
-		&cfg.rpcListenAddress, "rpc.listen-address", defaultRPCListenAddress,
-		"Address to listen for RPC communication",
-	)
 
 	cfg.fs.StringVar(
 		&cfg.masterAddress, "master.address", "",
@@ -85,11 +70,9 @@ func GetNodeConfig(args []string) (*nodeconfig.Config, error) {
 	}
 
 	nodeCfg := &nodeconfig.Config{
-		HTTPListenAddress: cfg.httpListenAddress,
-		RPCListenAddress:  cfg.rpcListenAddress,
-		MasterAddress:     cfg.masterAddress,
-		Debug:             cfg.debug,
-		DryRun:            cfg.dryRun,
+		MasterAddress: cfg.masterAddress,
+		Debug:         cfg.debug,
+		DryRun:        cfg.dryRun,
 	}
 
 	if err := nodeCfg.Validate(); err != nil {
