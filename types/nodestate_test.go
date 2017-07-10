@@ -3,8 +3,10 @@ package types_test
 import (
 	"testing"
 
-	"github.com/slok/ragnarok/types"
 	"github.com/stretchr/testify/assert"
+
+	pbns "github.com/slok/ragnarok/grpc/nodestatus"
+	"github.com/slok/ragnarok/types"
 )
 
 func TestNodeStateStringer(t *testing.T) {
@@ -27,7 +29,7 @@ func TestNodeStateStringer(t *testing.T) {
 	}
 }
 
-func TestNodeStateParse(t *testing.T) {
+func TestNodeStateParseStr(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
@@ -44,7 +46,34 @@ func TestNodeStateParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotSt, err := types.ParseNodeState(test.st)
+		gotSt, err := types.ParseNodeStateStr(test.st)
+		if test.expErr {
+			assert.Error(err)
+		} else {
+			assert.NoError(err)
+		}
+		assert.Equal(test.expSt, gotSt)
+	}
+}
+
+func TestNodeStateParsePB(t *testing.T) {
+	assert := assert.New(t)
+
+	tests := []struct {
+		st     pbns.State
+		expSt  types.NodeState
+		expErr bool
+	}{
+		{pbns.State_READY, types.ReadyNodeState, false},
+		{pbns.State_ATTACKING, types.AttackingNodeState, false},
+		{pbns.State_REVERTING, types.RevertingNodeState, false},
+		{pbns.State_ERRORED, types.ErroredNodeState, false},
+		{pbns.State_UNKNOWN, types.UnknownNodeState, false},
+		{999999, types.UnknownNodeState, true},
+	}
+
+	for _, test := range tests {
+		gotSt, err := types.ParseNodeStatePB(test.st)
 		if test.expErr {
 			assert.Error(err)
 		} else {
