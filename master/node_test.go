@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMemNodeRegistryRegisterNode(t *testing.T) {
+func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
@@ -22,7 +22,7 @@ func TestMemNodeRegistryRegisterNode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := master.NewMemNodeRegistry()
+		reg := master.NewMemNodeRepository()
 		nodes := make([]*master.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
@@ -31,7 +31,7 @@ func TestMemNodeRegistryRegisterNode(t *testing.T) {
 				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 			}
 			nodes = append(nodes, n)
-			err := reg.AddNode(n.ID, n)
+			err := reg.StoreNode(n.ID, n)
 			assert.NoError(err)
 
 			// Check stored node is ok
@@ -43,26 +43,26 @@ func TestMemNodeRegistryRegisterNode(t *testing.T) {
 	}
 }
 
-func TestMemNodeRegistryGetMissin(t *testing.T) {
+func TestMemNodeRepositoryGetMissing(t *testing.T) {
 	assert := assert.New(t)
 
-	reg := master.NewMemNodeRegistry()
+	reg := master.NewMemNodeRepository()
 	nGot, ok := reg.GetNode("missing")
 	if assert.False(ok) {
 		assert.Nil(nGot)
 	}
 }
-func TestMemNodeRegistryDelete(t *testing.T) {
+func TestMemNodeRepositoryDelete(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	reg := master.NewMemNodeRegistry()
+	reg := master.NewMemNodeRepository()
 
 	n := &master.Node{
 		ID:   "test1",
 		Tags: map[string]string{"address": "127.0.0.1"},
 	}
-	err := reg.AddNode(n.ID, n)
+	err := reg.StoreNode(n.ID, n)
 	require.NoError(err)
 	_, ok := reg.GetNode(n.ID)
 	require.True(ok)
@@ -73,7 +73,7 @@ func TestMemNodeRegistryDelete(t *testing.T) {
 	assert.False(ok)
 }
 
-func TestMemNodeRegistryAddGetAll(t *testing.T) {
+func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -86,7 +86,7 @@ func TestMemNodeRegistryAddGetAll(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := master.NewMemNodeRegistry()
+		reg := master.NewMemNodeRepository()
 		nodes := make([]*master.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
@@ -95,7 +95,7 @@ func TestMemNodeRegistryAddGetAll(t *testing.T) {
 				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 			}
 			nodes = append(nodes, n)
-			err := reg.AddNode(n.ID, n)
+			err := reg.StoreNode(n.ID, n)
 			require.NoError(err)
 		}
 

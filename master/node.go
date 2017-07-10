@@ -11,10 +11,10 @@ type Node struct {
 	Tags map[string]string // Tags are the tags related with the node
 }
 
-// NodeRegistry is the way the master should store the nodes
-type NodeRegistry interface {
-	// AddNode adds a node to the registry
-	AddNode(id string, node *Node) error
+// NodeRepository is the way the master should store the nodes
+type NodeRepository interface {
+	// StoreNode adds a node to the registry
+	StoreNode(id string, node *Node) error
 
 	// DeleteNode deletes a node from the registry
 	DeleteNode(id string)
@@ -26,21 +26,21 @@ type NodeRegistry interface {
 	GetNodes() map[string]*Node
 }
 
-// NewMemNodeRegistry returns a new memory node registry
-func NewMemNodeRegistry() *MemNodeRegistry {
-	return &MemNodeRegistry{
+// NewMemNodeRepository returns a new memory node registry
+func NewMemNodeRepository() *MemNodeRepository {
+	return &MemNodeRepository{
 		reg: map[string]*Node{},
 	}
 }
 
-// MemNodeRegistry is a representation of the node registry using memorymap
-type MemNodeRegistry struct {
+// MemNodeRepository is a representation of the node registry using memorymap
+type MemNodeRepository struct {
 	reg map[string]*Node
 	sync.Mutex
 }
 
-// AddNode satisfies NodeRegistry interface
-func (m *MemNodeRegistry) AddNode(id string, node *Node) error {
+// StoreNode satisfies NodeRepository interface
+func (m *MemNodeRepository) StoreNode(id string, node *Node) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -49,8 +49,8 @@ func (m *MemNodeRegistry) AddNode(id string, node *Node) error {
 	return nil
 }
 
-// DeleteNode satisfies NodeRegistry interface
-func (m *MemNodeRegistry) DeleteNode(id string) {
+// DeleteNode satisfies NodeRepository interface
+func (m *MemNodeRepository) DeleteNode(id string) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -58,7 +58,7 @@ func (m *MemNodeRegistry) DeleteNode(id string) {
 }
 
 // GetNode satisfies GetNode interface
-func (m *MemNodeRegistry) GetNode(id string) (*Node, bool) {
+func (m *MemNodeRepository) GetNode(id string) (*Node, bool) {
 	m.Lock()
 	defer m.Unlock()
 	n, ok := m.reg[id]
@@ -66,7 +66,7 @@ func (m *MemNodeRegistry) GetNode(id string) (*Node, bool) {
 }
 
 // GetNodes satisfies GetNode interface
-func (m *MemNodeRegistry) GetNodes() map[string]*Node {
+func (m *MemNodeRepository) GetNodes() map[string]*Node {
 	m.Lock()
 	defer m.Unlock()
 	return m.reg

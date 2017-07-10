@@ -29,7 +29,7 @@ func Main() error {
 	}
 
 	// Create the master and the registry.
-	reg := master.NewMemNodeRegistry()
+	reg := master.NewMemNodeRepository()
 	m := master.NewFailureMaster(*cfg, reg, logger)
 
 	// Create the GRPC service server

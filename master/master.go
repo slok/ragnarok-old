@@ -17,17 +17,17 @@ type Master interface {
 // FailureMaster is the implementation of master failure sender
 type FailureMaster struct {
 	debug  bool
-	reg    NodeRegistry // registry where all the nodes will be stored
+	repo   NodeRepository // repository where all the nodes will be stored
 	logger log.Logger
 
 	nodeLock sync.Mutex
 }
 
 // NewFailureMaster returns a new failure master
-func NewFailureMaster(cfg config.Config, registry NodeRegistry, logger log.Logger) *FailureMaster {
+func NewFailureMaster(cfg config.Config, repository NodeRepository, logger log.Logger) *FailureMaster {
 	return &FailureMaster{
 		debug:  cfg.Debug,
-		reg:    registry,
+		repo:   repository,
 		logger: logger,
 	}
 }
@@ -43,5 +43,5 @@ func (f *FailureMaster) RegisterNode(id string, tags map[string]string) error {
 		Tags: tags,
 	}
 
-	return f.reg.AddNode(id, n)
+	return f.repo.StoreNode(id, n)
 }
