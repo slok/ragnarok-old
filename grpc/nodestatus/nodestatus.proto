@@ -3,16 +3,36 @@ syntax = "proto3";
 package nodestatus;
 
 
-// The node status definition
+// NodeStatus is the node status service definition.
 service NodeStatus {
-  rpc Register(Node) returns (RegisteredResponse) {}
+  // Register registers a node.
+  rpc Register(Node) returns (RegisteredResponse);
+  // Heartbeat sends the current status of the node and receives 
+  // the expected status that should have.
+  rpc Heartbeat(NodeState) returns (NodeState);
 }
 
 message RegisteredResponse {
   string message = 1;
 }
 
+// Node reprensets a node information.
 message Node {
   string id = 1;
   map<string, string> tags = 2;   
+}
+
+// NodeState reprensents the current state of the node.
+message NodeState {
+  string id = 1;
+  State state = 2;
+}
+
+// Status is the the state the node can be.
+enum  State{
+  UNKNOWN = 0;
+  READY = 1;
+  ATTACKING = 2;
+  REVERTING = 3;
+  ERRORED = 4;
 }
