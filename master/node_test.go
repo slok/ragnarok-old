@@ -5,9 +5,11 @@ import (
 
 	"fmt"
 
-	"github.com/slok/ragnarok/master"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/slok/ragnarok/master"
+	"github.com/slok/ragnarok/types"
 )
 
 func TestMemNodeRepositoryRegisterNode(t *testing.T) {
@@ -27,8 +29,9 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := &master.Node{
-				ID:   fmt.Sprintf("id-%d", i),
-				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				ID:    fmt.Sprintf("id-%d", i),
+				Tags:  map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				State: types.ReadyNodeState,
 			}
 			nodes = append(nodes, n)
 			err := reg.StoreNode(n.ID, n)
@@ -59,8 +62,9 @@ func TestMemNodeRepositoryDelete(t *testing.T) {
 	reg := master.NewMemNodeRepository()
 
 	n := &master.Node{
-		ID:   "test1",
-		Tags: map[string]string{"address": "127.0.0.1"},
+		ID:    "test1",
+		Tags:  map[string]string{"address": "127.0.0.1"},
+		State: types.AttackingNodeState,
 	}
 	err := reg.StoreNode(n.ID, n)
 	require.NoError(err)
@@ -91,8 +95,9 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := &master.Node{
-				ID:   fmt.Sprintf("id-%d", i),
-				Tags: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				ID:    fmt.Sprintf("id-%d", i),
+				Tags:  map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				State: types.ErroredNodeState,
 			}
 			nodes = append(nodes, n)
 			err := reg.StoreNode(n.ID, n)
