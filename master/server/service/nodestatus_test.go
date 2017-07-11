@@ -6,12 +6,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
 
 	pb "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/server/service"
 	mmaster "github.com/slok/ragnarok/mocks/master"
+	mtypes "github.com/slok/ragnarok/mocks/types"
+	"github.com/slok/ragnarok/types"
 )
 
 func TestNodeStatusGRPCRegisterOK(t *testing.T) {
@@ -20,7 +23,7 @@ func TestNodeStatusGRPCRegisterOK(t *testing.T) {
 	mm := &mmaster.Master{}
 
 	// Create the service.
-	nsg := service.NewNodeStatusGRPC(mm, log.Dummy)
+	nsg := service.NewNodeStatusGRPC(mm, types.NodeStateTransformer, log.Dummy)
 	n := &pb.Node{
 		Id:   "test1",
 		Tags: map[string]string{"key1": "value1"},
@@ -37,7 +40,6 @@ func TestNodeStatusGRPCRegisterOK(t *testing.T) {
 		}
 		assert.Equal(expResp, resp)
 		mm.AssertExpectations(t)
-
 	}
 }
 
@@ -47,7 +49,7 @@ func TestNodeStatusGRPCRegisterError(t *testing.T) {
 	mm := &mmaster.Master{}
 
 	// Create the service.
-	nsg := service.NewNodeStatusGRPC(mm, log.Dummy)
+	nsg := service.NewNodeStatusGRPC(mm, types.NodeStateTransformer, log.Dummy)
 	n := &pb.Node{
 		Id:   "test1",
 		Tags: map[string]string{"key1": "value1"},
@@ -69,14 +71,15 @@ func TestNodeStatusGRPCRegisterError(t *testing.T) {
 
 func TestNodeStatusGRPCRegisterDoneContext(t *testing.T) {
 	assert := assert.New(t)
+
 	// Create the mocks.
 	mm := &mmaster.Master{}
 
 	// Create the service.
-	nsg := service.NewNodeStatusGRPC(mm, log.Dummy)
+	nsg := service.NewNodeStatusGRPC(mm, types.NodeStateTransformer, log.Dummy)
 	n := &pb.Node{
-		Id: "test1",
-		Tags:    map[string]string{"key1": "value1"},
+		Id:   "test1",
+		Tags: map[string]string{"key1": "value1"},
 	}
 
 	// Cancel context.
@@ -93,4 +96,87 @@ func TestNodeStatusGRPCRegisterDoneContext(t *testing.T) {
 		assert.Equal(expResp, resp)
 		mm.AssertExpectations(t)
 	}
+}
+
+func TestNodeStatusGRPCHeartbeatOK(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create the mocks.
+	mm := &mmaster.Master{}
+	nsp := &mtypes.NodeStateParser{}
+
+	// Create the service.
+	nsg := service.NewNodeStatusGRPC(mm, nsp, log.Dummy)
+	n := &pb.NodeState{
+		Id:    "test1",
+		State: pb.State_READY,
+	}
+
+	// Mock service calls on master.
+	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, nil)
+	mm.On("NodeHeartbeat", n.Id, mock.AnythingOfType("types.NodeState")).Once().Return(nil)
+
+	// Call and check.
+	_, err := nsg.Heartbeat(context.Background(), n)
+	assert.NoError(err)
+	mm.AssertExpectations(t)
+}
+
+func TestNodeStatusGRPCHeartbeatDoneContext(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create the mocks.
+	mm := &mmaster.Master{}
+	nsp := &mtypes.NodeStateParser{}
+
+	// Create the service.
+	nsg := service.NewNodeStatusGRPC(mm, nsp, log.Dummy)
+
+	// Cancel context.
+	ctx, cncl := context.WithCancel(context.Background())
+	cncl()
+
+	// Call and check.
+	_, err := nsg.Heartbeat(ctx, &pb.NodeState{})
+	assert.Error(err)
+	mm.AssertExpectations(t)
+}
+
+func TestNodeStatusGRPCHeartbeatError(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create the mocks.
+	mm := &mmaster.Master{}
+	nsp := &mtypes.NodeStateParser{}
+
+	// Create the service.
+	nsg := service.NewNodeStatusGRPC(mm, nsp, log.Dummy)
+
+	// Mock service calls on master.
+	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, nil)
+	mm.On("NodeHeartbeat", mock.AnythingOfType("string"), types.ReadyNodeState).Once().Return(errors.New("wanted error"))
+
+	// Call and check.
+	_, err := nsg.Heartbeat(context.Background(), &pb.NodeState{})
+	assert.Error(err)
+	mm.AssertExpectations(t)
+}
+
+func TestNodeStatusGRPCHeartbeatParseStatusError(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create the mocks.
+	mm := &mmaster.Master{}
+	nsp := &mtypes.NodeStateParser{}
+
+	// Create the service.
+	nsg := service.NewNodeStatusGRPC(mm, nsp, log.Dummy)
+
+	// Mock service calls on master.
+	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, errors.New("wanted error"))
+
+	// Call and check.
+	_, err := nsg.Heartbeat(context.Background(), &pb.NodeState{})
+	assert.Error(err)
+	mm.AssertExpectations(t)
 }

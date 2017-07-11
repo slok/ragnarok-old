@@ -9,6 +9,7 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master"
 	"github.com/slok/ragnarok/master/server/service"
+	"github.com/slok/ragnarok/types"
 )
 
 // GRPCServiceServiceServer is an interface that wraps all the GRPC service need to implement.
@@ -35,7 +36,7 @@ func NewMasterGRPCServiceServer(master master.Master, listener net.Listener, log
 	grpcServer := grpc.NewServer()
 	m := &MasterGRPCServiceServer{
 		// Node status service.
-		NodeStatusGRPC: service.NewNodeStatusGRPC(master, logger),
+		NodeStatusGRPC: service.NewNodeStatusGRPC(master, types.NodeStateTransformer, logger),
 		server:         grpcServer,
 		logger:         logger,
 		listener:       listener,
