@@ -7,23 +7,23 @@ import (
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 )
 
-// NodeState is the reprensetation of the node state
+// NodeState is the reprensetation of the node state.
 type NodeState int
 
 const (
-	// UnknownNodeState is an unknown status
+	// UnknownNodeState is an unknown status.
 	UnknownNodeState NodeState = iota
-	// ReadyNodeState is the state when a node is ready for accepting attacks
+	// ReadyNodeState is the state when a node is ready for accepting attacks.
 	ReadyNodeState
-	// AttackingNodeState is the state when a node is aplying an attack
+	// AttackingNodeState is the state when a node is aplying an attack.
 	AttackingNodeState
-	// RevertingNodeState is the state when a node is reverting an applied attack
+	// RevertingNodeState is the state when a node is reverting an applied attack.
 	RevertingNodeState
-	// ErroredNodeState is the state when a node is in error state
+	// ErroredNodeState is the state when a node is in error state.
 	ErroredNodeState
 )
 
-// String implements the stringer interface
+// String implements the stringer interface.
 func (n NodeState) String() string {
 	switch n {
 	case ReadyNodeState:
@@ -39,7 +39,7 @@ func (n NodeState) String() string {
 	}
 }
 
-// ParseNodeStateStr parses an string and returns a NodeState
+// ParseNodeStateStr parses an string and returns a NodeState.
 func ParseNodeStateStr(state string) (NodeState, error) {
 	switch strings.ToLower(state) {
 	case "ready":
@@ -57,7 +57,7 @@ func ParseNodeStateStr(state string) (NodeState, error) {
 	}
 }
 
-// ParseNodeStatePB parses a proto buffer node state and returns a NodeState
+// ParseNodeStatePB parses a proto buffer node state and returns a NodeState.
 func ParseNodeStatePB(state pbns.State) (NodeState, error) {
 	switch state {
 	case pbns.State_READY:
