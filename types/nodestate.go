@@ -39,8 +39,20 @@ func (n NodeState) String() string {
 	}
 }
 
+// NodeStateParser has the required methods to transform node state
+type NodeStateParser interface {
+	StrToNodeState(state string) (NodeState, error)
+	PBToNodeState(state pbns.State) (NodeState, error)
+}
+
+// nodeStateTypeParser will convert node state in different types
+type nodeStateParser struct{}
+
+// NodeStateTransformer is the utility to transform node stauts kinds
+var NodeStateTransformer = &nodeStateParser{}
+
 // ParseNodeStateStr parses an string and returns a NodeState.
-func ParseNodeStateStr(state string) (NodeState, error) {
+func (nodeStateParser) StrToNodeState(state string) (NodeState, error) {
 	switch strings.ToLower(state) {
 	case "ready":
 		return ReadyNodeState, nil
@@ -58,7 +70,7 @@ func ParseNodeStateStr(state string) (NodeState, error) {
 }
 
 // ParseNodeStatePB parses a proto buffer node state and returns a NodeState.
-func ParseNodeStatePB(state pbns.State) (NodeState, error) {
+func (nodeStateParser) PBToNodeState(state pbns.State) (NodeState, error) {
 	switch state {
 	case pbns.State_READY:
 		return ReadyNodeState, nil

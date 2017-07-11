@@ -46,7 +46,7 @@ func TestNodeStateParseStr(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotSt, err := types.ParseNodeStateStr(test.st)
+		gotSt, err := types.NodeStateTransformer.StrToNodeState(test.st)
 		if test.expErr {
 			assert.Error(err)
 		} else {
@@ -73,7 +73,7 @@ func TestNodeStateParsePB(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotSt, err := types.ParseNodeStatePB(test.st)
+		gotSt, err := types.NodeStateTransformer.PBToNodeState(test.st)
 		if test.expErr {
 			assert.Error(err)
 		} else {
