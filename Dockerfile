@@ -1,7 +1,13 @@
 FROM golang:1.8-alpine
 
 
-RUN apk --update add musl-dev gcc tar git bash wget && rm -rf /var/cache/apk/*
+RUN apk add --no-cache \
+    musl-dev \
+    gcc \
+    tar \
+    git \
+    bash \
+    wget
 
 # Create user
 ARG uid=1000
