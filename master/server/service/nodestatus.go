@@ -70,5 +70,6 @@ func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*p
 		return nil, err
 	}
 
-	return nil, nil
+	// TODO: We shouldn't need to return an state, us protobuf google Empty type.
+	return state, nil
 }

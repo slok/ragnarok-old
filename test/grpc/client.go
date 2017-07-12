@@ -34,7 +34,12 @@ func (t *TestClient) Close() error {
 	return t.conn.Close()
 }
 
-// NodeStatusRegister wraps the call to nodestatus service
+// NodeStatusRegister wraps the call to nodestatus service.
 func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.Node) (*pbns.RegisteredResponse, error) {
 	return t.nsCli.Register(ctx, ni)
+}
+
+// NodeStatusHeartbeat wraps the call to nodestatus service.
+func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, ns *pbns.NodeState) (*pbns.NodeState, error) {
+	return t.nsCli.Heartbeat(ctx, ns)
 }
