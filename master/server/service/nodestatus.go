@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	pbempty "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
 
 	pb "github.com/slok/ragnarok/grpc/nodestatus"
@@ -50,7 +51,7 @@ func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.Node) (*pb.Regis
 }
 
 // Heartbeat sets the current status of a node.
-func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*pb.NodeState, error) {
+func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*pbempty.Empty, error) {
 
 	// Check context already cancelled.
 	select {
@@ -70,6 +71,5 @@ func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*p
 		return nil, err
 	}
 
-	// TODO: We shouldn't need to return an state, us protobuf google Empty type.
-	return state, nil
+	return &pbempty.Empty{}, nil
 }
