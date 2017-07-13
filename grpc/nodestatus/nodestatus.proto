@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package nodestatus;
 
+import "google/protobuf/empty.proto";
+
 
 // NodeStatus is the node status service definition.
 service NodeStatus {
@@ -9,7 +11,7 @@ service NodeStatus {
   rpc Register(Node) returns (RegisteredResponse);
   // Heartbeat sends the current status of the node and receives 
   // the expected status that should have.
-  rpc Heartbeat(NodeState) returns (NodeState);
+  rpc Heartbeat(NodeState) returns (google.protobuf.Empty);
 }
 
 message RegisteredResponse {

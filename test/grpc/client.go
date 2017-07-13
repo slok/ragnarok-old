@@ -3,7 +3,8 @@ package grpc
 import (
 	"google.golang.org/grpc"
 
-	// TODO: Change when GRPC supports std librarie context
+	// TODO: Change when GRPC supports std library context
+	pbempty "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
@@ -40,6 +41,6 @@ func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.Node) (*pb
 }
 
 // NodeStatusHeartbeat wraps the call to nodestatus service.
-func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, ns *pbns.NodeState) (*pbns.NodeState, error) {
+func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, ns *pbns.NodeState) (*pbempty.Empty, error) {
 	return t.nsCli.Heartbeat(ctx, ns)
 }
