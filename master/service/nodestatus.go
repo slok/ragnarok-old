@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master"
 	"github.com/slok/ragnarok/master/config"
+	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/types"
 )
 
@@ -21,14 +21,14 @@ type NodeStatusService interface {
 
 // NodeStatus is the implementation of node status service.
 type NodeStatus struct {
-	repo   master.NodeRepository // repository where all the nodes will be stored.
+	repo   NodeRepository // repository where all the nodes will be stored.
 	logger log.Logger
 
 	nodeLock sync.Mutex
 }
 
 // NewNodeStatus returns a new node status service.
-func NewNodeStatus(_ config.Config, repository master.NodeRepository, logger log.Logger) *NodeStatus {
+func NewNodeStatus(_ config.Config, repository NodeRepository, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
 		repo:   repository,
 		logger: logger,
@@ -41,7 +41,7 @@ func (f *NodeStatus) Register(id string, tags map[string]string) error {
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
-	n := &master.Node{
+	n := &model.Node{
 		ID:    id,
 		Tags:  tags,
 		State: types.UnknownNodeState,

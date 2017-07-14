@@ -18,11 +18,9 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 // Node mocks
 //go:generate mockery -output . -dir ../node/client -name Status
 
-// master mocks (models?)
-//go:generate mockery -output ./master -outpkg master -dir ../master/ -name NodeRepository
-
 // Services mocks
 //go:generate mockery -output ./service -outpkg service -dir ../master/service -name NodeStatusService
+//go:generate mockery -output ./service -outpkg service -dir ../master/service -name NodeRepository
 
 // Types mocks
 //go:generate mockery -output ./types -outpkg types -dir ../types -name NodeStateParser

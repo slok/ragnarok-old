@@ -1,14 +1,14 @@
-package master_test
+package service_test
 
 import (
-	"testing"
-
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/slok/ragnarok/master"
+	"github.com/slok/ragnarok/master/model"
+	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/types"
 )
 
@@ -24,11 +24,11 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := master.NewMemNodeRepository()
-		nodes := make([]*master.Node, test.quantity)
+		reg := service.NewMemNodeRepository()
+		nodes := make([]*model.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
-			n := &master.Node{
+			n := &model.Node{
 				ID:    fmt.Sprintf("id-%d", i),
 				Tags:  map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 				State: types.ReadyNodeState,
@@ -49,7 +49,7 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 func TestMemNodeRepositoryGetMissing(t *testing.T) {
 	assert := assert.New(t)
 
-	reg := master.NewMemNodeRepository()
+	reg := service.NewMemNodeRepository()
 	nGot, ok := reg.GetNode("missing")
 	if assert.False(ok) {
 		assert.Nil(nGot)
@@ -59,9 +59,9 @@ func TestMemNodeRepositoryDelete(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	reg := master.NewMemNodeRepository()
+	reg := service.NewMemNodeRepository()
 
-	n := &master.Node{
+	n := &model.Node{
 		ID:    "test1",
 		Tags:  map[string]string{"address": "127.0.0.1"},
 		State: types.AttackingNodeState,
@@ -90,11 +90,11 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := master.NewMemNodeRepository()
-		nodes := make([]*master.Node, test.quantity)
+		reg := service.NewMemNodeRepository()
+		nodes := make([]*model.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
-			n := &master.Node{
+			n := &model.Node{
 				ID:    fmt.Sprintf("id-%d", i),
 				Tags:  map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 				State: types.ErroredNodeState,

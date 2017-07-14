@@ -9,16 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master"
 	"github.com/slok/ragnarok/master/config"
+	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/service"
-	mmaster "github.com/slok/ragnarok/mocks/master"
+	mservice "github.com/slok/ragnarok/mocks/service"
 	"github.com/slok/ragnarok/types"
 )
 
 func TestNodeStatusCreation(t *testing.T) {
 	assert := assert.New(t)
-	reg := master.NewMemNodeRepository()
+	reg := service.NewMemNodeRepository()
 	m := service.NewNodeStatus(config.Config{}, reg, log.Dummy)
 	assert.NotNil(m)
 }
@@ -27,14 +27,14 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &master.Node{
+	n := &model.Node{
 		ID:    "test1",
 		Tags:  map[string]string{"address": "127.0.0.45"},
 		State: types.UnknownNodeState,
 	}
 
 	// Get our registry mock.
-	mReg := &mmaster.NodeRepository{}
+	mReg := &mservice.NodeRepository{}
 	mReg.On("StoreNode", n.ID, n).Once().Return(nil)
 
 	// Create the service.
@@ -52,14 +52,14 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &master.Node{
+	n := &model.Node{
 		ID:    "test1",
 		Tags:  map[string]string{"address": "127.0.0.45"},
 		State: types.UnknownNodeState,
 	}
 
 	// Get our registry mock.
-	mRep := &mmaster.NodeRepository{}
+	mRep := &mservice.NodeRepository{}
 	mRep.On("StoreNode", n.ID, n).Once().Return(errors.New("want error"))
 
 	// Create the service.
@@ -77,19 +77,19 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	stubN := &master.Node{
+	stubN := &model.Node{
 		ID:    "test1",
 		Tags:  map[string]string{"address": "127.0.0.45"},
 		State: types.UnknownNodeState,
 	}
-	expN := &master.Node{
+	expN := &model.Node{
 		ID:    stubN.ID,
 		Tags:  stubN.Tags,
 		State: types.ReadyNodeState,
 	}
 
 	// Get our repository mock.
-	mRep := &mmaster.NodeRepository{}
+	mRep := &mservice.NodeRepository{}
 	mRep.On("GetNode", expN.ID).Once().Return(stubN, true)
 	mRep.On("StoreNode", expN.ID, expN).Once().Return(nil)
 
@@ -109,7 +109,7 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	require := require.New(t)
 
 	// Get our repository mock.
-	mRep := &mmaster.NodeRepository{}
+	mRep := &mservice.NodeRepository{}
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(nil, false)
 
 	// Create the service.
@@ -121,14 +121,14 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	assert.Error(err)
 }
 
-func TestFailureMasterNodeHeartbeatStoreFailure(t *testing.T) {
+func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	// Get our repository mock.
-	mRep := &mmaster.NodeRepository{}
-	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&master.Node{}, true)
-	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.AnythingOfType("*master.Node")).Return(errors.New("wanted error"))
+	mRep := &mservice.NodeRepository{}
+	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&model.Node{}, true)
+	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Node")).Return(errors.New("wanted error"))
 
 	// Create the service.
 	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
