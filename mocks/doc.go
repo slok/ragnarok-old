@@ -18,12 +18,14 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 // Node mocks
 //go:generate mockery -output . -dir ../node/client -name Status
 
-// Master mocks
+// master mocks (models?)
 //go:generate mockery -output ./master -outpkg master -dir ../master/ -name NodeRepository
-//go:generate mockery -output ./master -outpkg master -dir ../master/ -name Master
+
+// Services mocks
+//go:generate mockery -output ./service -outpkg service -dir ../master/service -name NodeStatusService
 
 // Types mocks
 //go:generate mockery -output ./types -outpkg types -dir ../types -name NodeStateParser
 
-// GRPC clients
+// GRPC proto clients
 //go:generate mockery -output ./grpc -outpkg grpc -dir ../grpc/nodestatus -name NodeStatusClient

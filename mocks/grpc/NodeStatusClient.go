@@ -2,6 +2,7 @@
 package grpc
 
 import context "golang.org/x/net/context"
+import empty "github.com/golang/protobuf/ptypes/empty"
 import grpc "google.golang.org/grpc"
 import mock "github.com/stretchr/testify/mock"
 import nodestatus "github.com/slok/ragnarok/grpc/nodestatus"
@@ -12,7 +13,7 @@ type NodeStatusClient struct {
 }
 
 // Heartbeat provides a mock function with given fields: ctx, in, opts
-func (_m *NodeStatusClient) Heartbeat(ctx context.Context, in *nodestatus.NodeState, opts ...grpc.CallOption) (*nodestatus.NodeState, error) {
+func (_m *NodeStatusClient) Heartbeat(ctx context.Context, in *nodestatus.NodeState, opts ...grpc.CallOption) (*empty.Empty, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -22,12 +23,12 @@ func (_m *NodeStatusClient) Heartbeat(ctx context.Context, in *nodestatus.NodeSt
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *nodestatus.NodeState
-	if rf, ok := ret.Get(0).(func(context.Context, *nodestatus.NodeState, ...grpc.CallOption) *nodestatus.NodeState); ok {
+	var r0 *empty.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *nodestatus.NodeState, ...grpc.CallOption) *empty.Empty); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*nodestatus.NodeState)
+			r0 = ret.Get(0).(*empty.Empty)
 		}
 	}
 

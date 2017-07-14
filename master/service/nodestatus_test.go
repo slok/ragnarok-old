@@ -1,4 +1,4 @@
-package master_test
+package service_test
 
 import (
 	"errors"
@@ -11,18 +11,19 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master"
 	"github.com/slok/ragnarok/master/config"
+	"github.com/slok/ragnarok/master/service"
 	mmaster "github.com/slok/ragnarok/mocks/master"
 	"github.com/slok/ragnarok/types"
 )
 
-func TestFailureMasterCreation(t *testing.T) {
+func TestNodeStatusCreation(t *testing.T) {
 	assert := assert.New(t)
 	reg := master.NewMemNodeRepository()
-	m := master.NewFailureMaster(config.Config{}, reg, log.Dummy)
+	m := service.NewNodeStatus(config.Config{}, reg, log.Dummy)
 	assert.NotNil(m)
 }
 
-func TestFailureMasterNodeRegistration(t *testing.T) {
+func TestNodeStatusNodeRegistration(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -32,22 +33,22 @@ func TestFailureMasterNodeRegistration(t *testing.T) {
 		State: types.UnknownNodeState,
 	}
 
-	// Get our registry mock
+	// Get our registry mock.
 	mReg := &mmaster.NodeRepository{}
 	mReg.On("StoreNode", n.ID, n).Once().Return(nil)
 
-	// Create a master
-	m := master.NewFailureMaster(config.Config{}, mReg, log.Dummy)
-	require.NotNil(n)
+	// Create the service.
+	ns := service.NewNodeStatus(config.Config{}, mReg, log.Dummy)
+	require.NotNil(ns)
 
-	// Check our registered node
-	err := m.RegisterNode(n.ID, n.Tags)
+	// Check our registered node.
+	err := ns.Register(n.ID, n.Tags)
 	if assert.NoError(err) {
 		mReg.AssertExpectations(t)
 	}
 }
 
-func TestFailureMasterNodeRegistrationError(t *testing.T) {
+func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -57,22 +58,22 @@ func TestFailureMasterNodeRegistrationError(t *testing.T) {
 		State: types.UnknownNodeState,
 	}
 
-	// Get our registry mock
+	// Get our registry mock.
 	mRep := &mmaster.NodeRepository{}
 	mRep.On("StoreNode", n.ID, n).Once().Return(errors.New("want error"))
 
-	// Create a master
-	m := master.NewFailureMaster(config.Config{}, mRep, log.Dummy)
-	require.NotNil(m)
+	// Create the service.
+	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
+	require.NotNil(ns)
 
-	// Check our registered node
-	err := m.RegisterNode(n.ID, n.Tags)
+	// Check our registered node.
+	err := ns.Register(n.ID, n.Tags)
 	if assert.Error(err) {
 		mRep.AssertExpectations(t)
 	}
 }
 
-func TestFailureMasterNodeHeartbeat(t *testing.T) {
+func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -92,18 +93,18 @@ func TestFailureMasterNodeHeartbeat(t *testing.T) {
 	mRep.On("GetNode", expN.ID).Once().Return(stubN, true)
 	mRep.On("StoreNode", expN.ID, expN).Once().Return(nil)
 
-	// Create our master.
-	m := master.NewFailureMaster(config.Config{}, mRep, log.Dummy)
-	require.NotNil(m)
+	// Create the service.
+	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
+	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := m.NodeHeartbeat(expN.ID, expN.State)
+	err := ns.Heartbeat(expN.ID, expN.State)
 	if assert.NoError(err) {
 		mRep.AssertExpectations(t)
 	}
 }
 
-func TestFailureMasterNodeHeartbeatNotRegistered(t *testing.T) {
+func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -111,12 +112,12 @@ func TestFailureMasterNodeHeartbeatNotRegistered(t *testing.T) {
 	mRep := &mmaster.NodeRepository{}
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(nil, false)
 
-	// Create our master.
-	m := master.NewFailureMaster(config.Config{}, mRep, log.Dummy)
-	require.NotNil(m)
+	// Create the service.
+	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
+	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := m.NodeHeartbeat("test1", types.ReadyNodeState)
+	err := ns.Heartbeat("test1", types.ReadyNodeState)
 	assert.Error(err)
 }
 
@@ -129,11 +130,11 @@ func TestFailureMasterNodeHeartbeatStoreFailure(t *testing.T) {
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&master.Node{}, true)
 	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.AnythingOfType("*master.Node")).Return(errors.New("wanted error"))
 
-	// Create our master.
-	m := master.NewFailureMaster(config.Config{}, mRep, log.Dummy)
-	require.NotNil(m)
+	// Create the service.
+	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
+	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := m.NodeHeartbeat("test1", types.ReadyNodeState)
+	err := ns.Heartbeat("test1", types.ReadyNodeState)
 	assert.Error(err)
 }
