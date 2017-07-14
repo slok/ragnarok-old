@@ -10,8 +10,8 @@ import (
 	"github.com/slok/ragnarok/types"
 )
 
-// NodeStatusServer is the master node that sends attacks to the nodes interface.
-type NodeStatusServer interface {
+// NodeStatusService is the master node that sends attacks to the nodes interface.
+type NodeStatusService interface {
 	// Register registers a new node on the master.
 	Register(id string, tags map[string]string) error
 

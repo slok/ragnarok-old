@@ -1,35 +1,35 @@
-package service
+package grpc
 
 import (
 	"fmt"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
-	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
+	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context.
 
 	pb "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master"
+	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/types"
 )
 
-// NodeStatusGRPC implements the required GRPC service methods for node status service.
-type NodeStatusGRPC struct {
-	master   master.Master
+// NodeStatus implements the required GRPC service methods for node status service.
+type NodeStatus struct {
+	service  service.NodeStatusService // The service that has the real logic
 	nsParser types.NodeStateParser
 	logger   log.Logger
 }
 
-// NewNodeStatusGRPC returns a new NodeStatusGRPC.
-func NewNodeStatusGRPC(master master.Master, nsParser types.NodeStateParser, logger log.Logger) *NodeStatusGRPC {
-	return &NodeStatusGRPC{
-		master:   master,
+// NewNodeStatus returns a new NodeStatus.
+func NewNodeStatus(service service.NodeStatusService, nsParser types.NodeStateParser, logger log.Logger) *NodeStatus {
+	return &NodeStatus{
+		service:  service,
 		nsParser: nsParser,
 		logger:   logger,
 	}
 }
 
 // Register registers a node on the master.
-func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.Node) (*pb.RegisteredResponse, error) {
+func (n *NodeStatus) Register(ctx context.Context, node *pb.Node) (*pb.RegisteredResponse, error) {
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
@@ -39,7 +39,7 @@ func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.Node) (*pb.Regis
 	default:
 	}
 
-	if err := n.master.RegisterNode(node.Id, node.Tags); err != nil {
+	if err := n.service.Register(node.Id, node.Tags); err != nil {
 		return &pb.RegisteredResponse{
 			Message: fmt.Sprintf("couldn't register node '%s' on master: %v", node.Id, err),
 		}, err
@@ -51,7 +51,7 @@ func (n *NodeStatusGRPC) Register(ctx context.Context, node *pb.Node) (*pb.Regis
 }
 
 // Heartbeat sets the current status of a node.
-func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*pbempty.Empty, error) {
+func (n *NodeStatus) Heartbeat(ctx context.Context, state *pb.NodeState) (*pbempty.Empty, error) {
 
 	// Check context already cancelled.
 	select {
@@ -67,7 +67,7 @@ func (n *NodeStatusGRPC) Heartbeat(ctx context.Context, state *pb.NodeState) (*p
 	}
 
 	// Set the node heartbeat.
-	if err := n.master.NodeHeartbeat(state.Id, st); err != nil {
+	if err := n.service.Heartbeat(state.Id, st); err != nil {
 		return nil, err
 	}
 
