@@ -12,7 +12,7 @@ import (
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/server"
-	mmaster "github.com/slok/ragnarok/mocks/master"
+	mservice "github.com/slok/ragnarok/mocks/service"
 	tgrpc "github.com/slok/ragnarok/test/grpc"
 	"github.com/slok/ragnarok/types"
 )
@@ -32,19 +32,19 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Create master mock.
-		mm := &mmaster.Master{}
+		// Create service mocks.
+		mnss := &mservice.NodeStatusService{}
 		var expErr error
 		if test.shouldErr {
 			expErr = errors.New("wanted error")
 		}
-		mm.On("RegisterNode", test.id, test.tags).Once().Return(expErr)
+		mnss.On("Register", test.id, test.tags).Once().Return(expErr)
 
 		// Create our server.
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
 		require.NoError(err)
 		defer l.Close()
-		s := server.NewMasterGRPCServiceServer(mm, l, log.Dummy)
+		s := server.NewMasterGRPCServiceServer(mnss, l, log.Dummy)
 		// Serve in background.
 		go func() {
 			s.Serve()
@@ -69,7 +69,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 			assert.NoError(err)
 		}
 		// Assert correct calls on our logic.
-		mm.AssertExpectations(t)
+		mnss.AssertExpectations(t)
 	}
 }
 
@@ -92,19 +92,19 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// Create master mock.
-		mm := &mmaster.Master{}
+		// Create service mocks.
+		mnss := &mservice.NodeStatusService{}
 		var expErr error
 		if test.shouldErr {
 			expErr = errors.New("wanted error")
 		}
-		mm.On("NodeHeartbeat", test.id, test.expState).Once().Return(expErr)
+		mnss.On("Heartbeat", test.id, test.expState).Once().Return(expErr)
 
 		// Create our server.
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
 		require.NoError(err)
 		defer l.Close()
-		s := server.NewMasterGRPCServiceServer(mm, l, log.Dummy)
+		s := server.NewMasterGRPCServiceServer(mnss, l, log.Dummy)
 		// Serve in background.
 		go func() {
 			s.Serve()
@@ -129,6 +129,6 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 			assert.NoError(err)
 		}
 		// Assert correct calls on our logic.
-		mm.AssertExpectations(t)
+		mnss.AssertExpectations(t)
 	}
 }
