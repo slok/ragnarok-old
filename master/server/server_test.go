@@ -5,9 +5,9 @@ import (
 	"net"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
-	"github.com/stretchr/testify/assert"
 
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
