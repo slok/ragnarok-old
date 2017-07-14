@@ -8,9 +8,24 @@ import (
 
 	"github.com/slok/ragnarok/cmd/master/flags"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master"
+	"github.com/slok/ragnarok/master/config"
 	"github.com/slok/ragnarok/master/server"
+	"github.com/slok/ragnarok/master/service"
 )
+
+func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
+	// Create the services.
+	reg := service.NewMemNodeRepository()
+	nss := service.NewNodeStatus(cfg, reg, logger)
+
+	// Create the GRPC service server
+	l, err := net.Listen("tcp", cfg.RPCListenAddress)
+	if err != nil {
+		return nil, err
+	}
+	srvServer := server.NewMasterGRPCServiceServer(nss, l, logger)
+	return srvServer, nil
+}
 
 // Main run main logic.
 func Main() error {
@@ -28,17 +43,11 @@ func Main() error {
 		logger.Set("debug")
 	}
 
-	// Create the master and the registry.
-	reg := master.NewMemNodeRepository()
-	m := master.NewFailureMaster(*cfg, reg, logger)
-
-	// Create the GRPC service server
-	l, err := net.Listen("tcp", cfg.RPCListenAddress)
+	gserver, err := createGRPCServer(*cfg, logger)
 	if err != nil {
 		return err
 	}
-	srvServer := server.NewMasterGRPCServiceServer(m, l, logger)
-	srvServer.Serve()
+	gserver.Serve()
 
 	return nil
 }
