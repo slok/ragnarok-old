@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"time"
+
 	"github.com/slok/ragnarok/cmd/node/flags"
 	"github.com/slok/ragnarok/node/config"
 )
@@ -25,9 +27,10 @@ func TestCofiguration(t *testing.T) {
 				"-master.address", "127.0.0.1:8080",
 			},
 			config.Config{
-				MasterAddress: "127.0.0.1:8080",
-				Debug:         true,
-				DryRun:        false,
+				MasterAddress:     "127.0.0.1:8080",
+				HeartbeatInterval: 15 * time.Second,
+				Debug:             true,
+				DryRun:            false,
 			},
 			false,
 		},
@@ -37,9 +40,10 @@ func TestCofiguration(t *testing.T) {
 				"-master.address", "127.0.0.1:8080",
 			},
 			config.Config{
-				MasterAddress: "127.0.0.1:8080",
-				Debug:         false,
-				DryRun:        true,
+				MasterAddress:     "127.0.0.1:8080",
+				HeartbeatInterval: 15 * time.Second,
+				Debug:             false,
+				DryRun:            true,
 			},
 			false,
 		},
@@ -49,9 +53,10 @@ func TestCofiguration(t *testing.T) {
 				"-master.address", "127.0.0.1:8080",
 			},
 			config.Config{
-				MasterAddress: "127.0.0.1:8080",
-				Debug:         false,
-				DryRun:        true,
+				MasterAddress:     "127.0.0.1:8080",
+				HeartbeatInterval: 15 * time.Second,
+				Debug:             false,
+				DryRun:            true,
 			},
 			false,
 		},
@@ -61,11 +66,19 @@ func TestCofiguration(t *testing.T) {
 				"--master.address", "127.0.0.1:8080",
 			},
 			config.Config{
-				MasterAddress: "127.0.0.1:8080",
-				Debug:         false,
-				DryRun:        true,
+				MasterAddress:     "127.0.0.1:8080",
+				HeartbeatInterval: 15 * time.Second,
+				Debug:             false,
+				DryRun:            true,
 			},
 			false,
+		},
+		{
+			[]string{
+				"--heartbeat.interval", "-15s",
+			},
+			config.Config{},
+			true,
 		},
 		{
 			[]string{

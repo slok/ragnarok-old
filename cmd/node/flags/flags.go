@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"time"
+
 	nodeconfig "github.com/slok/ragnarok/node/config"
 )
 
@@ -15,10 +17,11 @@ const (
 )
 
 type config struct {
-	fs            *flag.FlagSet
-	masterAddress string
-	debug         bool
-	dryRun        bool
+	fs                *flag.FlagSet
+	masterAddress     string
+	heartbeatInterval string
+	debug             bool
+	dryRun            bool
 }
 
 func new() *config {
@@ -29,6 +32,11 @@ func new() *config {
 	cfg.fs.StringVar(
 		&cfg.masterAddress, "master.address", "",
 		"Address where the master is listening",
+	)
+
+	cfg.fs.StringVar(
+		&cfg.heartbeatInterval, "heartbeat.interval", "15s",
+		"Time interval the node will send a heartbeat to the master",
 	)
 
 	cfg.fs.BoolVar(
@@ -58,6 +66,12 @@ func (c *config) parse(args []string) error {
 		err = fmt.Errorf("master address is required")
 	}
 
+	// Check heartbeat valid timing.
+	d, err := time.ParseDuration(c.heartbeatInterval)
+	if err != nil || d <= 0 {
+		err = fmt.Errorf("invalid heartbeat interval")
+	}
+
 	return err
 }
 
@@ -69,10 +83,14 @@ func GetNodeConfig(args []string) (*nodeconfig.Config, error) {
 		return nil, err
 	}
 
+	// Parse intervals (parsing error validated on the parse).
+	d, _ := time.ParseDuration(cfg.heartbeatInterval)
+
 	nodeCfg := &nodeconfig.Config{
-		MasterAddress: cfg.masterAddress,
-		Debug:         cfg.debug,
-		DryRun:        cfg.dryRun,
+		MasterAddress:     cfg.masterAddress,
+		HeartbeatInterval: d,
+		Debug:             cfg.debug,
+		DryRun:            cfg.dryRun,
 	}
 
 	if err := nodeCfg.Validate(); err != nil {
