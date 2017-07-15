@@ -29,7 +29,7 @@ func TestNodeStateStringer(t *testing.T) {
 	}
 }
 
-func TestNodeStateParseStr(t *testing.T) {
+func TestNodeStateParseStrToNS(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
@@ -56,7 +56,7 @@ func TestNodeStateParseStr(t *testing.T) {
 	}
 }
 
-func TestNodeStateParsePB(t *testing.T) {
+func TestNodeStateParsePBToNS(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
@@ -74,6 +74,33 @@ func TestNodeStateParsePB(t *testing.T) {
 
 	for _, test := range tests {
 		gotSt, err := types.NodeStateTransformer.PBToNodeState(test.st)
+		if test.expErr {
+			assert.Error(err)
+		} else {
+			assert.NoError(err)
+		}
+		assert.Equal(test.expSt, gotSt)
+	}
+}
+
+func TestNodeStateParseNSToPB(t *testing.T) {
+	assert := assert.New(t)
+
+	tests := []struct {
+		st     types.NodeState
+		expSt  pbns.State
+		expErr bool
+	}{
+		{types.ReadyNodeState, pbns.State_READY, false},
+		{types.AttackingNodeState, pbns.State_ATTACKING, false},
+		{types.RevertingNodeState, pbns.State_REVERTING, false},
+		{types.ErroredNodeState, pbns.State_ERRORED, false},
+		{types.UnknownNodeState, pbns.State_UNKNOWN, false},
+		{999999, pbns.State_UNKNOWN, true},
+	}
+
+	for _, test := range tests {
+		gotSt, err := types.NodeStateTransformer.NodeStateToPB(test.st)
 		if test.expErr {
 			assert.Error(err)
 		} else {

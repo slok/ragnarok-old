@@ -39,16 +39,17 @@ func (n NodeState) String() string {
 	}
 }
 
-// NodeStateParser has the required methods to transform node state
+// NodeStateParser has the required methods to transform node state.
 type NodeStateParser interface {
 	StrToNodeState(state string) (NodeState, error)
 	PBToNodeState(state pbns.State) (NodeState, error)
+	NodeStateToPB(state NodeState) (pbns.State, error)
 }
 
-// nodeStateTypeParser will convert node state in different types
+// nodeStateTypeParser will convert node state in different types.
 type nodeStateParser struct{}
 
-// NodeStateTransformer is the utility to transform node stauts kinds
+// NodeStateTransformer is the utility to transform node stauts kinds.
 var NodeStateTransformer = &nodeStateParser{}
 
 // ParseNodeStateStr parses an string and returns a NodeState.
@@ -84,5 +85,23 @@ func (nodeStateParser) PBToNodeState(state pbns.State) (NodeState, error) {
 		return UnknownNodeState, nil
 	default:
 		return UnknownNodeState, fmt.Errorf("invalid node state: %s", state)
+	}
+}
+
+// NodeStateToPB parses a node state to proto buffer and returns a PB node state.
+func (nodeStateParser) NodeStateToPB(state NodeState) (pbns.State, error) {
+	switch state {
+	case ReadyNodeState:
+		return pbns.State_READY, nil
+	case AttackingNodeState:
+		return pbns.State_ATTACKING, nil
+	case RevertingNodeState:
+		return pbns.State_REVERTING, nil
+	case ErroredNodeState:
+		return pbns.State_ERRORED, nil
+	case UnknownNodeState:
+		return pbns.State_UNKNOWN, nil
+	default:
+		return pbns.State_UNKNOWN, fmt.Errorf("invalid node state: %s", state)
 	}
 }
