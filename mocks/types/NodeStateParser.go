@@ -10,6 +10,27 @@ type NodeStateParser struct {
 	mock.Mock
 }
 
+// NodeStateToPB provides a mock function with given fields: state
+func (_m *NodeStateParser) NodeStateToPB(state types.NodeState) (nodestatus.State, error) {
+	ret := _m.Called(state)
+
+	var r0 nodestatus.State
+	if rf, ok := ret.Get(0).(func(types.NodeState) nodestatus.State); ok {
+		r0 = rf(state)
+	} else {
+		r0 = ret.Get(0).(nodestatus.State)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.NodeState) error); ok {
+		r1 = rf(state)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PBToNodeState provides a mock function with given fields: state
 func (_m *NodeStateParser) PBToNodeState(state nodestatus.State) (types.NodeState, error) {
 	ret := _m.Called(state)

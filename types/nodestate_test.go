@@ -24,6 +24,7 @@ func TestNodeStateStringer(t *testing.T) {
 		{99999, "unknown"},
 	}
 
+
 	for _, test := range tests {
 		assert.Equal(test.expSt, test.st.String())
 	}
