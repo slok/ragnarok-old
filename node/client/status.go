@@ -16,7 +16,7 @@ type Status interface {
 	// RegisterNode registers a node as available on the server
 	RegisterNode(id string, tags map[string]string) error
 	// NodeHeartbeat sends a node heartbeat to the master
-	NodeHeartbeat(id string, status types.NodeState)
+	NodeHeartbeat(id string, status types.NodeState) error
 }
 
 // StatusGRPC satisfies Status interface with GRPC communication
