@@ -10,8 +10,17 @@ type Status struct {
 }
 
 // NodeHeartbeat provides a mock function with given fields: id, status
-func (_m *Status) NodeHeartbeat(id string, status types.NodeState) {
-	_m.Called(id, status)
+func (_m *Status) NodeHeartbeat(id string, status types.NodeState) error {
+	ret := _m.Called(id, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, types.NodeState) error); ok {
+		r0 = rf(id, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RegisterNode provides a mock function with given fields: id, tags
