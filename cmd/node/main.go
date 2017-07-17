@@ -9,10 +9,12 @@ import (
 
 	"fmt"
 
+	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"
+	"github.com/slok/ragnarok/types"
 )
 
 // Main run main logic.
@@ -37,18 +39,22 @@ func Main() error {
 		return err
 	}
 	defer conn.Close()
-	nsCli, err := client.NewStatusGRPCFromConnection(conn, logger)
+	nsCli, err := client.NewStatusGRPCFromConnection(conn, types.NodeStateTransformer, logger)
 	if err != nil {
 		return err
 	}
 	// Create the node.
-	n := node.NewFailureNode(*cfg, nsCli, logger)
+	n := node.NewFailureNode(*cfg, nsCli, clock.Base(), logger)
 
 	// Register node.
 	if err := n.RegisterOnMaster(); err != nil {
 		return fmt.Errorf("node not registered on master: %v", err)
 	}
 
+	// Start heartbeats
+	if err := n.StartHeartbeat(); err != nil {
+		return fmt.Errorf("node heartbeating start failed: %v", err)
+	}
 	// TODO: Listen for service calls
 
 	return nil
