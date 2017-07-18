@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package attack;
+
+
+
+// AttackState is the service that will have all the operations regarding the attack
+service AttackState {
+    // AttackStateList asks for a list of the attacks that should begin, continue or stop
+    rpc AttackStateList(NodeId) returns (stream AttacksExpectedState);
+}
+
+// NodeId is a node id
+message NodeId {
+    string id = 1;
+}
+
+// Attack represents an attack
+message Attack {
+    string id = 1;
+    string name = 2;
+    string definition = 3;
+}
+
+// SttackStateResponse reprensents the state of the attacks
+message AttacksExpectedState {
+    repeated string running_attack_id = 1;
+    repeated string reverted_attack_id = 2;
+}

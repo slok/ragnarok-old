@@ -4,5 +4,8 @@ by the nodes and the masters to implement the servers and the clients
 */
 package grpc // import "github.com/slok/ragnarok/grpc"
 
-// Attack mocks
+// Node status protos
 //go:generate protoc -I. -I${GOOGLEPROTO_PATH} nodestatus/nodestatus.proto --go_out=plugins=grpc:.
+
+// Attack protos
+//go:generate protoc -I. attack/attack.proto --go_out=plugins=grpc:.
