@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package failure;
+
+
+
+// FailureState is the service that will have all the operations regarding the failure
+service FailureState {
+    // FailureStateList asks for a list of the failures that should begin, continue or stop
+    rpc FailureStateList(NodeId) returns (stream FailuresExpectedState);
+}
+
+// NodeId is a node id
+message NodeId {
+    string id = 1;
+}
+
+// Failure represents an failure
+message Failure {
+    string id = 1;
+    string name = 2;
+    string definition = 3;
+}
+
+// FailuresExpectedState reprensents the state of the failures
+message FailuresExpectedState {
+    repeated string running_failure_id = 1;
+    repeated string reverted_failure_id = 2;
+}
