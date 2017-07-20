@@ -25,7 +25,6 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 
 	for _, test := range tests {
 		reg := service.NewMemNodeRepository()
-		nodes := make([]*model.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
 			n := &model.Node{
@@ -33,7 +32,6 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 				Tags:  map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 				State: types.ReadyNodeState,
 			}
-			nodes = append(nodes, n)
 			err := reg.StoreNode(n.ID, n)
 			assert.NoError(err)
 
