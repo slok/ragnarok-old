@@ -2,28 +2,48 @@ syntax = "proto3";
 
 package failure;
 
+//import "google/protobuf/empty.proto";
 
 
-// FailureState is the service that will have all the operations regarding the failure
+// FailureState is the service that will have all the operations regarding the failure.
 service FailureState {
-    // FailureStateList asks for a list of the failures that should begin, continue or stop
+    // FailureStateList asks for a list of the failures that should begin, continue or stop.
     rpc FailureStateList(NodeId) returns (stream FailuresExpectedState);
+    // GetFailure asks for a failure.
+    rpc GetFailure(FailureId) returns (Failure);
+    // FailureStarted sets when the failure started
+    //rpc FailureStarted(FailureId) returns (google.protobuf.Empty);
+    // FailureFinished sets when the failure finished
+    //rpc FailureFinished(FailureId) returns (google.protobuf.Empty);
 }
 
-// NodeId is a node id
+// NodeId is a node id.
 message NodeId {
     string id = 1;
 }
 
-// Failure represents an failure
+// FailureId is a failure id.
+message FailureId {
+    string id = 1;
+}
+
+// Failure represents an failure.
 message Failure {
     string id = 1;
     string name = 2;
     string definition = 3;
 }
 
-// FailuresExpectedState reprensents the state of the failures
+// FailuresExpectedState reprensents the state of the failures.
 message FailuresExpectedState {
     repeated string running_failure_id = 1;
     repeated string reverted_failure_id = 2;
+}
+
+// State is the state a failure can be.
+enum State{
+    UNKNOWN = 0;
+    ENABLED = 1;
+    REVERTING = 2;
+    DISABLED = 3;
 }
