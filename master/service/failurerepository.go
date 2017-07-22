@@ -18,10 +18,10 @@ type FailureRepository interface {
 	Get(id string) (*model.Failure, bool)
 
 	// GetAll gets all the failures from the registry.
-	GetAll() map[string]*model.Failure
+	GetAll() []*model.Failure
 
 	// GetAllByNode gets all the failures of a node from the registry.
-	GetAllByNode(nodeID string) map[string]*model.Failure
+	GetAllByNode(nodeID string) []*model.Failure
 }
 
 // MemFailureRepository is a represententation of the failure regsitry using a memory map.
@@ -77,20 +77,26 @@ func (m *MemFailureRepository) Get(id string) (*model.Failure, bool) {
 }
 
 // GetAll satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetAll() map[string]*model.Failure {
+func (m *MemFailureRepository) GetAll() []*model.Failure {
 	m.Lock()
 	defer m.Unlock()
-
-	return m.reg
+	res := []*model.Failure{}
+	for _, f := range m.reg {
+		res = append(res, f)
+	}
+	return res
 }
 
 // GetAllByNode satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetAllByNode(nodeID string) map[string]*model.Failure {
+func (m *MemFailureRepository) GetAllByNode(nodeID string) []*model.Failure {
 	m.Lock()
 	defer m.Unlock()
-	reg, ok := m.regByNode[nodeID]
-	if !ok {
-		reg = make(map[string]*model.Failure)
+	res := []*model.Failure{}
+	tmpReg, ok := m.regByNode[nodeID]
+	if ok {
+		for _, f := range tmpReg {
+			res = append(res, f)
+		}
 	}
-	return reg
+	return res
 }
