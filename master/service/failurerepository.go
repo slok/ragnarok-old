@@ -19,18 +19,23 @@ type FailureRepository interface {
 
 	// GetAll gets all the failures from the registry.
 	GetAll() map[string]*model.Failure
+
+	// GetAllByNode gets all the failures of a node from the registry.
+	GetAllByNode(nodeID string) map[string]*model.Failure
 }
 
 // MemFailureRepository is a represententation of the failure regsitry using a memory map.
 type MemFailureRepository struct {
-	reg map[string]*model.Failure
+	reg       map[string]*model.Failure
+	regByNode map[string]map[string]*model.Failure
 	sync.Mutex
 }
 
 // NewMemFailureRepository returns a new MemFailureRepository
 func NewMemFailureRepository() *MemFailureRepository {
 	return &MemFailureRepository{
-		reg: map[string]*model.Failure{},
+		reg:       map[string]*model.Failure{},
+		regByNode: map[string]map[string]*model.Failure{},
 	}
 }
 
@@ -39,6 +44,10 @@ func (m *MemFailureRepository) Store(failure *model.Failure) error {
 	m.Lock()
 	defer m.Unlock()
 	m.reg[failure.ID] = failure
+	if _, ok := m.regByNode[failure.NodeID]; !ok {
+		m.regByNode[failure.NodeID] = map[string]*model.Failure{}
+	}
+	m.regByNode[failure.NodeID][failure.ID] = failure
 
 	return nil
 }
@@ -48,7 +57,13 @@ func (m *MemFailureRepository) Delete(id string) {
 	m.Lock()
 	defer m.Unlock()
 
+	f, ok := m.reg[id]
+	if !ok {
+		return
+	}
+
 	delete(m.reg, id)
+	delete(m.regByNode[f.NodeID], id)
 }
 
 // Get satisfies FailureRepository interface.
@@ -67,4 +82,15 @@ func (m *MemFailureRepository) GetAll() map[string]*model.Failure {
 	defer m.Unlock()
 
 	return m.reg
+}
+
+// GetAllByNode satisfies FailureRepository interface.
+func (m *MemFailureRepository) GetAllByNode(nodeID string) map[string]*model.Failure {
+	m.Lock()
+	defer m.Unlock()
+	reg, ok := m.regByNode[nodeID]
+	if !ok {
+		reg = make(map[string]*model.Failure)
+	}
+	return reg
 }
