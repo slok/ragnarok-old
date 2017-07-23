@@ -8,4 +8,4 @@ package grpc // import "github.com/slok/ragnarok/grpc"
 //go:generate protoc -I. -I${GOOGLEPROTO_PATH} nodestatus/nodestatus.proto --go_out=plugins=grpc:.
 
 // Failure protos
-//go:generate protoc -I. failure/failure.proto --go_out=plugins=grpc:.
+//go:generate protoc -I. failurestatus/failurestatus.proto --go_out=plugins=grpc:.

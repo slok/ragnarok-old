@@ -30,8 +30,10 @@ message FailureId {
 // Failure represents an failure.
 message Failure {
     string id = 1;
-    string name = 2;
+    string nodeID = 2;
     string definition = 3;
+    State current_state = 4;
+    State expected_state = 5; 
 }
 
 // FailuresExpectedState reprensents the state of the failures.
