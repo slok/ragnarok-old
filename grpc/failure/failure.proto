@@ -5,8 +5,8 @@ package failure;
 //import "google/protobuf/empty.proto";
 
 
-// FailureState is the service that will have all the operations regarding the failure.
-service FailureState {
+// FailureStatus is the service that will have all the operations regarding the failure.
+service FailureStatus {
     // FailureStateList asks for a list of the failures that should begin, continue or stop.
     rpc FailureStateList(NodeId) returns (stream FailuresExpectedState);
     // GetFailure asks for a failure.
