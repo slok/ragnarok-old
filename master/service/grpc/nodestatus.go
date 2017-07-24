@@ -30,6 +30,8 @@ func NewNodeStatus(service service.NodeStatusService, nsParser types.NodeStatePa
 
 // Register registers a node on the master.
 func (n *NodeStatus) Register(ctx context.Context, node *pb.Node) (*pb.RegisteredResponse, error) {
+	n.logger.WithField("node", node.GetId()).Debugf("node registration GRPC call received")
+
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
@@ -52,6 +54,7 @@ func (n *NodeStatus) Register(ctx context.Context, node *pb.Node) (*pb.Registere
 
 // Heartbeat sets the current status of a node.
 func (n *NodeStatus) Heartbeat(ctx context.Context, state *pb.NodeState) (*pbempty.Empty, error) {
+	n.logger.WithField("node", state.GetId()).Debugf("node heartbeat GRPC call received")
 
 	// Check context already cancelled.
 	select {
