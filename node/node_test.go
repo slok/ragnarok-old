@@ -11,7 +11,8 @@ import (
 
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/mocks"
+	mclock "github.com/slok/ragnarok/mocks/clock"
+	mlog "github.com/slok/ragnarok/mocks/log"
 	mclient "github.com/slok/ragnarok/mocks/node/client"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/config"
@@ -33,7 +34,7 @@ func TestFailureNodeCreationDryRun(t *testing.T) {
 
 	// Mocks
 	scm := &mclient.Status{}
-	logger := &mocks.Logger{}
+	logger := &mlog.Logger{}
 	logger.On("WithField", "id", mock.AnythingOfType("string")).Once().Return(logger)
 	logger.On("Info", "System failure node ready").Once()
 	logger.On("Warn", "System failure node in dry run mode").Once()
@@ -96,7 +97,7 @@ func TestFailureNodeStartHeartbeatAlreadyRunningError(t *testing.T) {
 
 	// Create the mock.
 	msc := &mclient.Status{}
-	mClock := &mocks.Clock{}
+	mClock := &mclock.Clock{}
 	stubT := time.NewTicker(1 * time.Millisecond)
 	defer stubT.Stop()                   // Stop after test.
 	heartbeatting := make(chan struct{}) // Channel that will wait for the signal when the node is already sending heartbeats.
@@ -134,7 +135,7 @@ func TestFailureNodeStartHeartbeatOK(t *testing.T) {
 
 	// Create the mock.
 	msc := &mclient.Status{}
-	mClock := &mocks.Clock{}
+	mClock := &mclock.Clock{}
 	stubT := time.NewTicker(1 * time.Millisecond)
 	defer stubT.Stop()                    // Stop after test.
 	heartbeated := make(chan struct{}, 1) // Channel that will wait for the signal when the node heartbeated.
@@ -192,7 +193,7 @@ func TestFailureNodeStoptHeartbeatOK(t *testing.T) {
 
 	// Create the mock.
 	msc := &mclient.Status{}
-	mClock := &mocks.Clock{}
+	mClock := &mclock.Clock{}
 	heartbeated := make(chan struct{})       // Channel that will wait for the signal when the node heartbeated.
 	heartbeatFinished := make(chan struct{}) // Channel that will wait until heartbeat finishes.
 	stubT := time.NewTicker(1 * time.Millisecond)

@@ -14,7 +14,8 @@ import (
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/failure"
-	"github.com/slok/ragnarok/mocks"
+	mattack "github.com/slok/ragnarok/mocks/attack"
+	mclock "github.com/slok/ragnarok/mocks/clock"
 )
 
 func TestNewSystemFailure(t *testing.T) {
@@ -45,12 +46,12 @@ func TestNewSystemFailure(t *testing.T) {
 			},
 		},
 	}
-	at1 := &mocks.Attacker{}
-	at2 := &mocks.Attacker{}
-	at3 := &mocks.Attacker{}
-	at4 := &mocks.Attacker{}
+	at1 := &mattack.Attacker{}
+	at2 := &mattack.Attacker{}
+	at3 := &mattack.Attacker{}
+	at4 := &mattack.Attacker{}
 	// Mock registry.
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", c.Attacks[0]["attack1"]).Return(at1, nil)
 	reg.On("New", "attack1", c.Attacks[1]["attack1"]).Return(at2, nil)
 	reg.On("New", "attack2", c.Attacks[2]["attack2"]).Return(at3, nil)
@@ -86,7 +87,7 @@ func TestNewSystemFailureError(t *testing.T) {
 	}
 
 	// Mock registry.
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", c.Attacks[0]["attack1"]).Return(nil, nil)
 	reg.On("New", "attack2", c.Attacks[1]["attack2"]).Return(nil, errors.New("error test"))
 
@@ -117,7 +118,7 @@ func TestNewSystemFailureMultipleAttacksOnBlock(t *testing.T) {
 	}
 
 	// Mock registry.
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.AssertNotCalled(t, "New")
 	// Test.
 	_, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
@@ -190,11 +191,11 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at := &mocks.Attacker{}
+	at := &mattack.Attacker{}
 	at.On("Apply", ctxMatcher).Times(3).Return(nil)
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
@@ -221,12 +222,12 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at := &mocks.Attacker{}
+	at := &mattack.Attacker{}
 	at.On("Apply", ctxMatcher).Times(3).Return(nil)
 	at.On("Revert").Times(3).Return(nil)
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
@@ -256,7 +257,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at1, at2, at3 := &mocks.Attacker{}, &mocks.Attacker{}, &mocks.Attacker{}
+	at1, at2, at3 := &mattack.Attacker{}, &mattack.Attacker{}, &mattack.Attacker{}
 	at1.On("Apply", ctxMatcher).Once().Return(errors.New("error1"))
 	at2.On("Apply", ctxMatcher).Once().Return(nil)
 	at3.On("Apply", ctxMatcher).Once().Return(errors.New("error3"))
@@ -264,7 +265,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	at2.On("Revert").Once().Return(nil)
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
@@ -295,7 +296,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at1, at2, at3 := &mocks.Attacker{}, &mocks.Attacker{}, &mocks.Attacker{}
+	at1, at2, at3 := &mattack.Attacker{}, &mattack.Attacker{}, &mattack.Attacker{}
 	at1.On("Apply", ctxMatcher).Once().Return(nil)
 	at2.On("Apply", ctxMatcher).Once().Return(errors.New("error2"))
 	at3.On("Apply", ctxMatcher).Once().Return(nil)
@@ -303,7 +304,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	at3.On("Revert").Once().Return(errors.New("revert_error3"))
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
@@ -334,7 +335,7 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at1 := &mocks.Attacker{}
+	at1 := &mattack.Attacker{}
 	at1.On("Apply", ctxMatcher).Once().Return(nil)
 	reverted := make(chan struct{})
 	at1.On("Revert").Once().Return(nil).Run(func(args mock.Arguments) {
@@ -342,11 +343,11 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 	})
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
 
 	// Mock clock
-	cl := &mocks.Clock{}
+	cl := &mclock.Clock{}
 	cl.On("After", c.Timeout).Return(time.After(0))
 	cl.On("Now").Return(time.Now())
 
@@ -376,16 +377,16 @@ func TestSystemFailureFailAttacksFinishForced(t *testing.T) {
 
 	// Mock attackers
 	ctxMatcher := mock.MatchedBy(func(ctx context.Context) bool { return true })
-	at1 := &mocks.Attacker{}
+	at1 := &mattack.Attacker{}
 	at1.On("Apply", ctxMatcher).Once().Return(nil)
 	at1.On("Revert").Once().Return(nil)
 
 	// Mock Registry
-	reg := &mocks.Registry{}
+	reg := &mattack.Registry{}
 	reg.On("New", "attack1", attack.Opts{}).Return(at1, nil)
 
 	// Mock clock
-	cl := &mocks.Clock{}
+	cl := &mclock.Clock{}
 	cl.On("After", c.Timeout).Return(time.After(9999 * time.Hour)) // Never
 	cl.On("Now").Return(time.Now())
 

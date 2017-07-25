@@ -9,7 +9,7 @@ import (
 
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
-	mgrpc "github.com/slok/ragnarok/mocks/grpc"
+	mpbns "github.com/slok/ragnarok/mocks/grpc/nodestatus"
 	mtypes "github.com/slok/ragnarok/mocks/types"
 	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/types"
@@ -31,7 +31,7 @@ func TestRegisterNode(t *testing.T) {
 	for _, test := range tests {
 
 		// Mocks
-		mc := &mgrpc.NodeStatusClient{}
+		mc := &mpbns.NodeStatusClient{}
 		var expectErr error
 		if test.expectError {
 			expectErr = errors.New("wanted error")
@@ -90,7 +90,7 @@ func TestNodeHeartbeat(t *testing.T) {
 		}
 
 		// Create the mocks.
-		mc := &mgrpc.NodeStatusClient{}
+		mc := &mpbns.NodeStatusClient{}
 		mstp := &mtypes.NodeStateParser{}
 		ns := &pbns.NodeState{
 			Id:    test.id,
