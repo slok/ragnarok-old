@@ -38,8 +38,8 @@ message Failure {
 
 // FailuresExpectedState reprensents the state of the failures.
 message FailuresExpectedState {
-    repeated string running_failure_id = 1;
-    repeated string reverted_failure_id = 2;
+    repeated string enabled_failure_id = 1;
+    repeated string disabled_failure_id = 2;
 }
 
 // State is the state a failure can be.

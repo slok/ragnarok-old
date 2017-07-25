@@ -5,18 +5,18 @@ testing and integration tests whenever is possible.
 package mocks // import "github.com/slok/ragnarok/mocks"
 
 // Attack mocks
-//go:generate mockery -output . -dir ../attack -name Registry
-//go:generate mockery -output . -dir ../attack -name Creater
-//go:generate mockery -output . -dir ../attack -name Attacker
+//go:generate mockery -output ./attack -outpkg attack -dir ../attack -name Registry
+//go:generate mockery -output ./attack -outpkg attack -dir ../attack -name Creater
+//go:generate mockery -output ./attack -outpkg attack -dir ../attack -name Attacker
 
 // Clock mocks
-//go:generate mockery -output . -dir ../clock -name Clock
+//go:generate mockery -output ./clock -outpkg clock -dir ../clock -name Clock
 
 // Logger mock
-//go:generate mockery -output . -dir ../log -name Logger
+//go:generate mockery -output ./log -outpkg log -dir ../log -name Logger
 
 // Node mocks
-//go:generate mockery -output ./node/client -dir ../node/client -name Status
+//go:generate mockery -output ./node/client -outpkg client -dir ../node/client -name Status
 
 // Services mocks
 //go:generate mockery -output ./service -outpkg service -dir ../master/service -name NodeStatusService
@@ -28,5 +28,6 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 //go:generate mockery -output ./types -outpkg types -dir ../types -name NodeStateParser
 
 // GRPC proto clients
-//go:generate mockery -output ./grpc -outpkg grpc -dir ../grpc/nodestatus -name NodeStatusClient
-//go:generate mockery -output ./grpc -outpkg grpc -dir ../grpc/failurestatus -name FailureStatusClient
+//go:generate mockery -output ./grpc/nodestatus -outpkg nodestatus -dir ../grpc/nodestatus -name NodeStatusClient
+//go:generate mockery -output ./grpc/failurestatus -outpkg failurestatus -dir ../grpc/failurestatus -name FailureStatusClient
+//go:generate mockery -output ./grpc/failurestatus -outpkg failurestatus -dir ../grpc/failurestatus -name FailureStatus_FailureStateListServer
