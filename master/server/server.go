@@ -2,9 +2,12 @@ package server
 
 import (
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 
+	"github.com/slok/ragnarok/clock"
+	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
@@ -12,9 +15,14 @@ import (
 	"github.com/slok/ragnarok/types"
 )
 
+// TODO: set this as configurable.
+const failureStatusUpInterval = 15 * time.Second
+
 // GRPCServiceServer is an interface that wraps all the GRPC service need to implement.
 type GRPCServiceServer interface {
 	pbns.NodeStatusServer
+	pbfs.FailureStatusServer
+
 	// Serve will serve the services.
 	Serve(addr string) error
 }
@@ -23,26 +31,29 @@ type GRPCServiceServer interface {
 // implementation as logic, it wraps all the services used as.
 type MasterGRPCServiceServer struct {
 	*grpcservice.NodeStatus
+	*grpcservice.FailureStatus
 	server   *grpc.Server
 	listener net.Listener
 	logger   log.Logger
 }
 
 // NewMasterGRPCServiceServer returns a new grpc service server with a master as a base.
-func NewMasterGRPCServiceServer(nss service.NodeStatusService, listener net.Listener, logger log.Logger) *MasterGRPCServiceServer {
+func NewMasterGRPCServiceServer(fss service.FailureStatusService, nss service.NodeStatusService, listener net.Listener, logger log.Logger) *MasterGRPCServiceServer {
 
 	// Create different grpc services.
 	gnss := grpcservice.NewNodeStatus(nss, types.NodeStateTransformer, logger)
+	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, fss, types.FailureStateTransformer, clock.Base(), logger)
 
 	// TODO: Authentication.
 	// Create the GRPC server.
 	grpcServer := grpc.NewServer()
 	m := &MasterGRPCServiceServer{
-		// Node status service.
-		NodeStatus: gnss,
-		server:     grpcServer,
-		logger:     logger,
-		listener:   listener,
+		NodeStatus:    gnss, // Node status service.
+		FailureStatus: gfss, // Failure status service.
+
+		server:   grpcServer,
+		logger:   logger,
+		listener: listener,
 	}
 
 	// Register our services on the grpc server.
@@ -53,8 +64,11 @@ func NewMasterGRPCServiceServer(nss service.NodeStatusService, listener net.List
 
 // registerServices will register all the services on the grpc server.
 func (m *MasterGRPCServiceServer) registerServices() {
-	// Register node status service
-	pbns.RegisterNodeStatusServer(m.server, m.NodeStatus)
+	// Register node status service.
+	pbns.RegisterNodeStatusServer(m.server, m)
+
+	// Register failure status service.
+	pbfs.RegisterFailureStatusServer(m.server, m)
 }
 
 // Serve implements the GRPCServiceServiceServer interface.

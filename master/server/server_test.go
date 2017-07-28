@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
 
+	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
+	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/server"
 	mservice "github.com/slok/ragnarok/mocks/service"
 	tgrpc "github.com/slok/ragnarok/test/grpc"
@@ -33,6 +35,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 
 	for _, test := range tests {
 		// Create service mocks.
+		mfss := &mservice.FailureStatusService{}
 		mnss := &mservice.NodeStatusService{}
 		var expErr error
 		if test.shouldErr {
@@ -44,7 +47,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
 		require.NoError(err)
 		defer l.Close()
-		s := server.NewMasterGRPCServiceServer(mnss, l, log.Dummy)
+		s := server.NewMasterGRPCServiceServer(mfss, mnss, l, log.Dummy)
 		// Serve in background.
 		go func() {
 			s.Serve()
@@ -93,6 +96,7 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 
 	for _, test := range tests {
 		// Create service mocks.
+		mfss := &mservice.FailureStatusService{}
 		mnss := &mservice.NodeStatusService{}
 		var expErr error
 		if test.shouldErr {
@@ -104,7 +108,7 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
 		require.NoError(err)
 		defer l.Close()
-		s := server.NewMasterGRPCServiceServer(mnss, l, log.Dummy)
+		s := server.NewMasterGRPCServiceServer(mfss, mnss, l, log.Dummy)
 		// Serve in background.
 		go func() {
 			s.Serve()
@@ -131,4 +135,101 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 		// Assert correct calls on our logic.
 		mnss.AssertExpectations(t)
 	}
+}
+
+func _TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
+	assert := assert.New(t)
+	assert.Fail("Need to be implemented")
+}
+
+func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	tests := []struct {
+		failureID  *pbfs.FailureId
+		expFailure *pbfs.Failure
+		expErr     bool
+	}{
+		{
+			failureID: &pbfs.FailureId{Id: "test1"},
+			expFailure: &pbfs.Failure{
+				Id:            "test1",
+				NodeID:        "test1node",
+				Definition:    "test1definition",
+				CurrentState:  pbfs.State_ENABLED,
+				ExpectedState: pbfs.State_DISABLED,
+			},
+			expErr: false,
+		},
+		{
+			failureID: &pbfs.FailureId{Id: "test2"},
+			expFailure: &pbfs.Failure{
+				Id:            "test2",
+				NodeID:        "test2node",
+				Definition:    "test2definition",
+				CurrentState:  pbfs.State_ENABLED,
+				ExpectedState: pbfs.State_DISABLED,
+			},
+			expErr: true,
+		},
+	}
+
+	for _, test := range tests {
+
+		var expErr error
+		if test.expErr {
+			expErr = errors.New("wanted error")
+		}
+
+		// Converti pb Failure to model.Failure.
+		cs, err := types.FailureStateTransformer.PBToFailureState(test.expFailure.GetCurrentState())
+		require.NoError(err)
+		es, err := types.FailureStateTransformer.PBToFailureState(test.expFailure.GetExpectedState())
+		require.NoError(err)
+		expF := &model.Failure{
+			ID:            test.expFailure.GetId(),
+			NodeID:        test.expFailure.GetNodeID(),
+			Definition:    test.expFailure.GetDefinition(),
+			CurrentState:  cs,
+			ExpectedState: es,
+		}
+
+		// Mocks.
+		mnss := &mservice.NodeStatusService{}
+		mfss := &mservice.FailureStatusService{}
+		mfss.On("GetFailure", test.failureID.GetId()).Once().Return(expF, expErr)
+
+		// Create our server.
+		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
+		require.NoError(err)
+		defer l.Close()
+
+		// Create our server
+		s := server.NewMasterGRPCServiceServer(mfss, mnss, l, log.Dummy)
+
+		// Serve in background.
+		go func() {
+			s.Serve()
+		}()
+
+		// Create our client.
+		testCli, err := tgrpc.NewTestClient(l.Addr().String())
+		require.NoError(err)
+		defer testCli.Close()
+
+		// Make the call.
+		f, err := testCli.FailureStatusGetFailure(context.Background(), test.failureID)
+
+		// Check.
+		if test.expErr {
+			assert.Error(err)
+		} else {
+			if assert.NoError(err) {
+				assert.Equal(test.expFailure, f)
+			}
+		}
+		mfss.AssertExpectations(t)
+	}
+
 }

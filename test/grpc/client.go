@@ -29,6 +29,7 @@ func NewTestClient(addr string) (*TestClient, error) {
 	return &TestClient{
 		conn:  conn,
 		nsCli: pbns.NewNodeStatusClient(conn),
+		fsCli: pbfs.NewFailureStatusClient(conn),
 	}, nil
 }
 
