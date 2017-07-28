@@ -38,11 +38,11 @@ type MasterGRPCServiceServer struct {
 }
 
 // NewMasterGRPCServiceServer returns a new grpc service server with a master as a base.
-func NewMasterGRPCServiceServer(fss service.FailureStatusService, nss service.NodeStatusService, listener net.Listener, logger log.Logger) *MasterGRPCServiceServer {
+func NewMasterGRPCServiceServer(fss service.FailureStatusService, nss service.NodeStatusService, listener net.Listener, clock clock.Clock, logger log.Logger) *MasterGRPCServiceServer {
 
 	// Create different grpc services.
 	gnss := grpcservice.NewNodeStatus(nss, types.NodeStateTransformer, logger)
-	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, fss, types.FailureStateTransformer, clock.Base(), logger)
+	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, fss, types.FailureStateTransformer, clock, logger)
 
 	// TODO: Authentication.
 	// Create the GRPC server.
