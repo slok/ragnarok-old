@@ -16,6 +16,7 @@ import (
 	"github.com/slok/ragnarok/failure"
 	mattack "github.com/slok/ragnarok/mocks/attack"
 	mclock "github.com/slok/ragnarok/mocks/clock"
+	"github.com/slok/ragnarok/types"
 )
 
 func TestNewSystemFailure(t *testing.T) {
@@ -61,7 +62,7 @@ func TestNewSystemFailure(t *testing.T) {
 	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		assert.NotNil(f, "A succesful creation shoudln't be an error")
-		assert.Equal(failure.Created, f.State)
+		assert.Equal(types.EnabledFailureState, f.State)
 		reg.AssertExpectations(t)
 	}
 
@@ -129,41 +130,41 @@ func TestNewSystemFailureMultipleAttacksOnBlock(t *testing.T) {
 
 func TestSystemFailureFailState(t *testing.T) {
 	assert := assert.New(t)
-	expectedErr := fmt.Errorf("invalid state. The only valid state for execution is: %s", failure.Created)
+	expectedErr := fmt.Errorf("invalid state. The only valid state for execution is: %s", types.EnabledFailureState)
 	tests := []struct {
-		state         failure.State
+		state         types.FailureState
 		expectedErr   error
-		expectedState failure.State
+		expectedState types.FailureState
 	}{
 		{
-			state:         failure.Created,
+			state:         types.EnabledFailureState,
 			expectedErr:   nil,
-			expectedState: failure.Executing,
+			expectedState: types.ExecutingFailureState,
 		},
 		{
-			state:         failure.Executing,
+			state:         types.ExecutingFailureState,
 			expectedErr:   expectedErr,
-			expectedState: failure.Executing,
+			expectedState: types.ExecutingFailureState,
 		},
 		{
-			state:         failure.Reverted,
+			state:         types.DisabledFailureState,
 			expectedErr:   expectedErr,
-			expectedState: failure.Reverted,
+			expectedState: types.DisabledFailureState,
 		},
 		{
-			state:         failure.Error,
+			state:         types.ErroredFailureState,
 			expectedErr:   expectedErr,
-			expectedState: failure.Error,
+			expectedState: types.ErroredFailureState,
 		},
 		{
-			state:         failure.ErrorReverting,
+			state:         types.ErroredRevertingFailureState,
 			expectedErr:   expectedErr,
-			expectedState: failure.ErrorReverting,
+			expectedState: types.ErroredRevertingFailureState,
 		},
 		{
-			state:         failure.Unknown,
+			state:         types.UnknownFailureState,
 			expectedErr:   expectedErr,
-			expectedState: failure.Unknown,
+			expectedState: types.UnknownFailureState,
 		},
 	}
 
@@ -203,7 +204,7 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
-			assert.Equal(failure.Executing, f.State)
+			assert.Equal(types.ExecutingFailureState, f.State)
 			at.AssertExpectations(t)
 		}
 	}
@@ -235,9 +236,9 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
-			assert.Equal(failure.Executing, f.State)
+			assert.Equal(types.ExecutingFailureState, f.State)
 			if assert.NoError(f.Revert()) {
-				assert.Equal(failure.Reverted, f.State)
+				assert.Equal(types.DisabledFailureState, f.State)
 				at.AssertExpectations(t)
 			}
 		}
@@ -275,7 +276,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 		err = f.Fail()
 		if assert.Error(err) {
 			assert.Equal(errors.New("error aplying failure"), err)
-			assert.Equal(failure.Error, f.State)
+			assert.Equal(types.ErroredFailureState, f.State)
 			at1.AssertExpectations(t)
 			at2.AssertExpectations(t)
 			at3.AssertExpectations(t)
@@ -314,7 +315,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 		err = f.Fail()
 		if assert.Error(err) {
 			assert.Equal(errors.New("error aplying failure & error when trying to revert the applied ones"), err)
-			assert.Equal(failure.ErrorReverting, f.State)
+			assert.Equal(types.ErroredRevertingFailureState, f.State)
 			at1.AssertExpectations(t)
 			at2.AssertExpectations(t)
 			at3.AssertExpectations(t)
