@@ -77,13 +77,13 @@ type SystemFailure struct {
 
 // NewSystemFailure Creates a new SystemFailure object from a failure definition
 // using the base global registry.
-func NewSystemFailure(c Config, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
-	return NewSystemFailureFromReg(c, attack.BaseReg(), l, cl)
+func NewSystemFailure(d Definition, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
+	return NewSystemFailureFromReg(d, attack.BaseReg(), l, cl)
 }
 
 // NewSystemFailureFromReg Creates a new SystemFailure object from a failure definition
 // and a custom registry.
-func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
+func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
 	// Set global logger if no logger
 	if l == nil {
 		l = log.Base()
@@ -94,9 +94,9 @@ func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger, cl clo
 	}
 
 	// Create the attacks.
-	atts := make([]attack.Attacker, len(c.Attacks))
+	atts := make([]attack.Attacker, len(d.Attacks))
 
-	for i, tAC := range c.Attacks {
+	for i, tAC := range d.Attacks {
 		// Check on each attack slice there is only one attack map.
 		if len(tAC) != 1 {
 			return nil, errors.New("configuration attack doesn't have the correct length")
@@ -117,7 +117,7 @@ func NewSystemFailureFromReg(c Config, reg attack.Registry, l log.Logger, cl clo
 	id := "random_id" // TODO
 	f := &SystemFailure{
 		id:       id,
-		timeout:  c.Timeout,
+		timeout:  d.Timeout,
 		attacks:  atts,
 		creation: cl.Now().UTC(),
 		ctx:      context.Background(),

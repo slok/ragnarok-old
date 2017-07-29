@@ -20,7 +20,7 @@ import (
 
 func TestNewSystemFailure(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{
@@ -52,13 +52,13 @@ func TestNewSystemFailure(t *testing.T) {
 	at4 := &mattack.Attacker{}
 	// Mock registry.
 	reg := &mattack.Registry{}
-	reg.On("New", "attack1", c.Attacks[0]["attack1"]).Return(at1, nil)
-	reg.On("New", "attack1", c.Attacks[1]["attack1"]).Return(at2, nil)
-	reg.On("New", "attack2", c.Attacks[2]["attack2"]).Return(at3, nil)
-	reg.On("New", "attack3", c.Attacks[3]["attack3"]).Return(at4, nil)
+	reg.On("New", "attack1", d.Attacks[0]["attack1"]).Return(at1, nil)
+	reg.On("New", "attack1", d.Attacks[1]["attack1"]).Return(at2, nil)
+	reg.On("New", "attack2", d.Attacks[2]["attack2"]).Return(at3, nil)
+	reg.On("New", "attack3", d.Attacks[3]["attack3"]).Return(at4, nil)
 
 	// Test.
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		assert.NotNil(f, "A succesful creation shoudln't be an error")
 		assert.Equal(failure.Created, f.State)
@@ -69,7 +69,7 @@ func TestNewSystemFailure(t *testing.T) {
 
 func TestNewSystemFailureError(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{
@@ -88,12 +88,12 @@ func TestNewSystemFailureError(t *testing.T) {
 
 	// Mock registry.
 	reg := &mattack.Registry{}
-	reg.On("New", "attack1", c.Attacks[0]["attack1"]).Return(nil, nil)
-	reg.On("New", "attack2", c.Attacks[1]["attack2"]).Return(nil, errors.New("error test"))
+	reg.On("New", "attack1", d.Attacks[0]["attack1"]).Return(nil, nil)
+	reg.On("New", "attack2", d.Attacks[1]["attack2"]).Return(nil, errors.New("error test"))
 
 	// Test.
-	_, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
-	reg.AssertNotCalled(t, "New", "attack3", c.Attacks[2]["attack3"])
+	_, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
+	reg.AssertNotCalled(t, "New", "attack3", d.Attacks[2]["attack3"])
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
 	}
@@ -102,7 +102,7 @@ func TestNewSystemFailureError(t *testing.T) {
 
 func TestNewSystemFailureMultipleAttacksOnBlock(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{
@@ -121,7 +121,7 @@ func TestNewSystemFailureMultipleAttacksOnBlock(t *testing.T) {
 	reg := &mattack.Registry{}
 	reg.AssertNotCalled(t, "New")
 	// Test.
-	_, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	_, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
 	}
@@ -168,7 +168,7 @@ func TestSystemFailureFailState(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		f, err := failure.NewSystemFailure(failure.Config{}, nil, nil)
+		f, err := failure.NewSystemFailure(failure.Definition{}, nil, nil)
 		f.State = test.state
 		if assert.NoError(err) {
 			err = f.Fail()
@@ -180,7 +180,7 @@ func TestSystemFailureFailState(t *testing.T) {
 
 func TestSystemFailureAttacksOK(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -200,7 +200,7 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
 			assert.Equal(failure.Executing, f.State)
@@ -211,7 +211,7 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 
 func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -232,7 +232,7 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(f.Fail()) {
 			assert.Equal(failure.Executing, f.State)
@@ -246,7 +246,7 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 
 func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -270,7 +270,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		err = f.Fail()
 		if assert.Error(err) {
@@ -285,7 +285,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 
 func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	assert := assert.New(t)
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -309,7 +309,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, nil)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, nil)
 	if assert.NoError(err) {
 		err = f.Fail()
 		if assert.Error(err) {
@@ -326,7 +326,7 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -348,10 +348,10 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 
 	// Mock clock
 	cl := &mclock.Clock{}
-	cl.On("After", c.Timeout).Return(time.After(0))
+	cl.On("After", d.Timeout).Return(time.After(0))
 	cl.On("Now").Return(time.Now())
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, cl)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, cl)
 	if assert.NoError(err) {
 		err = f.Fail()
 		// Wait until clock timeout to check revert called
@@ -368,7 +368,7 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 func TestSystemFailureFailAttacksFinishForced(t *testing.T) {
 	assert := assert.New(t)
 
-	c := failure.Config{
+	d := failure.Definition{
 		Timeout: 1 * time.Hour,
 		Attacks: []failure.AttackMap{
 			{"attack1": attack.Opts{}},
@@ -387,10 +387,10 @@ func TestSystemFailureFailAttacksFinishForced(t *testing.T) {
 
 	// Mock clock
 	cl := &mclock.Clock{}
-	cl.On("After", c.Timeout).Return(time.After(9999 * time.Hour)) // Never
+	cl.On("After", d.Timeout).Return(time.After(9999 * time.Hour)) // Never
 	cl.On("Now").Return(time.Now())
 
-	f, err := failure.NewSystemFailureFromReg(c, reg, nil, cl)
+	f, err := failure.NewSystemFailureFromReg(d, reg, nil, cl)
 	if assert.NoError(err) {
 		err = f.Fail()
 		f.Revert()
