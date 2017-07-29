@@ -23,6 +23,8 @@ const (
 	DisabledFailureState
 	// ErroredFailureState is when the failure is not making stuff (due to an error).
 	ErroredFailureState
+	// ErroredRevertingFailureState is when the failure is not making stuff (due to an error reverting).
+	ErroredRevertingFailureState
 )
 
 func (f FailureState) String() string {
@@ -37,6 +39,8 @@ func (f FailureState) String() string {
 		return "disabled"
 	case ErroredFailureState:
 		return "errored"
+	case ErroredRevertingFailureState:
+		return "erroredreverting"
 
 	default:
 		return "unknown"
@@ -72,6 +76,8 @@ func (f *failureStateParser) StrToFailureState(state string) (FailureState, erro
 		return DisabledFailureState, nil
 	case "errored":
 		return ErroredFailureState, nil
+	case "erroredreverting":
+		return ErroredRevertingFailureState, nil
 	default:
 		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
@@ -90,6 +96,8 @@ func (f *failureStateParser) PBToFailureState(state pbfs.State) (FailureState, e
 		return DisabledFailureState, nil
 	case pbfs.State_ERRORED:
 		return ErroredFailureState, nil
+	case pbfs.State_ERRORED_REVERTING:
+		return ErroredRevertingFailureState, nil
 	default:
 		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
@@ -108,6 +116,8 @@ func (f *failureStateParser) FailureStateToPB(state FailureState) (pbfs.State, e
 		return pbfs.State_DISABLED, nil
 	case ErroredFailureState:
 		return pbfs.State_ERRORED, nil
+	case ErroredRevertingFailureState:
+		return pbfs.State_ERRORED_REVERTING, nil
 	default:
 		return pbfs.State_UNKNOWN, fmt.Errorf("invalid failure state: %s", state)
 	}

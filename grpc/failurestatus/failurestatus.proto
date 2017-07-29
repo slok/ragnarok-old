@@ -46,6 +46,9 @@ message FailuresExpectedState {
 enum State{
     UNKNOWN = 0;
     ENABLED = 1;
-    REVERTING = 2;
-    DISABLED = 3;
+    EXECUTING = 2;
+    REVERTING = 3;
+    DISABLED = 4;
+    ERRORED = 5;
+    ERRORED_REVERTING = 6;
 }

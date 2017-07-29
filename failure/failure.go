@@ -10,42 +10,8 @@ import (
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
+	"github.com/slok/ragnarok/types"
 )
-
-// State is the current situation of the failure.
-type State int
-
-const (
-	// Created means a not executed failure.
-	Created State = iota
-	// Executing means an executing failure.
-	Executing
-	// Reverted means a reverted failure.
-	Reverted
-	// Error means a failure that errored.
-	Error
-	// ErrorReverting means a failure that errored reverting it.
-	ErrorReverting
-	// Unknown means a staet of the failure that is unknown.
-	Unknown
-)
-
-func (s State) String() string {
-	switch s {
-	case Created:
-		return "created"
-	case Executing:
-		return "executing"
-	case Reverted:
-		return "reverted"
-	case Error:
-		return "error"
-	case ErrorReverting:
-		return "error reverting"
-	default:
-		return "unknown"
-	}
-}
 
 // Failer will implement the way of making a failure of a kind on a system (high level error).
 type Failer interface {
@@ -66,7 +32,7 @@ type SystemFailure struct {
 	creation time.Time
 	executed time.Time
 	finished time.Time
-	State    State
+	State    types.FailureState
 	sync.Mutex
 	log   log.Logger
 	clock clock.Clock
@@ -121,7 +87,7 @@ func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl
 		attacks:  atts,
 		creation: cl.Now().UTC(),
 		ctx:      context.Background(),
-		State:    Created,
+		State:    types.EnabledFailureState,
 		log:      l,
 		clock:    cl,
 	}
@@ -133,10 +99,10 @@ func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl
 func (s *SystemFailure) Fail() error {
 	// Set correct state and only allow execution of not executed failures
 	s.Lock()
-	if s.State != Created {
-		return fmt.Errorf("invalid state. The only valid state for execution is: %s", Created)
+	if s.State != types.EnabledFailureState {
+		return fmt.Errorf("invalid state. The only valid state for execution is: %s", types.EnabledFailureState)
 	}
-	s.State = Executing
+	s.State = types.ExecutingFailureState
 	s.executed = s.clock.Now().UTC()
 	s.Unlock()
 
@@ -176,7 +142,7 @@ func (s *SystemFailure) Fail() error {
 			return fmt.Errorf("error aplying failure & error when trying to revert the applied ones")
 		}
 		s.Lock()
-		s.State = Error
+		s.State = types.ErroredFailureState
 		s.Unlock()
 		return fmt.Errorf("error aplying failure")
 	}
@@ -191,7 +157,7 @@ func (s *SystemFailure) Fail() error {
 		}
 		s.Lock()
 		// Don't revert if not executing
-		if s.State != Executing {
+		if s.State != types.ExecutingFailureState {
 			s.log.Warnf("system failure attempt to finish but this is not in running state: %s", s.State)
 			return
 		}
@@ -217,7 +183,7 @@ func (s *SystemFailure) Revert() error {
 		}(a)
 	}
 
-	s.State = Reverted
+	s.State = types.DisabledFailureState
 	errStr := ""
 	for i := 0; i < len(s.appliedAtts); i++ {
 		if err := <-errsCh; err != nil {
@@ -229,7 +195,7 @@ func (s *SystemFailure) Revert() error {
 	s.Lock()
 	s.finished = s.clock.Now().UTC()
 	if errStr != "" {
-		s.State = ErrorReverting
+		s.State = types.ErroredRevertingFailureState
 		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
 	}
 	s.Unlock()

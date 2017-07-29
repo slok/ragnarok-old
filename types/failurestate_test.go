@@ -19,6 +19,7 @@ func TestFailureStateStringer(t *testing.T) {
 		{types.RevertingFailureState, "reverting"},
 		{types.DisabledFailureState, "disabled"},
 		{types.ErroredFailureState, "errored"},
+		{types.ErroredRevertingFailureState, "erroredreverting"},
 		{types.UnknownFailureState, "unknown"},
 		{99999, "unknown"},
 	}
@@ -42,6 +43,7 @@ func TestFailureStateParseStrToFS(t *testing.T) {
 		{"reverting", types.RevertingFailureState, false},
 		{"disabled", types.DisabledFailureState, false},
 		{"errored", types.ErroredFailureState, false},
+		{"erroredreverting", types.ErroredRevertingFailureState, false},
 		{"no-state", types.UnknownFailureState, true},
 	}
 
@@ -71,6 +73,7 @@ func TestFailureStateParsePBToFS(t *testing.T) {
 		{pbfs.State_REVERTING, types.RevertingFailureState, false},
 		{pbfs.State_DISABLED, types.DisabledFailureState, false},
 		{pbfs.State_ERRORED, types.ErroredFailureState, false},
+		{pbfs.State_ERRORED_REVERTING, types.ErroredRevertingFailureState, false},
 		{pbfs.State_UNKNOWN, types.UnknownFailureState, true},
 		{999999, types.UnknownFailureState, true},
 	}
@@ -101,6 +104,7 @@ func TestFailureStateParseFSToPB(t *testing.T) {
 		{types.RevertingFailureState, pbfs.State_REVERTING, false},
 		{types.DisabledFailureState, pbfs.State_DISABLED, false},
 		{types.ErroredFailureState, pbfs.State_ERRORED, false},
+		{types.ErroredRevertingFailureState, pbfs.State_ERRORED_REVERTING, false},
 		{types.UnknownFailureState, pbfs.State_UNKNOWN, true},
 		{999999, pbfs.State_UNKNOWN, true},
 	}
