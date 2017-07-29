@@ -15,20 +15,29 @@ const (
 	UnknownFailureState FailureState = iota
 	// EnabledFailureState is when the failure should be making stuff.
 	EnabledFailureState
+	// ExecutingFailureState is when the failure its making stuff.
+	ExecutingFailureState
 	// RevertingFailureState is when the failure is being reverted.
 	RevertingFailureState
 	// DisabledFailureState is when the failure is not making stuff (reverted already).
 	DisabledFailureState
+	// ErroredFailureState is when the failure is not making stuff (due to an error).
+	ErroredFailureState
 )
 
 func (f FailureState) String() string {
 	switch f {
 	case EnabledFailureState:
 		return "enabled"
+	case ExecutingFailureState:
+		return "executing"
 	case RevertingFailureState:
 		return "reverting"
 	case DisabledFailureState:
 		return "disabled"
+	case ErroredFailureState:
+		return "errored"
+
 	default:
 		return "unknown"
 	}
@@ -55,10 +64,14 @@ func (f *failureStateParser) StrToFailureState(state string) (FailureState, erro
 	switch strings.ToLower(state) {
 	case "enabled":
 		return EnabledFailureState, nil
+	case "executing":
+		return ExecutingFailureState, nil
 	case "reverting":
 		return RevertingFailureState, nil
 	case "disabled":
 		return DisabledFailureState, nil
+	case "errored":
+		return ErroredFailureState, nil
 	default:
 		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
@@ -69,10 +82,14 @@ func (f *failureStateParser) PBToFailureState(state pbfs.State) (FailureState, e
 	switch state {
 	case pbfs.State_ENABLED:
 		return EnabledFailureState, nil
+	case pbfs.State_EXECUTING:
+		return ExecutingFailureState, nil
 	case pbfs.State_REVERTING:
 		return RevertingFailureState, nil
 	case pbfs.State_DISABLED:
 		return DisabledFailureState, nil
+	case pbfs.State_ERRORED:
+		return ErroredFailureState, nil
 	default:
 		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
@@ -83,10 +100,14 @@ func (f *failureStateParser) FailureStateToPB(state FailureState) (pbfs.State, e
 	switch state {
 	case EnabledFailureState:
 		return pbfs.State_ENABLED, nil
+	case ExecutingFailureState:
+		return pbfs.State_EXECUTING, nil
 	case RevertingFailureState:
 		return pbfs.State_REVERTING, nil
 	case DisabledFailureState:
 		return pbfs.State_DISABLED, nil
+	case ErroredFailureState:
+		return pbfs.State_ERRORED, nil
 	default:
 		return pbfs.State_UNKNOWN, fmt.Errorf("invalid failure state: %s", state)
 	}
