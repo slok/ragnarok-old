@@ -15,15 +15,15 @@ import (
 
 // Failer will implement the way of making a failure of a kind on a system (high level error).
 type Failer interface {
-	// Fail applies the failure to the system
-	Fail() error
+	// Inject applies the failure to the system
+	Inject() error
 
 	// Revert will disable the failure.
 	Revert() error
 }
 
-// SystemFailure is the most basic kind of failure.
-type SystemFailure struct {
+// Injection is a failure that can be applied.
+type Injection struct {
 	id       string
 	timeout  time.Duration
 	attacks  []attack.Attacker
@@ -41,15 +41,15 @@ type SystemFailure struct {
 	appliedAtts []attack.Attacker // Used to track the correct applied attacks
 }
 
-// NewSystemFailure Creates a new SystemFailure object from a failure definition
+// NewInjection Creates a new Failer object from a failure definition
 // using the base global registry.
-func NewSystemFailure(d Definition, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
-	return NewSystemFailureFromReg(d, attack.BaseReg(), l, cl)
+func NewInjection(d Definition, l log.Logger, cl clock.Clock) (*Injection, error) {
+	return NewInjectionFromReg(d, attack.BaseReg(), l, cl)
 }
 
-// NewSystemFailureFromReg Creates a new SystemFailure object from a failure definition
+// NewInjectionFromReg Creates a new SystemFailure object from a failure definition
 // and a custom registry.
-func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl clock.Clock) (*SystemFailure, error) {
+func NewInjectionFromReg(d Definition, reg attack.Registry, l log.Logger, cl clock.Clock) (*Injection, error) {
 	// Set global logger if no logger
 	if l == nil {
 		l = log.Base()
@@ -81,7 +81,7 @@ func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl
 	}
 
 	id := "random_id" // TODO
-	f := &SystemFailure{
+	ij := &Injection{
 		id:       id,
 		timeout:  d.Timeout,
 		attacks:  atts,
@@ -92,29 +92,29 @@ func NewSystemFailureFromReg(d Definition, reg attack.Registry, l log.Logger, cl
 		clock:    cl,
 	}
 
-	return f, nil
+	return ij, nil
 }
 
 // Fail implements Failer interface. Locked operation
-func (s *SystemFailure) Fail() error {
+func (i *Injection) Fail() error {
 	// Set correct state and only allow execution of not executed failures
-	s.Lock()
-	if s.State != types.EnabledFailureState {
+	i.Lock()
+	if i.State != types.EnabledFailureState {
 		return fmt.Errorf("invalid state. The only valid state for execution is: %s", types.EnabledFailureState)
 	}
-	s.State = types.ExecutingFailureState
-	s.executed = s.clock.Now().UTC()
-	s.Unlock()
+	i.State = types.ExecutingFailureState
+	i.executed = i.clock.Now().UTC()
+	i.Unlock()
 
-	s.ctx, s.ctxC = context.WithCancel(s.ctx)
+	i.ctx, i.ctxC = context.WithCancel(i.ctx)
 
 	// channels for the attack results
 	errCh := make(chan attack.Attacker)
 	applyCh := make(chan attack.Attacker)
 
-	for _, a := range s.attacks {
+	for _, a := range i.attacks {
 		go func(a attack.Attacker) {
-			if err := a.Apply(s.ctx); err != nil {
+			if err := a.Apply(i.ctx); err != nil {
 				// Process the error, if there is any error then we need to revert
 				log.Errorf("error aplying attack: %s", err)
 				errCh <- a
@@ -125,79 +125,79 @@ func (s *SystemFailure) Fail() error {
 	}
 
 	// Check for errors, sync with channels
-	for i := 0; i < len(s.attacks); i++ {
+	for j := 0; j < len(i.attacks); j++ {
 		select {
 		case a := <-errCh:
-			s.erroredAtts = append(s.erroredAtts, a)
+			i.erroredAtts = append(i.erroredAtts, a)
 		case a := <-applyCh:
-			s.appliedAtts = append(s.appliedAtts, a)
+			i.appliedAtts = append(i.appliedAtts, a)
 		}
 	}
 
 	// Check if there are any errors, if there are errors then revert the applied ones
-	if len(s.erroredAtts) > 0 {
+	if len(i.erroredAtts) > 0 {
 		// If reverting correct applied ones then return different error
-		if err := s.Revert(); err != nil {
+		if err := i.Revert(); err != nil {
 			log.Error(err)
 			return fmt.Errorf("error aplying failure & error when trying to revert the applied ones")
 		}
-		s.Lock()
-		s.State = types.ErroredFailureState
-		s.Unlock()
+		i.Lock()
+		i.State = types.ErroredFailureState
+		i.Unlock()
 		return fmt.Errorf("error aplying failure")
 	}
 
 	// Set execution timer and start the countdown until the revert
 	go func() {
 		select {
-		case <-s.ctx.Done():
-			s.log.Info("context on system failure done")
-		case <-s.clock.After(s.timeout):
-			s.log.Info("system failure finished")
+		case <-i.ctx.Done():
+			i.log.Info("context on system failure done")
+		case <-i.clock.After(i.timeout):
+			i.log.Info("system failure finished")
 		}
-		s.Lock()
+		i.Lock()
 		// Don't revert if not executing
-		if s.State != types.ExecutingFailureState {
-			s.log.Warnf("system failure attempt to finish but this is not in running state: %s", s.State)
+		if i.State != types.ExecutingFailureState {
+			i.log.Warnf("system failure attempt to finish but this is not in running state: %s", i.State)
 			return
 		}
-		s.Unlock()
-		s.Revert()
+		i.Unlock()
+		i.Revert()
 	}()
-	s.executed = s.clock.Now().UTC()
-	s.log.Infof("execution of '%s' failure started", s.id)
+	i.executed = i.clock.Now().UTC()
+	i.log.Infof("execution of '%s' failure started", i.id)
 	return nil
 }
 
 // Revert implements Revert interface.
-func (s *SystemFailure) Revert() error {
-	s.log.Infof("reverting '%s' failure", s.id)
-	defer s.ctxC()
+func (i *Injection) Revert() error {
+	i.log.Infof("reverting '%s' failure", i.id)
+	defer i.ctxC()
 
 	// Only revert the applied attacks
 	errsCh := make(chan error)
-	for _, a := range s.appliedAtts {
+	for _, a := range i.appliedAtts {
 		// TODO: Retry
 		go func(a attack.Attacker) {
 			errsCh <- a.Revert()
 		}(a)
 	}
 
-	s.State = types.DisabledFailureState
+	i.State = types.DisabledFailureState
 	errStr := ""
-	for i := 0; i < len(s.appliedAtts); i++ {
+	for j := 0; j < len(i.appliedAtts); j++ {
 		if err := <-errsCh; err != nil {
 			errStr = fmt.Sprintf("%s; %s", errStr, err)
 		}
 	}
 
 	var err error
-	s.Lock()
-	s.finished = s.clock.Now().UTC()
+	i.Lock()
+	i.finished = i.clock.Now().UTC()
 	if errStr != "" {
-		s.State = types.ErroredRevertingFailureState
+		i.State = types.ErroredRevertingFailureState
 		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
 	}
-	s.Unlock()
+	i.Unlock()
 	return err
 }
