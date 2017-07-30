@@ -6,14 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/service"
 	mservice "github.com/slok/ragnarok/mocks/service"
 	"github.com/slok/ragnarok/types"
 )
 
-type testNodeFailures map[string][]*model.Failure
+type testNodeFailures map[string][]*failure.Failure
 
 func TestGetNodeFailures(t *testing.T) {
 	assert := assert.New(t)
@@ -27,11 +27,11 @@ func TestGetNodeFailures(t *testing.T) {
 		{
 			expectedFailures: testNodeFailures{
 				"node1": {
-					&model.Failure{ID: "f11", NodeID: "node1"},
+					&failure.Failure{ID: "f11", NodeID: "node1"},
 				},
 				"node2": {
-					&model.Failure{ID: "f21", NodeID: "node2"},
-					&model.Failure{ID: "f21", NodeID: "node2"},
+					&failure.Failure{ID: "f21", NodeID: "node2"},
+					&failure.Failure{ID: "f21", NodeID: "node2"},
 				},
 				"node3": {},
 			},
@@ -62,33 +62,33 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*model.Failure
-		expFailures []*model.Failure
+		failures    []*failure.Failure
+		expFailures []*failure.Failure
 	}{
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
 			},
-			expFailures: []*model.Failure{},
+			expFailures: []*failure.Failure{},
 		},
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
 			},
-			expFailures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			expFailures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
 			},
 		},
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
-				&model.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&model.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
-				&model.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
+				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
 			},
-			expFailures: []*model.Failure{
-				&model.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&model.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			expFailures: []*failure.Failure{
+				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
 			},
 		},
 	}
@@ -111,32 +111,32 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*model.Failure
-		expFailures []*model.Failure
+		failures    []*failure.Failure
+		expFailures []*failure.Failure
 	}{
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
 			},
-			expFailures: []*model.Failure{},
+			expFailures: []*failure.Failure{},
 		},
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
 			},
-			expFailures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			expFailures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
 			},
 		},
 		{
-			failures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
-				&model.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&model.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
-				&model.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			failures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
+				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
 			},
-			expFailures: []*model.Failure{
-				&model.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			expFailures: []*failure.Failure{
+				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
 			},
 		},
 	}
@@ -159,12 +159,12 @@ func TestGetFailure(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		expFailure *model.Failure
+		expFailure *failure.Failure
 		expErr     bool
 	}{
-		{&model.Failure{ID: "test1"}, false},
-		{&model.Failure{ID: "test2"}, true},
-		{&model.Failure{ID: "test3"}, false},
+		{&failure.Failure{ID: "test1"}, false},
+		{&failure.Failure{ID: "test2"}, true},
+		{&failure.Failure{ID: "test3"}, false},
 	}
 
 	for _, test := range tests {

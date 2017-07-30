@@ -6,14 +6,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 
 	"time"
 
 	"github.com/slok/ragnarok/clock"
+	"github.com/slok/ragnarok/failure"
 	pb "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/service/grpc"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mpb "github.com/slok/ragnarok/mocks/grpc/failurestatus"
@@ -23,18 +24,23 @@ import (
 
 func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
+
+	def := failure.Definition{}
+	bs, err := def.Render()
+	require.NoError(err)
 
 	expF := &pb.Failure{
 		Id:            "test1",
 		NodeID:        "node1",
-		Definition:    "definition",
+		Definition:    string(bs),
 		CurrentState:  pb.State_ENABLED,
 		ExpectedState: pb.State_DISABLED,
 	}
-	stubF := &model.Failure{
+	stubF := &failure.Failure{
 		ID:            expF.GetId(),
 		NodeID:        expF.GetNodeID(),
-		Definition:    expF.GetDefinition(),
+		Definition:    def,
 		CurrentState:  types.EnabledFailureState,
 		ExpectedState: types.DisabledFailureState,
 	}
@@ -95,12 +101,12 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 
 	nodeID := &pb.NodeId{Id: "test1"}
 	times := 5
-	efs := []*model.Failure{
-		&model.Failure{ID: "test11"},
-		&model.Failure{ID: "test12"},
+	efs := []*failure.Failure{
+		&failure.Failure{ID: "test11"},
+		&failure.Failure{ID: "test12"},
 	}
-	dfs := []*model.Failure{
-		&model.Failure{ID: "test13"},
+	dfs := []*failure.Failure{
+		&failure.Failure{ID: "test13"},
 	}
 	expectedSt := &pb.FailuresExpectedState{
 		EnabledFailureId:  []string{"test11", "test12"},

@@ -102,10 +102,16 @@ func (f *FailureStatus) GetFailure(ctx context.Context, fID *pb.FailureId) (*pb.
 		return nil, err
 	}
 
+	// Marshal the definition to bytearray.
+	bs, err := flr.Definition.Render()
+	if err != nil {
+		return nil, fmt.Errorf("could not make the call because of marshaling error on definition: %v", err)
+	}
+
 	res := &pb.Failure{
 		Id:            flr.ID,
 		NodeID:        flr.NodeID,
-		Definition:    flr.Definition,
+		Definition:    string(bs),
 		CurrentState:  cSt,
 		ExpectedState: eSt,
 	}

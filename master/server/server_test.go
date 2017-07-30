@@ -12,10 +12,10 @@ import (
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
 
 	"github.com/slok/ragnarok/clock"
+	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/server"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mservice "github.com/slok/ragnarok/mocks/service"
@@ -148,31 +148,31 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 	tests := []struct {
 		name          string
 		nID           *pbfs.NodeId
-		expEF         []*model.Failure
-		expDF         []*model.Failure
+		expEF         []*failure.Failure
+		expDF         []*failure.Failure
 		stUpdateTimes int
 	}{
 		{
 			name: "receive one failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test1"},
-			expEF: []*model.Failure{
-				&model.Failure{ID: "f1"},
-				&model.Failure{ID: "f2"},
+			expEF: []*failure.Failure{
+				&failure.Failure{ID: "f1"},
+				&failure.Failure{ID: "f2"},
 			},
-			expDF: []*model.Failure{
-				&model.Failure{ID: "f3"},
+			expDF: []*failure.Failure{
+				&failure.Failure{ID: "f3"},
 			},
 			stUpdateTimes: 1,
 		},
 		{
 			name: "receive multiple failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test2"},
-			expEF: []*model.Failure{
-				&model.Failure{ID: "f1"},
-				&model.Failure{ID: "f2"},
+			expEF: []*failure.Failure{
+				&failure.Failure{ID: "f1"},
+				&failure.Failure{ID: "f2"},
 			},
-			expDF: []*model.Failure{
-				&model.Failure{ID: "f3"},
+			expDF: []*failure.Failure{
+				&failure.Failure{ID: "f3"},
 			},
 			stUpdateTimes: 5,
 		},
@@ -261,7 +261,7 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			expFailure: &pbfs.Failure{
 				Id:            "test1",
 				NodeID:        "test1node",
-				Definition:    "test1definition",
+				Definition:    "{}\n",
 				CurrentState:  pbfs.State_ENABLED,
 				ExpectedState: pbfs.State_DISABLED,
 			},
@@ -273,7 +273,7 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			expFailure: &pbfs.Failure{
 				Id:            "test2",
 				NodeID:        "test2node",
-				Definition:    "test2definition",
+				Definition:    "{}\n",
 				CurrentState:  pbfs.State_ENABLED,
 				ExpectedState: pbfs.State_DISABLED,
 			},
@@ -289,15 +289,19 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 				expErr = errors.New("wanted error")
 			}
 
-			// Convert pb Failure to model.Failure.
+			// Convert pb Failure to failure.Failure.
 			cs, err := types.FailureStateTransformer.PBToFailureState(test.expFailure.GetCurrentState())
 			require.NoError(err)
 			es, err := types.FailureStateTransformer.PBToFailureState(test.expFailure.GetExpectedState())
 			require.NoError(err)
-			expF := &model.Failure{
+
+			def, err := failure.ReadDefinition([]byte(test.expFailure.Definition))
+			require.NoError(err)
+
+			expF := &failure.Failure{
 				ID:            test.expFailure.GetId(),
 				NodeID:        test.expFailure.GetNodeID(),
-				Definition:    test.expFailure.GetDefinition(),
+				Definition:    def,
 				CurrentState:  cs,
 				ExpectedState: es,
 			}

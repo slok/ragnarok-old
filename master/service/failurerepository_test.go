@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/slok/ragnarok/master/model"
+	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/types"
 )
@@ -26,10 +26,10 @@ func TestStoreFailure(t *testing.T) {
 	for _, test := range tests {
 		r := service.NewMemFailureRepository()
 		for i := 0; i < test.quantity; i++ {
-			f := &model.Failure{
+			f := &failure.Failure{
 				ID:            fmt.Sprintf("id-%d", i),
 				NodeID:        fmt.Sprintf("nodeid-%d", i),
-				Definition:    fmt.Sprintf("definition-%d", i),
+				Definition:    failure.Definition{},
 				CurrentState:  types.UnknownFailureState,
 				ExpectedState: types.EnabledFailureState,
 			}
@@ -54,7 +54,7 @@ func TestDeleteFailure(t *testing.T) {
 	r := service.NewMemFailureRepository()
 
 	// Store a failure and check is there.
-	f := &model.Failure{ID: "test"}
+	f := &failure.Failure{ID: "test"}
 	err := r.Store(f)
 	require.NoError(err)
 	_, ok := r.Get(f.ID)
@@ -89,10 +89,10 @@ func TestGetAllFailures(t *testing.T) {
 	for _, test := range tests {
 		r := service.NewMemFailureRepository()
 		for i := 0; i < test.quantity; i++ {
-			f := &model.Failure{
+			f := &failure.Failure{
 				ID:            fmt.Sprintf("id-%d", i),
 				NodeID:        fmt.Sprintf("nodeid-%d", i),
-				Definition:    fmt.Sprintf("definition-%d", i),
+				Definition:    failure.Definition{},
 				CurrentState:  types.UnknownFailureState,
 				ExpectedState: types.EnabledFailureState,
 			}
@@ -146,10 +146,10 @@ func TestGetAllByNodeFailures(t *testing.T) {
 		for nID, q := range test.nodeFailures {
 			// For each failure per node.
 			for i := 0; i < q; i++ {
-				f := &model.Failure{
+				f := &failure.Failure{
 					ID:            fmt.Sprintf("id-%d", i),
 					NodeID:        nID,
-					Definition:    fmt.Sprintf("definition-%s-f%d-", nID, i),
+					Definition:    failure.Definition{},
 					CurrentState:  types.UnknownFailureState,
 					ExpectedState: types.EnabledFailureState,
 				}
@@ -184,9 +184,9 @@ func TestDeleteFailureByNode(t *testing.T) {
 	r := service.NewMemFailureRepository()
 
 	// Store failures on different nodes.
-	f11 := &model.Failure{ID: "test1", NodeID: "nid1"}
-	f21 := &model.Failure{ID: "test2", NodeID: "nid2"}
-	f22 := &model.Failure{ID: "test3", NodeID: "nid2"}
+	f11 := &failure.Failure{ID: "test1", NodeID: "nid1"}
+	f21 := &failure.Failure{ID: "test2", NodeID: "nid2"}
+	f22 := &failure.Failure{ID: "test3", NodeID: "nid2"}
 	require.NoError(r.Store(f11))
 	require.NoError(r.Store(f21))
 	require.NoError(r.Store(f22))
