@@ -39,7 +39,28 @@ type transformer struct {
 
 // FailureToPB implements Parser interface.
 func (t *transformer) FailureToPB(fl *Failure) (*pbfs.Failure, error) {
-	return nil, nil
+	bs, err := fl.Definition.Render()
+	if err != nil {
+		return nil, err
+	}
+
+	cs, err := t.stateParser.FailureStateToPB(fl.CurrentState)
+	if err != nil {
+		return nil, err
+	}
+
+	es, err := t.stateParser.FailureStateToPB(fl.ExpectedState)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbfs.Failure{
+		Id:            fl.ID,
+		NodeID:        fl.NodeID,
+		Definition:    string(bs),
+		CurrentState:  cs,
+		ExpectedState: es,
+	}, nil
 }
 
 // PBToFailure implements Parser interface.
