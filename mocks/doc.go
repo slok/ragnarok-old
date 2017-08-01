@@ -9,6 +9,9 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 //go:generate mockery -output ./attack -outpkg attack -dir ../attack -name Creater
 //go:generate mockery -output ./attack -outpkg attack -dir ../attack -name Attacker
 
+// Failure mocks
+//go:generate mockery -output ./failure -outpkg failure -dir ../failure -name Parser
+
 // Clock mocks
 //go:generate mockery -output ./clock -outpkg clock -dir ../clock -name Clock
 
