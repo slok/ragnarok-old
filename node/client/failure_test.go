@@ -17,6 +17,7 @@ import (
 	"github.com/slok/ragnarok/log"
 	mfailure "github.com/slok/ragnarok/mocks/failure"
 	mpbfs "github.com/slok/ragnarok/mocks/grpc/failurestatus"
+	mclient "github.com/slok/ragnarok/mocks/node/client"
 	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/types"
 )
@@ -91,7 +92,7 @@ func TestGetFailure(t *testing.T) {
 			mp.On("PBToFailure", test.failure).Return(test.expFailure, transErr)
 
 			// Create the service
-			c, err := client.NewFailureGRPC(0, mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			c, err := client.NewFailureGRPC(mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
 
 			// Make the call.
@@ -112,10 +113,9 @@ func TestGetFailure(t *testing.T) {
 
 func TestFailureStateListStreamingOK(t *testing.T) {
 	tests := []struct {
-		name        string
-		nodeID      string
-		statuses    []map[string][]string
-		expStatuses map[string][]string
+		name     string
+		nodeID   string
+		statuses []map[string][]string
 	}{
 		{
 			name:   "RPC call and stream correctly.",
@@ -130,9 +130,77 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 					"disabled": []string{"id7"},
 				},
 			},
-			expStatuses: map[string][]string{
-				"enabled":  []string{"id1", "id2", "id5", "id6", "id8"},
-				"disabled": []string{"id3", "id4", "id7"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Used to track the goroutine call finished.
+			finishedC := make(chan struct{})
+
+			// Create mocks.
+			mp := &mfailure.Parser{}
+			// Mock the streaming of batches from the server.
+			// Mock the  handler of the states in order to verify the proper handling of the stream statuses.
+			mstream := &mpbfs.FailureStatus_FailureStateListClient{}
+			mfsh := &mclient.FailureExpectedStateHandler{}
+			mstream.On("Context").Return(context.Background())
+			for _, st := range test.statuses {
+				fs := &pbfs.FailuresExpectedState{
+					EnabledFailureId:  st["enabled"],
+					DisabledFailureId: st["disabled"],
+				}
+				mstream.On("Recv").Once().Return(fs, nil)
+				mfsh.On("ProcessFailureExpectedStates", st["enabled"], st["disabled"]).Once().Return(nil)
+			}
+			// Ignore next streaming read receive calls.
+			mstream.On("Recv").Return(&pbfs.FailuresExpectedState{}, nil).Run(func(args mock.Arguments) {
+				finishedC <- struct{}{}
+			})
+
+			// Mock the server GRPC real call.
+			mc := &mpbfs.FailureStatusClient{}
+			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Once().Return(mstream, nil)
+
+			// Create the service
+			c, err := client.NewFailureGRPC(mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			require.NoError(err)
+			err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, nil)
+			if assert.NoError(err) {
+				// Wait to the stream activity.
+				select {
+				case <-time.After(10 * time.Millisecond):
+					assert.Fail("timeout waiting to receive data from the server stream")
+				case <-finishedC:
+				}
+
+				// Check the correct handling of the states.
+				mfsh.AssertExpectations(t)
+			}
+		})
+	}
+}
+
+func TestFailureStateListStreamingOKWithStop(t *testing.T) {
+	tests := []struct {
+		name     string
+		nodeID   string
+		statuses []map[string][]string
+	}{
+		{
+			name:   "RPC call and stream correctly.",
+			nodeID: "test1",
+			statuses: []map[string][]string{
+				map[string][]string{
+					"enabled":  []string{"id1", "id2", "id5"},
+					"disabled": []string{"id3", "id4"},
+				},
+				map[string][]string{
+					"enabled":  []string{"id6", "id8"},
+					"disabled": []string{"id7"},
+				},
 			},
 		},
 	}
@@ -145,7 +213,11 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 			finishedC := make(chan struct{})
 
 			// Create mocks.
+			mp := &mfailure.Parser{}
+			// Mock the streaming of batches from the server.
+			// Mock the  handler of the states in order to verify the proper handling of the stream statuses.
 			mstream := &mpbfs.FailureStatus_FailureStateListClient{}
+			mfsh := &mclient.FailureExpectedStateHandler{}
 			mstream.On("Context").Return(context.Background())
 			for _, st := range test.statuses {
 				fs := &pbfs.FailuresExpectedState{
@@ -153,20 +225,26 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 					DisabledFailureId: st["disabled"],
 				}
 				mstream.On("Recv").Once().Return(fs, nil)
+				mfsh.On("ProcessFailureExpectedStates", st["enabled"], st["disabled"]).Once().Return(nil)
 			}
+			// Ignore next streaming read receive calls.
 			mstream.On("Recv").Return(&pbfs.FailuresExpectedState{}, nil).Run(func(args mock.Arguments) {
-				finishedC <- struct{}{}
-			}) // Ignore next receive calls.
+				select {
+				case finishedC <- struct{}{}:
+				default:
+				}
+			})
+
+			// Mock the server GRPC real call.
 			mc := &mpbfs.FailureStatusClient{}
-			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Once().Return(mstream, nil)
-			mp := &mfailure.Parser{}
+			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Return(mstream, nil)
 
 			// Create the service
-			c, err := client.NewFailureGRPC(5, mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			stopC := make(chan struct{})
+			c, err := client.NewFailureGRPC(mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
-			esC, dsC, err := c.FailureStateList(test.nodeID)
+			err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
 			if assert.NoError(err) {
-
 				// Wait to the stream activity.
 				select {
 				case <-time.After(10 * time.Millisecond):
@@ -174,95 +252,17 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 				case <-finishedC:
 				}
 
-				// Get the data from our channels and check.
-				gotEnabled := []string{}
-				gotDisabled := []string{}
+				// Check the correct handling of the states.
+				mfsh.AssertExpectations(t)
 
-				for {
-					select {
-					case st := <-esC:
-						gotEnabled = append(gotEnabled, st)
-					case st := <-dsC:
-						gotDisabled = append(gotDisabled, st)
-					case <-time.After(10 * time.Millisecond): // Give some time to process all the messages.
-						if assert.NoError(err) {
-							gotStatuses := map[string][]string{
-								"enabled":  gotEnabled,
-								"disabled": gotDisabled,
-							}
-							assert.Equal(test.expStatuses, gotStatuses)
-						}
-						return
-					}
-				}
-			}
-
-		})
-	}
-}
-
-func TestFailureStateListStreamingContextDone(t *testing.T) {
-	tests := []struct {
-		name     string
-		nodeID   string
-		errClose bool
-		expErr   bool
-	}{
-		{
-			name:     "GRPC stream closed the context, client closes connection ok",
-			nodeID:   "testnode1",
-			errClose: false,
-			expErr:   false,
-		},
-		{
-			name:     "GRPC stream closed the context, error when client closes connection",
-			nodeID:   "testnode1",
-			errClose: true,
-			expErr:   false,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			assert := assert.New(t)
-			require := require.New(t)
-
-			var errClose error
-			if test.errClose {
-				errClose = errors.New("wanted error")
-			}
-
-			finishedTestC := make(chan struct{}) // Used to know when the tests has finished.
-
-			// Create mocks.
-			mstream := &mpbfs.FailureStatus_FailureStateListClient{}
-			ctx, ccl := context.WithCancel(context.Background())
-			ccl()
-			mstream.On("Context").Once().Return(ctx)
-			mstream.On("CloseSend").Once().Return(errClose).Run(func(args mock.Arguments) {
-				// Send the signal of tests is finished.
-				finishedTestC <- struct{}{}
-			})
-			mc := &mpbfs.FailureStatusClient{}
-			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Once().Return(mstream, nil)
-			mp := &mfailure.Parser{}
-
-			// Create the service
-			c, err := client.NewFailureGRPC(0, mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
-			require.NoError(err)
-			_, _, err = c.FailureStateList(test.nodeID)
-			if test.expErr {
-				assert.Error(err)
-			} else {
+				// Check stop is ok.
+				err := c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
+				require.Error(err)
+				stopC <- struct{}{}
+				time.Sleep(5 * time.Millisecond)
+				err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
 				assert.NoError(err)
 			}
-			// Wait to finish the tests.
-			select {
-			case <-time.After(10 * time.Millisecond):
-				assert.Fail("timeout waiting to finish tets")
-			case <-finishedTestC:
-			}
-			mstream.AssertExpectations(t)
 		})
 	}
 }

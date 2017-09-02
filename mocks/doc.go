@@ -20,6 +20,7 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 
 // Node mocks
 //go:generate mockery -output ./node/client -outpkg client -dir ../node/client -name Status
+//go:generate mockery -output ./node/client -outpkg client -dir ../node/client -name FailureExpectedStateHandler
 
 // Services mocks
 //go:generate mockery -output ./service -outpkg service -dir ../master/service -name NodeStatusService

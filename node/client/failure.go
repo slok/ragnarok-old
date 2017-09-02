@@ -15,15 +15,22 @@ import (
 	"github.com/slok/ragnarok/types"
 )
 
+// FailureExpectedStateHandler is a custom type that knows how to handle the expected state
+// of the failures.
+type FailureExpectedStateHandler interface {
+	// ProcessFailureExpectedStates processes a list of failures that should be in the expected state
+	// this is enabled or disabled (each one will be passed in a list of that state).
+	ProcessFailureExpectedStates(enabledStateIDs, disabledStateIDs []string) error
+}
+
 // Failure interface will implement the required methods to be able to
 // communicate with a failure status server.
 type Failure interface {
 	// GetFailure requests and returns a Failure usinig the ID of the failure
 	GetFailure(id string) (*failure.Failure, error)
-	// FailureStateList will make a request and return two channels, the first one will
-	// stream the failures that are in enabled state, and the second one the ones that are
-	// in disabled state.
-	FailureStateList(nodeID string) (enabledFs <-chan string, disabledFs <-chan string, err error)
+	// ProcessFailureExpectedStateStreaming will make a request and start reading the stream from the GRPC to handle the states.
+	// It receives a handler that will be executed on every status. also receives a stop channel that will cancel the stream processing.
+	ProcessFailureExpectedStateStreaming(nodeID string, handler FailureExpectedStateHandler, stopCh <-chan struct{}) error
 }
 
 // FailureGRPC staisfies Failure interface with GRPC communication.
@@ -34,29 +41,27 @@ type FailureGRPC struct {
 	clock         clock.Clock
 	logger        log.Logger
 
-	stStreaming      bool
-	streamMu         sync.Mutex
-	finishStreamingC chan struct{}
-	// bufferLen is the number of statuses that the returning failure status channels can buffer.
-	bufferLen int
+	// isStreaming will track the state when there is streaming already for a given node.
+	// TODO: change to sync maps when upgrading to Go 1.9
+	isStreaming     map[string]bool
+	isStreamingLock sync.Mutex
 }
 
 // NewFailureGRPCFromConnection returns a new FailureGRPC using a grpc connection.
-func NewFailureGRPCFromConnection(bufferLen int, connection *grpc.ClientConn, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
+func NewFailureGRPCFromConnection(connection *grpc.ClientConn, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
 	c := pbfs.NewFailureStatusClient(connection)
-	return NewFailureGRPC(bufferLen, c, failureParser, stateParser, clock, logger)
+	return NewFailureGRPC(c, failureParser, stateParser, clock, logger)
 }
 
 // NewFailureGRPC returns a new FailureGRPC.
-func NewFailureGRPC(bufferLen int, client pbfs.FailureStatusClient, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
+func NewFailureGRPC(client pbfs.FailureStatusClient, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
 	return &FailureGRPC{
-		c:                client,
-		stateParser:      stateParser,
-		failureParser:    failureParser,
-		clock:            clock,
-		logger:           logger,
-		finishStreamingC: make(chan struct{}),
-		bufferLen:        bufferLen,
+		c:             client,
+		stateParser:   stateParser,
+		failureParser: failureParser,
+		clock:         clock,
+		logger:        logger,
+		isStreaming:   map[string]bool{},
 	}, nil
 }
 
@@ -81,84 +86,72 @@ func (f *FailureGRPC) GetFailure(id string) (*failure.Failure, error) {
 	return res, nil
 }
 
-// FailureStateList satisfies Failure interface.
-func (f *FailureGRPC) FailureStateList(nodeID string) (<-chan string, <-chan string, error) {
+// ProcessFailureExpectedStateStreaming satisfies Failure interface.
+func (f *FailureGRPC) ProcessFailureExpectedStateStreaming(nodeID string, handler FailureExpectedStateHandler, stopCh <-chan struct{}) error {
 	logger := f.logger.WithField("call", "failure-state-list").WithField("NodeID", nodeID)
 	logger.Debug("making GRPC service call")
 
-	// Before creating a stream, check if we are already streaming, if we are
-	// straming the statuses then finish previous stream
-	f.streamMu.Lock()
-	isStreaming := f.stStreaming
-	f.streamMu.Unlock()
-	if isStreaming {
-		f.finishStreamingC <- struct{}{}
+	f.isStreamingLock.Lock()
+	is, ok := f.isStreaming[nodeID]
+	f.isStreamingLock.Unlock()
+	if ok && is {
+		return fmt.Errorf("already streaming node %s", nodeID)
 	}
 
 	// Make the call.
 	nid := &pbfs.NodeId{Id: nodeID}
 	stream, err := f.c.FailureStateList(context.Background(), nid)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	// Make the channels.
-	esC := make(chan string, f.bufferLen)
-	dsC := make(chan string, f.bufferLen)
+	// Start processing the stream
+	f.isStreamingLock.Lock()
+	f.isStreaming[nodeID] = true
+	f.isStreamingLock.Unlock()
+
+	f.logger.Info("failure status streaming started")
 
 	go func() {
-		// Set the streaming status to false.
 		defer func() {
-			f.streamMu.Lock()
-			f.stStreaming = false
-			f.streamMu.Unlock()
+			f.isStreamingLock.Lock()
+			f.isStreaming[nodeID] = false
+			f.isStreamingLock.Unlock()
 		}()
-
-		// Start capturing the streaming
-		f.logger.Info("failure status streaming started")
-		f.streamMu.Lock()
-		f.stStreaming = true
-		f.streamMu.Unlock()
-
 		for {
-			// Check if wi have finished.
+			// Check if we have finished.
 			select {
 			case <-stream.Context().Done():
-				f.logger.Warnf("failure status streaming terminated due con context cancelation")
+				f.logger.Warnf("failure status streaming terminated due context cancelation")
 				if err := stream.CloseSend(); err != nil {
 					f.logger.Errorf("error when closing stream: %v", err)
 				}
 				return
-			case <-f.finishStreamingC:
-				f.logger.Info("failure status streaming finished")
-				if err := stream.CloseSend(); err != nil {
-					f.logger.Errorf("error when closing stream: %v", err)
-				}
+			case <-stopCh:
+				f.logger.Info("failure status streaming stopped")
+				return
 			default:
 			}
 
 			fs, err := stream.Recv()
-			if fs == nil {
+			if fs == nil || len(fs.EnabledFailureId) == 0 && len(fs.EnabledFailureId) == 0 {
 				continue
 			}
 
 			if err == io.EOF {
+				f.logger.Info("failure status streaming finished (server EOF)")
 				return
 			} else if err != nil {
 				f.logger.Errorf("error receiving statuses: %v", err)
 				// TODO: Reconnect
 				return
 			}
-			// Send failures in the required channel.
-			for _, fl := range fs.EnabledFailureId {
-				esC <- fl
-			}
 
-			for _, fl := range fs.DisabledFailureId {
-				dsC <- fl
+			if err := handler.ProcessFailureExpectedStates(fs.EnabledFailureId, fs.DisabledFailureId); err != nil {
+				f.logger.Errorf("error handling node %s failures: %v", nodeID, err)
 			}
 		}
 	}()
 
-	return esC, dsC, nil
+	return nil
 }
