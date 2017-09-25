@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/master/flags"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
@@ -15,15 +16,17 @@ import (
 
 func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
 	// Create the services.
-	reg := service.NewMemNodeRepository()
-	nss := service.NewNodeStatus(cfg, reg, logger)
+	nodeReg := service.NewMemNodeRepository()
+	failureReg := service.NewMemFailureRepository()
+	nss := service.NewNodeStatus(cfg, nodeReg, logger)
+	fss := service.NewFailureStatus(failureReg, logger)
 
 	// Create the GRPC service server
 	l, err := net.Listen("tcp", cfg.RPCListenAddress)
 	if err != nil {
 		return nil, err
 	}
-	srvServer := server.NewMasterGRPCServiceServer(nss, l, logger)
+	srvServer := server.NewMasterGRPCServiceServer(fss, nss, l, clock.Base(), logger)
 	return srvServer, nil
 }
 

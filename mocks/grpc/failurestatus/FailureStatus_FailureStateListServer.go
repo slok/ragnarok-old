@@ -42,11 +42,11 @@ func (_m *FailureStatus_FailureStateListServer) RecvMsg(m interface{}) error {
 }
 
 // Send provides a mock function with given fields: _a0
-func (_m *FailureStatus_FailureStateListServer) Send(_a0 *failure.FailuresExpectedState) error {
+func (_m *FailureStatus_FailureStateListServer) Send(_a0 *failure.FailuresState) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*failure.FailuresExpectedState) error); ok {
+	if rf, ok := ret.Get(0).(func(*failure.FailuresState) error); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)

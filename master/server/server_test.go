@@ -148,31 +148,37 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 	tests := []struct {
 		name          string
 		nID           *pbfs.NodeId
-		expEF         []*failure.Failure
-		expDF         []*failure.Failure
+		fs            []*failure.Failure
+		expFs         []*pbfs.Failure
 		stUpdateTimes int
 	}{
 		{
 			name: "receive one failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test1"},
-			expEF: []*failure.Failure{
-				&failure.Failure{ID: "f1"},
-				&failure.Failure{ID: "f2"},
+			fs: []*failure.Failure{
+				&failure.Failure{ID: "f1", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f2", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f3", CurrentState: types.EnabledFailureState, ExpectedState: types.DisabledFailureState},
 			},
-			expDF: []*failure.Failure{
-				&failure.Failure{ID: "f3"},
+			expFs: []*pbfs.Failure{
+				&pbfs.Failure{Id: "f1", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
+				&pbfs.Failure{Id: "f2", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
+				&pbfs.Failure{Id: "f3", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_DISABLED, Definition: "{}\n"},
 			},
 			stUpdateTimes: 1,
 		},
 		{
 			name: "receive multiple failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test2"},
-			expEF: []*failure.Failure{
-				&failure.Failure{ID: "f1"},
-				&failure.Failure{ID: "f2"},
+			fs: []*failure.Failure{
+				&failure.Failure{ID: "f1", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f2", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+				&failure.Failure{ID: "f3", CurrentState: types.EnabledFailureState, ExpectedState: types.DisabledFailureState},
 			},
-			expDF: []*failure.Failure{
-				&failure.Failure{ID: "f3"},
+			expFs: []*pbfs.Failure{
+				&pbfs.Failure{Id: "f1", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
+				&pbfs.Failure{Id: "f2", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
+				&pbfs.Failure{Id: "f3", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_DISABLED, Definition: "{}\n"},
 			},
 			stUpdateTimes: 5,
 		},
@@ -184,8 +190,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 			// Mocks.
 			mnss := &mservice.NodeStatusService{}
 			mfss := &mservice.FailureStatusService{}
-			mfss.On("GetNodeExpectedEnabledFailures", test.nID.GetId()).Times(test.stUpdateTimes).Return(test.expEF, nil)
-			mfss.On("GetNodeExpectedDisabledFailures", test.nID.GetId()).Times(test.stUpdateTimes).Return(test.expDF, nil)
+			mfss.On("GetNodeFailures", test.nID.GetId()).Times(test.stUpdateTimes).Return(test.fs, nil)
 
 			mclk := &mclock.Clock{}
 			mclkT := make(chan time.Time)
@@ -224,19 +229,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 				for i := 0; i < test.stUpdateTimes; i++ {
 					fes, err := stream.Recv()
 					assert.NoError(err)
-
-					// Generate the expected state.
-					expFes := &pbfs.FailuresExpectedState{
-						DisabledFailureId: []string{},
-						EnabledFailureId:  []string{},
-					}
-					for _, i := range test.expEF {
-						expFes.EnabledFailureId = append(expFes.EnabledFailureId, i.ID)
-					}
-					for _, i := range test.expDF {
-						expFes.DisabledFailureId = append(expFes.DisabledFailureId, i.ID)
-					}
-					assert.Equal(expFes, fes)
+					assert.Equal(test.expFs, fes.GetFailures())
 				}
 			}
 			mfss.AssertExpectations(t)

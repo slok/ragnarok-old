@@ -15,12 +15,12 @@ import (
 	"github.com/slok/ragnarok/types"
 )
 
-// FailureExpectedStateHandler is a custom type that knows how to handle the expected state
+// FailureStateHandler is a custom type that knows how to handle the expected state
 // of the failures.
-type FailureExpectedStateHandler interface {
-	// ProcessFailureExpectedStates processes a list of failures that should be in the expected state
+type FailureStateHandler interface {
+	// ProcessFailureStates processes a list of failures that should be in the expected state
 	// this is enabled or disabled (each one will be passed in a list of that state).
-	ProcessFailureExpectedStates(enabledStateIDs, disabledStateIDs []string) error
+	ProcessFailureStates(failures []*failure.Failure) error
 }
 
 // Failure interface will implement the required methods to be able to
@@ -28,9 +28,9 @@ type FailureExpectedStateHandler interface {
 type Failure interface {
 	// GetFailure requests and returns a Failure usinig the ID of the failure
 	GetFailure(id string) (*failure.Failure, error)
-	// ProcessFailureExpectedStateStreaming will make a request and start reading the stream from the GRPC to handle the states.
+	// ProcessFailureStateStreaming will make a request and start reading the stream from the GRPC to handle the states.
 	// It receives a handler that will be executed on every status. also receives a stop channel that will cancel the stream processing.
-	ProcessFailureExpectedStateStreaming(nodeID string, handler FailureExpectedStateHandler, stopCh <-chan struct{}) error
+	ProcessFailureStateStreaming(nodeID string, handler FailureStateHandler, stopCh <-chan struct{}) error
 }
 
 // FailureGRPC staisfies Failure interface with GRPC communication.
@@ -86,8 +86,8 @@ func (f *FailureGRPC) GetFailure(id string) (*failure.Failure, error) {
 	return res, nil
 }
 
-// ProcessFailureExpectedStateStreaming satisfies Failure interface.
-func (f *FailureGRPC) ProcessFailureExpectedStateStreaming(nodeID string, handler FailureExpectedStateHandler, stopCh <-chan struct{}) error {
+// ProcessFailureStateStreaming satisfies Failure interface.
+func (f *FailureGRPC) ProcessFailureStateStreaming(nodeID string, handler FailureStateHandler, stopCh <-chan struct{}) error {
 	logger := f.logger.WithField("call", "failure-state-list").WithField("NodeID", nodeID)
 	logger.Debug("making GRPC service call")
 
@@ -134,7 +134,8 @@ func (f *FailureGRPC) ProcessFailureExpectedStateStreaming(nodeID string, handle
 			}
 
 			fs, err := stream.Recv()
-			if fs == nil || len(fs.EnabledFailureId) == 0 && len(fs.EnabledFailureId) == 0 {
+			fss := fs.GetFailures()
+			if fss == nil || len(fss) == 0 {
 				continue
 			}
 
@@ -146,8 +147,17 @@ func (f *FailureGRPC) ProcessFailureExpectedStateStreaming(nodeID string, handle
 				// TODO: Reconnect
 				return
 			}
+			transFs := make([]*failure.Failure, len(fss))
+			for i, fl := range fss {
+				res, err := f.failureParser.PBToFailure(fl)
+				if err != nil {
+					f.logger.Errorf("could not convert protobuf failure to internal failure type: %v", err)
+				} else {
+					transFs[i] = res
+				}
+			}
 
-			if err := handler.ProcessFailureExpectedStates(fs.EnabledFailureId, fs.DisabledFailureId); err != nil {
+			if err := handler.ProcessFailureStates(transFs); err != nil {
 				f.logger.Errorf("error handling node %s failures: %v", nodeID, err)
 			}
 		}

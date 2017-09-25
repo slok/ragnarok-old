@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/slok/ragnarok/clock"
+	"github.com/slok/ragnarok/failure"
 	pb "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
@@ -16,6 +17,7 @@ import (
 // FailureStatus implements the required methods for the FailureStatus GRPC service.
 type FailureStatus struct {
 	service             service.FailureStatusService // The service that has the real logic.
+	fParser             failure.Parser
 	fsParser            types.FailureStateParser
 	stateUpdateInterval time.Duration // The interval the server will send the sate of the failures to the client.
 	clock               clock.Clock
@@ -23,9 +25,10 @@ type FailureStatus struct {
 }
 
 // NewFailureStatus returns a new FailureStatus.
-func NewFailureStatus(stateUpdateInterval time.Duration, service service.FailureStatusService, fsParser types.FailureStateParser, clock clock.Clock, logger log.Logger) *FailureStatus {
+func NewFailureStatus(stateUpdateInterval time.Duration, service service.FailureStatusService, fParser failure.Parser, fsParser types.FailureStateParser, clock clock.Clock, logger log.Logger) *FailureStatus {
 	return &FailureStatus{
 		service:             service,
+		fParser:             fParser,
 		fsParser:            fsParser,
 		stateUpdateInterval: stateUpdateInterval,
 		clock:               clock,
@@ -33,22 +36,17 @@ func NewFailureStatus(stateUpdateInterval time.Duration, service service.Failure
 	}
 }
 
-func (f *FailureStatus) getEnabledFailureIDs(nodeID string) []string {
-	fs := f.service.GetNodeExpectedEnabledFailures(nodeID)
-	res := make([]string, len(fs))
-	for i, flr := range fs {
-		res[i] = flr.ID
+func (f *FailureStatus) getNodeFailures(nodeID string) ([]*pb.Failure, error) {
+	fss := f.service.GetNodeFailures(nodeID)
+	pbFSs := make([]*pb.Failure, len(fss))
+	for i, fs := range fss {
+		pbf, err := f.fParser.FailureToPB(fs)
+		if err != nil {
+			return pbFSs, fmt.Errorf("error while converting failure to PB failure: %s", err)
+		}
+		pbFSs[i] = pbf
 	}
-	return res
-
-}
-func (f *FailureStatus) getDisabledFailureIDs(nodeID string) []string {
-	fs := f.service.GetNodeExpectedDisabledFailures(nodeID)
-	res := make([]string, len(fs))
-	for i, flr := range fs {
-		res[i] = flr.ID
-	}
-	return res
+	return pbFSs, nil
 }
 
 // FailureStateList returns periodically the state of the current state of the failures.
@@ -68,11 +66,12 @@ func (f *FailureStatus) FailureStateList(nodeID *pb.NodeId, stream pb.FailureSta
 		}
 
 		// Send the state to the client.
-		fes := &pb.FailuresExpectedState{
-			EnabledFailureId:  f.getEnabledFailureIDs(nodeID.GetId()),
-			DisabledFailureId: f.getDisabledFailureIDs(nodeID.GetId()),
+		fss, err := f.getNodeFailures(nodeID.GetId())
+		if err != nil {
+			return err
 		}
-		if err := stream.Send(fes); err != nil {
+		fs := &pb.FailuresState{Failures: fss}
+		if err := stream.Send(fs); err != nil {
 			return fmt.Errorf("stream update loop canceled: %v", err)
 		}
 	}

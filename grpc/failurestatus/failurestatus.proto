@@ -8,7 +8,7 @@ package failure;
 // FailureStatus is the service that will have all the operations regarding the failure.
 service FailureStatus {
     // FailureStateList asks for a list of the failures that should begin, continue or stop.
-    rpc FailureStateList(NodeId) returns (stream FailuresExpectedState);
+    rpc FailureStateList(NodeId) returns (stream FailuresState);
     // GetFailure asks for a failure.
     rpc GetFailure(FailureId) returns (Failure);
     // FailureStarted sets when the failure started
@@ -37,9 +37,8 @@ message Failure {
 }
 
 // FailuresExpectedState reprensents the state of the failures.
-message FailuresExpectedState {
-    repeated string enabled_failure_id = 1;
-    repeated string disabled_failure_id = 2;
+message FailuresState {
+    repeated Failure failures = 1;
 }
 
 // State is the state a failure can be.

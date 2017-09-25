@@ -115,19 +115,23 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodeID   string
-		statuses []map[string][]string
+		statuses [][]*pbfs.Failure
 	}{
 		{
 			name:   "RPC call and stream correctly.",
 			nodeID: "test1",
-			statuses: []map[string][]string{
-				map[string][]string{
-					"enabled":  []string{"id1", "id2", "id5"},
-					"disabled": []string{"id3", "id4"},
+			statuses: [][]*pbfs.Failure{
+				[]*pbfs.Failure{
+					&pbfs.Failure{Id: "id1", ExpectedState: pbfs.State_ENABLED},
+					&pbfs.Failure{Id: "id2", ExpectedState: pbfs.State_ENABLED},
+					&pbfs.Failure{Id: "id3", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id4", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id5", ExpectedState: pbfs.State_ENABLED},
 				},
-				map[string][]string{
-					"enabled":  []string{"id6", "id8"},
-					"disabled": []string{"id7"},
+				[]*pbfs.Failure{
+					&pbfs.Failure{Id: "id6", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id7", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id8", ExpectedState: pbfs.State_ENABLED},
 				},
 			},
 		},
@@ -141,22 +145,20 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 			finishedC := make(chan struct{})
 
 			// Create mocks.
-			mp := &mfailure.Parser{}
 			// Mock the streaming of batches from the server.
 			// Mock the  handler of the states in order to verify the proper handling of the stream statuses.
 			mstream := &mpbfs.FailureStatus_FailureStateListClient{}
-			mfsh := &mclient.FailureExpectedStateHandler{}
+			mfsh := &mclient.FailureStateHandler{}
 			mstream.On("Context").Return(context.Background())
 			for _, st := range test.statuses {
-				fs := &pbfs.FailuresExpectedState{
-					EnabledFailureId:  st["enabled"],
-					DisabledFailureId: st["disabled"],
+				fs := &pbfs.FailuresState{
+					Failures: st,
 				}
 				mstream.On("Recv").Once().Return(fs, nil)
-				mfsh.On("ProcessFailureExpectedStates", st["enabled"], st["disabled"]).Once().Return(nil)
+				mfsh.On("ProcessFailureStates", mock.Anything).Once().Return(nil)
 			}
 			// Ignore next streaming read receive calls.
-			mstream.On("Recv").Return(&pbfs.FailuresExpectedState{}, nil).Run(func(args mock.Arguments) {
+			mstream.On("Recv").Return(&pbfs.FailuresState{}, nil).Run(func(args mock.Arguments) {
 				finishedC <- struct{}{}
 			})
 
@@ -165,9 +167,9 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Once().Return(mstream, nil)
 
 			// Create the service
-			c, err := client.NewFailureGRPC(mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			c, err := client.NewFailureGRPC(mc, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
-			err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, nil)
+			err = c.ProcessFailureStateStreaming(test.nodeID, mfsh, nil)
 			if assert.NoError(err) {
 				// Wait to the stream activity.
 				select {
@@ -187,19 +189,23 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodeID   string
-		statuses []map[string][]string
+		statuses [][]*pbfs.Failure
 	}{
 		{
 			name:   "RPC call and stream correctly.",
 			nodeID: "test1",
-			statuses: []map[string][]string{
-				map[string][]string{
-					"enabled":  []string{"id1", "id2", "id5"},
-					"disabled": []string{"id3", "id4"},
+			statuses: [][]*pbfs.Failure{
+				[]*pbfs.Failure{
+					&pbfs.Failure{Id: "id1", ExpectedState: pbfs.State_ENABLED},
+					&pbfs.Failure{Id: "id2", ExpectedState: pbfs.State_ENABLED},
+					&pbfs.Failure{Id: "id3", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id4", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id5", ExpectedState: pbfs.State_ENABLED},
 				},
-				map[string][]string{
-					"enabled":  []string{"id6", "id8"},
-					"disabled": []string{"id7"},
+				[]*pbfs.Failure{
+					&pbfs.Failure{Id: "id6", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id7", ExpectedState: pbfs.State_DISABLED},
+					&pbfs.Failure{Id: "id8", ExpectedState: pbfs.State_ENABLED},
 				},
 			},
 		},
@@ -213,22 +219,20 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 			finishedC := make(chan struct{})
 
 			// Create mocks.
-			mp := &mfailure.Parser{}
 			// Mock the streaming of batches from the server.
 			// Mock the  handler of the states in order to verify the proper handling of the stream statuses.
 			mstream := &mpbfs.FailureStatus_FailureStateListClient{}
-			mfsh := &mclient.FailureExpectedStateHandler{}
+			mfsh := &mclient.FailureStateHandler{}
 			mstream.On("Context").Return(context.Background())
 			for _, st := range test.statuses {
-				fs := &pbfs.FailuresExpectedState{
-					EnabledFailureId:  st["enabled"],
-					DisabledFailureId: st["disabled"],
+				fs := &pbfs.FailuresState{
+					Failures: st,
 				}
 				mstream.On("Recv").Once().Return(fs, nil)
-				mfsh.On("ProcessFailureExpectedStates", st["enabled"], st["disabled"]).Once().Return(nil)
+				mfsh.On("ProcessFailureStates", mock.Anything).Once().Return(nil)
 			}
 			// Ignore next streaming read receive calls.
-			mstream.On("Recv").Return(&pbfs.FailuresExpectedState{}, nil).Run(func(args mock.Arguments) {
+			mstream.On("Recv").Return(&pbfs.FailuresState{}, nil).Run(func(args mock.Arguments) {
 				select {
 				case finishedC <- struct{}{}:
 				default:
@@ -241,9 +245,9 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 
 			// Create the service
 			stopC := make(chan struct{})
-			c, err := client.NewFailureGRPC(mc, mp, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			c, err := client.NewFailureGRPC(mc, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
-			err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
+			err = c.ProcessFailureStateStreaming(test.nodeID, mfsh, stopC)
 			if assert.NoError(err) {
 				// Wait to the stream activity.
 				select {
@@ -256,11 +260,11 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 				mfsh.AssertExpectations(t)
 
 				// Check stop is ok.
-				err := c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
+				err := c.ProcessFailureStateStreaming(test.nodeID, mfsh, stopC)
 				require.Error(err)
 				stopC <- struct{}{}
 				time.Sleep(5 * time.Millisecond)
-				err = c.ProcessFailureExpectedStateStreaming(test.nodeID, mfsh, stopC)
+				err = c.ProcessFailureStateStreaming(test.nodeID, mfsh, stopC)
 				assert.NoError(err)
 			}
 		})

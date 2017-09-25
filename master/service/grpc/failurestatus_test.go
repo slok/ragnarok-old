@@ -50,7 +50,7 @@ func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	mfss.On("GetFailure", expF.Id).Once().Return(stubF, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, mfss, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
 	fID := &pb.FailureId{Id: stubF.ID}
@@ -68,7 +68,7 @@ func TestFailureStatusGRPCGetFailureError(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, errors.New("wanted error"))
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, mfss, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
 	fID := &pb.FailureId{Id: "test"}
@@ -84,7 +84,7 @@ func TestFailureStatusGRPCGetFailureCtxCanceled(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, mfss, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Cancel context.
 	ctx, cncl := context.WithCancel(context.Background())
@@ -101,45 +101,38 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 
 	nodeID := &pb.NodeId{Id: "test1"}
 	times := 5
-	efs := []*failure.Failure{
-		&failure.Failure{ID: "test11"},
-		&failure.Failure{ID: "test12"},
-	}
-	dfs := []*failure.Failure{
-		&failure.Failure{ID: "test13"},
-	}
-	expectedSt := &pb.FailuresExpectedState{
-		EnabledFailureId:  []string{"test11", "test12"},
-		DisabledFailureId: []string{"test13"},
+	fss := []*failure.Failure{
+		&failure.Failure{ID: "test11", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+		&failure.Failure{ID: "test12", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
+		&failure.Failure{ID: "test13", CurrentState: types.EnabledFailureState, ExpectedState: types.DisabledFailureState},
 	}
 
 	// Create mocks.
 	mfss := &mservice.FailureStatusService{}
-	mfss.On("GetNodeExpectedEnabledFailures", nodeID.GetId()).Times(times).Return(efs)
-	mfss.On("GetNodeExpectedDisabledFailures", nodeID.GetId()).Times(times).Return(dfs)
+	mfss.On("GetNodeFailures", nodeID.GetId()).Times(times).Return(fss)
 
 	mstream := &mpb.FailureStatus_FailureStateListServer{}
 	mstream.On("Context").Return(context.Background())
-	mstream.On("Send", expectedSt).Return(nil)
+	mstream.On("Send", mock.Anything).Return(nil)
 
 	mtime := &mclock.Clock{}
 	tC := make(chan time.Time)
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureStateTransformer, mtime, log.Dummy)
-
-	// Run the failure state refresh in background.
-	go func() {
-		err := fs.FailureStateList(nodeID, mstream)
-		assert.NoError(err)
-	}()
+	fs := grpc.NewFailureStatus(1, mfss, failure.Transformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Simulate the ticker that triggers the update.
-	for i := 0; i < times; i++ {
-		tC <- time.Now()
-	}
-	close(tC)
+	go func() {
+		for i := 0; i < times; i++ {
+			tC <- time.Now()
+		}
+		close(tC)
+	}()
+
+	// Run the failure state refresh in background.
+	err := fs.FailureStateList(nodeID, mstream)
+	assert.NoError(err)
 
 	time.Sleep(5 * time.Millisecond) // Used to wait for the final calls and have a real assert.
 	mfss.AssertExpectations(t)
@@ -164,7 +157,7 @@ func TestFailureStatusGRPCFailureStateListContextClosed(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, mfss, failure.Transformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {
@@ -188,8 +181,7 @@ func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 
 	// Create mocks.
 	mfss := &mservice.FailureStatusService{}
-	mfss.On("GetNodeExpectedEnabledFailures", nodeID.GetId()).Once().Return(nil)
-	mfss.On("GetNodeExpectedDisabledFailures", nodeID.GetId()).Once().Return(nil)
+	mfss.On("GetNodeFailures", nodeID.GetId()).Once().Return(nil)
 
 	mstream := &mpb.FailureStatus_FailureStateListServer{}
 	mstream.On("Context").Return(context.Background())
@@ -200,7 +192,7 @@ func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, mfss, failure.Transformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {
@@ -212,7 +204,6 @@ func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 	if assert.Error(err) {
 		mfss.AssertExpectations(t)
 		mstream.AssertExpectations(t)
-
 	}
 
 	close(tC)

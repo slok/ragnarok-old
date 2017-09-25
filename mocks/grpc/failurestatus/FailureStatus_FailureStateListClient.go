@@ -65,15 +65,15 @@ func (_m *FailureStatus_FailureStateListClient) Header() (metadata.MD, error) {
 }
 
 // Recv provides a mock function with given fields:
-func (_m *FailureStatus_FailureStateListClient) Recv() (*failure.FailuresExpectedState, error) {
+func (_m *FailureStatus_FailureStateListClient) Recv() (*failure.FailuresState, error) {
 	ret := _m.Called()
 
-	var r0 *failure.FailuresExpectedState
-	if rf, ok := ret.Get(0).(func() *failure.FailuresExpectedState); ok {
+	var r0 *failure.FailuresState
+	if rf, ok := ret.Get(0).(func() *failure.FailuresState); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*failure.FailuresExpectedState)
+			r0 = ret.Get(0).(*failure.FailuresState)
 		}
 	}
 
