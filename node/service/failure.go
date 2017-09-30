@@ -26,20 +26,6 @@ type FailureState interface {
 	StopHandling() error
 }
 
-// baseFailureState will handle the failures received by the master and
-// and do nothing. This Failure state will be used as a base to create the real ones.
-type baseFailureState struct {
-}
-
-func (b *baseFailureState) ProcessFailureStates(failures []*failure.Failure) error {
-	return nil
-}
-
-// StartHandling satisfies FailureState interface.
-func (b *baseFailureState) StartHandling() error {
-	return nil
-}
-
 // LogFailureState will process the failures received from the master and will only log them.
 type LogFailureState struct {
 	nodeID  string
@@ -48,7 +34,7 @@ type LogFailureState struct {
 	logger  log.Logger
 	clock   clock.Clock
 	running bool
-	stMu    sync.Mutex
+	stMu    sync.Mutex // stMu is the status running mutex.
 }
 
 // NewLogFailureState returns a new Failurestate.
