@@ -19,7 +19,7 @@ const (
 // to the master need to implement
 type Status interface {
 	// Returns the node status.
-	State() bool
+	State() types.NodeState
 
 	// RegisterOnMaster registers the node on the master.
 	RegisterOnMaster() error
