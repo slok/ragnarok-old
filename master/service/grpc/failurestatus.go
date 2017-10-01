@@ -74,6 +74,7 @@ func (f *FailureStatus) FailureStateList(nodeID *pb.NodeId, stream pb.FailureSta
 		if err := stream.Send(fs); err != nil {
 			return fmt.Errorf("stream update loop canceled: %v", err)
 		}
+		f.logger.WithField("targetNode", nodeID).Debugf("sent %d failures to node", len(fss))
 	}
 	return nil
 }
