@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"google.golang.org/grpc"
 
-	"fmt"
-
+	"github.com/google/uuid"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
+	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"
+	"github.com/slok/ragnarok/node/service"
 	"github.com/slok/ragnarok/types"
 )
 
 // Main run main logic.
 func Main() error {
-	logger := log.Base()
+	nodeID := uuid.New().String()
+	nodeTags := map[string]string{"id": nodeID, "version": "v0.1alpha"}
+	logger := log.Base().WithField("id", nodeID)
 
 	// Get the command line arguments.
 	cfg, err := flags.GetNodeConfig(os.Args[1:])
@@ -33,29 +37,40 @@ func Main() error {
 		logger.Set("debug")
 	}
 
-	// Create node status client
+	// Create node GRPC clients
 	conn, err := grpc.Dial(cfg.MasterAddress, grpc.WithInsecure()) // TODO: secured.
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	// TODO: Handle correctly the disconnect, reconnects...
+	//defer conn.Close()
+
+	// Create GRPC clients.
 	nsCli, err := client.NewStatusGRPCFromConnection(conn, types.NodeStateTransformer, logger)
 	if err != nil {
 		return err
 	}
+
+	fCli, err := client.NewFailureGRPCFromConnection(conn, failure.Transformer, types.FailureStateTransformer, clock.Base(), logger)
+	if err != nil {
+		return err
+	}
+
+	// Create services.
+	stSrv := service.NewNodeStatus(nodeID, nodeTags, nsCli, clock.Base(), logger)
+	fSrv := service.NewLogFailureState(nodeID, fCli, clock.Base(), logger)
+
 	// Create the node.
-	n := node.NewFailureNode(*cfg, nsCli, clock.Base(), logger)
+	n := node.NewFailureNode(nodeID, *cfg, stSrv, fSrv, logger)
 
-	// Register node.
-	if err := n.RegisterOnMaster(); err != nil {
-		return fmt.Errorf("node not registered on master: %v", err)
+	// Register node & start.
+	if err := n.Initialize(); err != nil {
+		return fmt.Errorf("node could not inicialize: %v", err)
 	}
 
-	// Start heartbeats
-	if err := n.StartHeartbeat(); err != nil {
-		return fmt.Errorf("node heartbeating start failed: %v", err)
+	if err := n.Start(); err != nil {
+		return fmt.Errorf("could not start the node: %v", err)
 	}
-	// TODO: Listen for service calls
 
 	return nil
 }
