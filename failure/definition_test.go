@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGoodReadConfig(t *testing.T) {
+func TestGoodReadDefinition(t *testing.T) {
 	assert := assert.New(t)
-	config := `
+	definition := `
 timeout: 1h
 attacks:
   - attack1:
@@ -26,9 +26,9 @@ attacks:
       rest: 30s
 `
 
-	c, err := ReadConfig([]byte(config))
+	d, err := ReadDefinition([]byte(definition))
 	if assert.NoError(err, "YAML unmarshalling shouldn't return an error") {
-		expectedC := Config{
+		expectedD := Definition{
 			Timeout: 1 * time.Hour,
 			Attacks: []AttackMap{
 				{
@@ -54,13 +54,13 @@ attacks:
 				},
 			},
 		}
-		assert.EqualValues(expectedC, c, "Configuration values should be equal after loading YAML definition")
+		assert.EqualValues(expectedD, d, "Definitionuration values should be equal after loading YAML definition")
 	}
 }
 
-func TestBadReadConfig(t *testing.T) {
+func TestBadReadDefinition(t *testing.T) {
 	assert := assert.New(t)
-	config := `
+	definition := `
 timeout: 1h
 attacks:
   - attack1:
@@ -68,13 +68,13 @@ attacks:
   back-attack:
   	something: 12
 `
-	_, err := ReadConfig([]byte(config))
+	_, err := ReadDefinition([]byte(definition))
 	assert.Error(err, "YAML unmarshalling should return an error")
 }
 
-func TestMultipleAttacksOnMapReadConfig(t *testing.T) {
+func TestMultipleAttacksOnMapReadDefinition(t *testing.T) {
 	assert := assert.New(t)
-	config := `
+	definition := `
 timeout: 1h
 attacks:
   - attack1:
@@ -84,17 +84,17 @@ attacks:
   - attack2:
       something: 12
 `
-	_, err := ReadConfig([]byte(config))
+	_, err := ReadDefinition([]byte(definition))
 	if assert.Error(err, "YAML unmarshalling should return an attack format error") {
 		assert.Equal(err, errors.New("attacks format error, tip: check identantion and '-' indicator"))
 	}
 
 }
 
-func TestGoodRenderConfig(t *testing.T) {
+func TestGoodRenderDefinition(t *testing.T) {
 	assert := assert.New(t)
 
-	c := Config{
+	c := Definition{
 		Timeout: 30 * time.Second,
 		Attacks: []AttackMap{
 			{
@@ -134,13 +134,13 @@ attacks:
 `
 
 	if assert.NoError(err, "YAML marshalling shouldn't return an error") {
-		assert.EqualValues(expectY, string(d), "YAML values should be equal after redering config")
+		assert.EqualValues(expectY, string(d), "YAML values should be equal after redering definition")
 	}
 }
 
-func TestMultipleAttacksOnMapRenderConfig(t *testing.T) {
+func TestMultipleAttacksOnMapRenderDefinition(t *testing.T) {
 	assert := assert.New(t)
-	c := Config{
+	c := Definition{
 		Timeout: 30 * time.Second,
 		Attacks: []AttackMap{
 			{

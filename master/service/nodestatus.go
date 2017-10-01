@@ -10,7 +10,7 @@ import (
 	"github.com/slok/ragnarok/types"
 )
 
-// NodeStatusService is the master node that sends attacks to the nodes interface.
+// NodeStatusService is how the master manages the status of the nodes.
 type NodeStatusService interface {
 	// Register registers a new node on the master.
 	Register(id string, tags map[string]string) error
@@ -21,7 +21,7 @@ type NodeStatusService interface {
 
 // NodeStatus is the implementation of node status service.
 type NodeStatus struct {
-	repo   NodeRepository // repository where all the nodes will be stored.
+	repo   NodeRepository // Repo is the repository where all the nodes will be stored.
 	logger log.Logger
 
 	nodeLock sync.Mutex
@@ -35,7 +35,7 @@ func NewNodeStatus(_ config.Config, repository NodeRepository, logger log.Logger
 	}
 }
 
-// Register implements Master interface.
+// Register implements NodeStatusService interface.
 func (f *NodeStatus) Register(id string, tags map[string]string) error {
 	f.logger.WithField("nodeID", id).Infof("node registered on master")
 	f.nodeLock.Lock()

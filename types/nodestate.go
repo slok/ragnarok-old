@@ -46,10 +46,10 @@ type NodeStateParser interface {
 	NodeStateToPB(state NodeState) (pbns.State, error)
 }
 
-// nodeStateTypeParser will convert node state in different types.
+// nodeStateParser will convert node state in different types.
 type nodeStateParser struct{}
 
-// NodeStateTransformer is the utility to transform node stauts kinds.
+// NodeStateTransformer is the utility to transform node status kinds.
 var NodeStateTransformer = &nodeStateParser{}
 
 // ParseNodeStateStr parses an string and returns a NodeState.

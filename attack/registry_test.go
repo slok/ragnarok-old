@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/mocks"
+	mattack "github.com/slok/ragnarok/mocks/attack"
 )
 
 func TestRegister(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRegister(t *testing.T) {
 	for _, test := range tests {
 		r := attack.NewSimpleRegistry()
 
-		m := &mocks.Creater{}
+		m := &mattack.Creater{}
 		err := r.Register(test.id, m)
 		if !test.wantErr {
 			assert.NoError(err, "An error was't expected")
@@ -53,7 +53,7 @@ func TestDeregister(t *testing.T) {
 	for _, test := range tests {
 		// Setup registry.
 		r := attack.SimpleRegistry(map[string]attack.Creater{
-			test.regID: &mocks.Creater{},
+			test.regID: &mattack.Creater{},
 		})
 
 		// Check.
@@ -83,7 +83,7 @@ func TestExists(t *testing.T) {
 		// Setup registry.
 		r := attack.SimpleRegistry(map[string]attack.Creater{})
 		for _, id := range test.ids {
-			r[id] = &mocks.Creater{}
+			r[id] = &mattack.Creater{}
 		}
 		assert.Equal(test.want, r.Exists(test.checkID))
 	}
@@ -91,19 +91,19 @@ func TestExists(t *testing.T) {
 
 func TestFactory(t *testing.T) {
 	r := attack.SimpleRegistry(map[string]attack.Creater{})
-	// Prepare 10 mocks on the registry
-	creaters := make(map[string]*mocks.Creater)
+	// Prepare 10 mattack on the registry
+	creaters := make(map[string]*mattack.Creater)
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
 		opts := attack.Opts{"id": id, "idx": i}
 
-		m := &mocks.Creater{}
+		m := &mattack.Creater{}
 		m.On("Create", opts).Return(nil, nil)
 		creaters[id] = m
 		r[id] = m
 	}
 
-	// Use the factory and check it called the mocks
+	// Use the factory and check it called the mattack
 	for i := 0; i < 10; i++ {
 		id := fmt.Sprintf("id%d", i)
 		opts := attack.Opts{"id": id, "idx": i}

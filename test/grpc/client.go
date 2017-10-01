@@ -7,6 +7,7 @@ import (
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 
+	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 )
 
@@ -15,6 +16,7 @@ type TestClient struct {
 	conn *grpc.ClientConn
 
 	nsCli pbns.NodeStatusClient
+	fsCli pbfs.FailureStatusClient
 }
 
 // NewTestClient creates and returns a new test client
@@ -27,6 +29,7 @@ func NewTestClient(addr string) (*TestClient, error) {
 	return &TestClient{
 		conn:  conn,
 		nsCli: pbns.NewNodeStatusClient(conn),
+		fsCli: pbfs.NewFailureStatusClient(conn),
 	}, nil
 }
 
@@ -43,4 +46,14 @@ func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.Node) (*pb
 // NodeStatusHeartbeat wraps the call to nodestatus service.
 func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, ns *pbns.NodeState) (*pbempty.Empty, error) {
 	return t.nsCli.Heartbeat(ctx, ns)
+}
+
+// FailureStatusGetFailure wraps the call to failurestatus service.
+func (t *TestClient) FailureStatusGetFailure(ctx context.Context, fID *pbfs.FailureId) (*pbfs.Failure, error) {
+	return t.fsCli.GetFailure(ctx, fID)
+}
+
+// FailureStatusFailureStateList wraps the call to failurestatus service.
+func (t *TestClient) FailureStatusFailureStateList(ctx context.Context, nID *pbfs.NodeId) (pbfs.FailureStatus_FailureStateListClient, error) {
+	return t.fsCli.FailureStateList(ctx, nID)
 }
