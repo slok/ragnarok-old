@@ -133,7 +133,7 @@ func (l *logger) Set(level Level) error {
 }
 
 func (l logger) sourced() *logrus.Entry {
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(3)
 	if !ok {
 		file = "<???>"
 		line = 1
