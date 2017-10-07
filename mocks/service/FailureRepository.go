@@ -69,6 +69,22 @@ func (_m *FailureRepository) GetAllByNode(nodeID string) []*failure.Failure {
 	return r0
 }
 
+// GetNotStaleByNode provides a mock function with given fields: nodeID
+func (_m *FailureRepository) GetNotStaleByNode(nodeID string) []*failure.Failure {
+	ret := _m.Called(nodeID)
+
+	var r0 []*failure.Failure
+	if rf, ok := ret.Get(0).(func(string) []*failure.Failure); ok {
+		r0 = rf(nodeID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*failure.Failure)
+		}
+	}
+
+	return r0
+}
+
 // Store provides a mock function with given fields: _a0
 func (_m *FailureRepository) Store(_a0 *failure.Failure) error {
 	ret := _m.Called(_a0)
