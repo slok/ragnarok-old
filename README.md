@@ -1,6 +1,10 @@
-# Ragnarok
+# Ragnarok [![CircleCI](https://circleci.com/gh/slok/ragnarok/tree/master.svg?style=shield)][circleci]
 
 Odin's failure injection tool
+
+## Status
+
+In heavy development!
 
 ## Attack
 

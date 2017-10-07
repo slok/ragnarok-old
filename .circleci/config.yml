@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    machine:
+      image: circleci/classic:201709-01
+    
+    steps:
+      - checkout
+
+      - run:
+          name: Run vet
+          command: make vet
+
+      - run:
+          name: Run tests
+          command: make test
