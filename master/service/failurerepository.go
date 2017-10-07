@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/types"
 )
 
 // FailureRepository is the way the master keeps track of the failures.
@@ -22,6 +23,9 @@ type FailureRepository interface {
 
 	// GetAllByNode gets all the failures of a node from the registry.
 	GetAllByNode(nodeID string) []*failure.Failure
+
+	// GetNotStaleByNode gets all not stale failures of a node from the registry.
+	GetNotStaleByNode(nodeID string) []*failure.Failure
 }
 
 // MemFailureRepository is a represententation of the failure regsitry using a memory map.
@@ -87,16 +91,31 @@ func (m *MemFailureRepository) GetAll() []*failure.Failure {
 	return res
 }
 
-// GetAllByNode satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetAllByNode(nodeID string) []*failure.Failure {
+// getAllByNode gets all the failures with an stale filter, if the filter is true
+// then it will return also the stale ones, if not then it will return all expect the stale ones.
+func (m *MemFailureRepository) getAllByNode(nodeID string, stale bool) []*failure.Failure {
 	m.Lock()
 	defer m.Unlock()
 	res := []*failure.Failure{}
 	tmpReg, ok := m.regByNode[nodeID]
 	if ok {
 		for _, f := range tmpReg {
+			// Only add the ones that we want, do we want stale data?
+			if !stale && f.CurrentState == types.StaleFailureState {
+				continue
+			}
 			res = append(res, f)
 		}
 	}
 	return res
+}
+
+// GetAllByNode satisfies FailureRepository interface.
+func (m *MemFailureRepository) GetAllByNode(nodeID string) []*failure.Failure {
+	return m.getAllByNode(nodeID, true)
+}
+
+// GetNotStaleByNode satisfies FailureRepository interface.
+func (m *MemFailureRepository) GetNotStaleByNode(nodeID string) []*failure.Failure {
+	return m.getAllByNode(nodeID, false)
 }
