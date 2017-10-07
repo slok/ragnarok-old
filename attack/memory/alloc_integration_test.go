@@ -25,7 +25,7 @@ func TestMemoryAllocationAttack(t *testing.T) {
 
 	// Allocate memory and test if increased.
 	ma.Apply(context.TODO())
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	runtime.ReadMemStats(&mem)
 	endMem := mem.Alloc
 
@@ -33,7 +33,7 @@ func TestMemoryAllocationAttack(t *testing.T) {
 	assert.InDelta((endMem - startMem), size, float64(size)*0.35, "current memory allocation should be wanted allocation (35% deviation)")
 	// Free memory and test if released.
 	ma.Revert()
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	runtime.ReadMemStats(&mem)
 
 	// Let 10% margin delta from the wanted size
