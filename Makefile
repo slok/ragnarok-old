@@ -28,6 +28,10 @@ COMMIT=$(shell git rev-parse --short HEAD)
 # Tag on this commit
 TAG ?= $(shell git describe --tags --exact-match)
 
+# Commands
+TEST_CMD := go test `glide nv` --tags="integration" -v
+VET_CMD := go vet `glide nv`
+
 # The default action of this Makefile is to build the release
 default: build_release
 
@@ -77,11 +81,11 @@ dep_install:build
 
 # Pass the golang vet check
 vet: build
-	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c 'go vet `glide nv`'
+	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(VET_CMD)'
 
 # Execute unit tests
 test:build
-	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c 'go test `glide nv` --tags="integration" -v'
+	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(TEST_CMD)'
 
 # Generate required code (mocks...)
 gogen: build
