@@ -27,10 +27,10 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &model.Node{
-		ID:    "test1",
-		Tags:  map[string]string{"address": "127.0.0.45"},
-		State: types.UnknownNodeState,
+	n := model.Node{
+		ID:     "test1",
+		Labels: map[string]string{"address": "127.0.0.45"},
+		State:  types.UnknownNodeState,
 	}
 
 	// Get our registry mock.
@@ -42,7 +42,7 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.ID, n.Tags)
+	err := ns.Register(n.ID, n.Labels)
 	if assert.NoError(err) {
 		mReg.AssertExpectations(t)
 	}
@@ -52,10 +52,10 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &model.Node{
-		ID:    "test1",
-		Tags:  map[string]string{"address": "127.0.0.45"},
-		State: types.UnknownNodeState,
+	n := model.Node{
+		ID:     "test1",
+		Labels: map[string]string{"address": "127.0.0.45"},
+		State:  types.UnknownNodeState,
 	}
 
 	// Get our registry mock.
@@ -67,7 +67,7 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.ID, n.Tags)
+	err := ns.Register(n.ID, n.Labels)
 	if assert.Error(err) {
 		mRep.AssertExpectations(t)
 	}
@@ -77,20 +77,20 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	stubN := &model.Node{
-		ID:    "test1",
-		Tags:  map[string]string{"address": "127.0.0.45"},
-		State: types.UnknownNodeState,
+	stubN := model.Node{
+		ID:     "test1",
+		Labels: map[string]string{"address": "127.0.0.45"},
+		State:  types.UnknownNodeState,
 	}
-	expN := &model.Node{
-		ID:    stubN.ID,
-		Tags:  stubN.Tags,
-		State: types.ReadyNodeState,
+	expN := model.Node{
+		ID:     stubN.ID,
+		Labels: stubN.Labels,
+		State:  types.ReadyNodeState,
 	}
 
 	// Get our repository mock.
 	mRep := &mservice.NodeRepository{}
-	mRep.On("GetNode", expN.ID).Once().Return(stubN, true)
+	mRep.On("GetNode", expN.ID).Once().Return(&stubN, true)
 	mRep.On("StoreNode", expN.ID, expN).Once().Return(nil)
 
 	// Create the service.
@@ -128,7 +128,7 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	// Get our repository mock.
 	mRep := &mservice.NodeRepository{}
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&model.Node{}, true)
-	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Node")).Return(errors.New("wanted error"))
+	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.Anything).Return(errors.New("wanted error"))
 
 	// Create the service.
 	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)

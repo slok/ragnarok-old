@@ -53,12 +53,28 @@ func (_m *NodeRepository) GetNodes() map[string]*model.Node {
 	return r0
 }
 
+// GetNodesByLabels provides a mock function with given fields: labels
+func (_m *NodeRepository) GetNodesByLabels(labels model.Labels) map[string]*model.Node {
+	ret := _m.Called(labels)
+
+	var r0 map[string]*model.Node
+	if rf, ok := ret.Get(0).(func(model.Labels) map[string]*model.Node); ok {
+		r0 = rf(labels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]*model.Node)
+		}
+	}
+
+	return r0
+}
+
 // StoreNode provides a mock function with given fields: id, node
-func (_m *NodeRepository) StoreNode(id string, node *model.Node) error {
+func (_m *NodeRepository) StoreNode(id string, node model.Node) error {
 	ret := _m.Called(id, node)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, *model.Node) error); ok {
+	if rf, ok := ret.Get(0).(func(string, model.Node) error); ok {
 		r0 = rf(id, node)
 	} else {
 		r0 = ret.Error(0)

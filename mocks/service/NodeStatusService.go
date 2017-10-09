@@ -24,13 +24,13 @@ func (_m *NodeStatusService) Heartbeat(id string, state types.NodeState) error {
 	return r0
 }
 
-// Register provides a mock function with given fields: id, tags
-func (_m *NodeStatusService) Register(id string, tags map[string]string) error {
-	ret := _m.Called(id, tags)
+// Register provides a mock function with given fields: id, labels
+func (_m *NodeStatusService) Register(id string, labels map[string]string) error {
+	ret := _m.Called(id, labels)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, map[string]string) error); ok {
-		r0 = rf(id, tags)
+		r0 = rf(id, labels)
 	} else {
 		r0 = ret.Error(0)
 	}

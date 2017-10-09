@@ -13,7 +13,7 @@ import (
 // NodeStatusService is how the master manages the status of the nodes.
 type NodeStatusService interface {
 	// Register registers a new node on the master.
-	Register(id string, tags map[string]string) error
+	Register(id string, labels map[string]string) error
 
 	// Heartbeat sets the node state after its heartbeat.
 	Heartbeat(id string, state types.NodeState) error
@@ -36,15 +36,15 @@ func NewNodeStatus(_ config.Config, repository NodeRepository, logger log.Logger
 }
 
 // Register implements NodeStatusService interface.
-func (f *NodeStatus) Register(id string, tags map[string]string) error {
+func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	f.logger.WithField("nodeID", id).Infof("node registered on master")
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
-	n := &model.Node{
-		ID:    id,
-		Tags:  tags,
-		State: types.UnknownNodeState,
+	n := model.Node{
+		ID:     id,
+		Labels: labels,
+		State:  types.UnknownNodeState,
 	}
 
 	return f.repo.StoreNode(id, n)
@@ -63,7 +63,7 @@ func (f *NodeStatus) Heartbeat(id string, state types.NodeState) error {
 
 	// Set state and save.
 	n.State = state
-	if err := f.repo.StoreNode(id, n); err != nil {
+	if err := f.repo.StoreNode(id, *n); err != nil {
 		return fmt.Errorf("could not set the current state: %v", err)
 	}
 
