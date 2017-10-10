@@ -1,23 +1,9 @@
-package failure
+package v1
 
 import (
-	"time"
-
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/types"
 )
-
-// Failure has all the information of a failure to create an injection
-type Failure struct {
-	ID            string             // ID is the id of the Failure.
-	NodeID        string             // NodeID is the id of the Node.
-	Definition    Definition         // Definition is the failure definition.
-	CurrentState  types.FailureState // CurrentState is the state of the failure.
-	ExpectedState types.FailureState // ExpectedState is the state the failure should be.
-	Creation      time.Time          // Creation is when the failure injection was created.
-	Executed      time.Time          // Executed is when the failure injectionwas executed.
-	Finished      time.Time          //Finished is when the failure injection was reverted.
-}
 
 // Parser will transform failures from and to different formats.
 type Parser interface {
@@ -26,7 +12,6 @@ type Parser interface {
 	// PBToFailure transforms a protobuf Failure to failure.Failure.
 	PBToFailure(fl *pbfs.Failure) (*Failure, error)
 }
-
 
 // Transformer is the Failure transformer.
 var Transformer = &transformer{
@@ -40,24 +25,24 @@ type transformer struct {
 
 // FailureToPB implements Parser interface.
 func (t *transformer) FailureToPB(fl *Failure) (*pbfs.Failure, error) {
-	bs, err := fl.Definition.Render()
+	bs, err := fl.Spec.Render()
 	if err != nil {
 		return nil, err
 	}
 
-	cs, err := t.stateParser.FailureStateToPB(fl.CurrentState)
+	cs, err := t.stateParser.FailureStateToPB(fl.Status.CurrentState)
 	if err != nil {
 		return nil, err
 	}
 
-	es, err := t.stateParser.FailureStateToPB(fl.ExpectedState)
+	es, err := t.stateParser.FailureStateToPB(fl.Status.ExpectedState)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pbfs.Failure{
-		Id:            fl.ID,
-		NodeID:        fl.NodeID,
+		Id:            fl.Metadata.ID,
+		NodeID:        fl.Metadata.NodeID,
 		Definition:    string(bs),
 		CurrentState:  cs,
 		ExpectedState: es,
@@ -67,7 +52,7 @@ func (t *transformer) FailureToPB(fl *Failure) (*pbfs.Failure, error) {
 // PBToFailure implements Parser interface.
 func (t *transformer) PBToFailure(fl *pbfs.Failure) (*Failure, error) {
 
-	def, err := ReadDefinition([]byte(fl.Definition))
+	spec, err := ReadFailureSpec([]byte(fl.Definition))
 	if err != nil {
 		return nil, err
 	}
@@ -81,11 +66,17 @@ func (t *transformer) PBToFailure(fl *pbfs.Failure) (*Failure, error) {
 		return nil, err
 	}
 
-	return &Failure{
-		ID:            fl.GetId(),
-		NodeID:        fl.GetNodeID(),
-		Definition:    def,
-		CurrentState:  cs,
-		ExpectedState: es,
-	}, nil
+	res := Failure{
+		Metadata: Metadata{
+			ID:     fl.GetId(),
+			NodeID: fl.GetNodeID(),
+		},
+		Spec: spec,
+		Status: Status{
+			CurrentState:  cs,
+			ExpectedState: es,
+		},
+	}
+
+	return &res, nil
 }
