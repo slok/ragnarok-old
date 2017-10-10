@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node/client"
 )

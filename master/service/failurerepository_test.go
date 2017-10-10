@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/types"
 )

@@ -4,10 +4,15 @@ import (
 	"errors"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/slok/ragnarok/object"
 )
+
+// DefinitionKind is the kind of Definition object.
+const DefinitionKind = "Definition"
 
 // AttackMap is a type that defines a list of map of attackers.
 type AttackMap map[string]attack.Opts
@@ -19,6 +24,11 @@ type Definition struct {
 	Attacks []AttackMap `yaml:"attacks,omitempty"`
 
 	// TODO: accuracy
+}
+
+// GetObjectKind satisfies Object interface.
+func (d *Definition) GetObjectKind() object.Kind {
+	return DefinitionKind
 }
 
 // ReadDefinition Reads a config yaml defition and returns a definition object.

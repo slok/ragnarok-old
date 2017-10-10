@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
-	mfailure "github.com/slok/ragnarok/mocks/failure"
+	mfailure "github.com/slok/ragnarok/mocks/chaos/failure"
 	mpbfs "github.com/slok/ragnarok/mocks/grpc/failurestatus"
 	mclient "github.com/slok/ragnarok/mocks/node/client"
 	"github.com/slok/ragnarok/node/client"

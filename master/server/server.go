@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"

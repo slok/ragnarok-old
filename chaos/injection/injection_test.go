@@ -1,4 +1,4 @@
-package failure_test
+package injection_test
 
 import (
 	"context"
@@ -12,8 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/chaos/failure"
+	"github.com/slok/ragnarok/chaos/injection"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	mattack "github.com/slok/ragnarok/mocks/attack"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	"github.com/slok/ragnarok/types"
@@ -61,7 +62,7 @@ func TestNewInjection(t *testing.T) {
 	reg.On("New", "attack3", f.Definition.Attacks[3]["attack3"]).Return(at4, nil)
 
 	// Test.
-	ij, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	ij, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.NoError(err) {
 		assert.NotNil(ij, "A succesful creation shoudln't be an error")
 		assert.Equal(types.EnabledFailureState, ij.CurrentState)
@@ -97,7 +98,7 @@ func TestNewInjectionError(t *testing.T) {
 	reg.On("New", "attack2", f.Definition.Attacks[1]["attack2"]).Return(nil, errors.New("error test"))
 
 	// Test.
-	_, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	_, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	reg.AssertNotCalled(t, "New", "attack3", f.Definition.Attacks[2]["attack3"])
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
@@ -128,7 +129,7 @@ func TestNewInjectionMultipleAttacksOnBlock(t *testing.T) {
 	reg := &mattack.Registry{}
 	reg.AssertNotCalled(t, "New")
 	// Test.
-	_, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	_, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.Error(err) {
 		reg.AssertExpectations(t)
 	}
@@ -175,7 +176,7 @@ func TestInjectionFailState(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		in, err := failure.NewInjection(&failure.Failure{}, nil, nil)
+		in, err := injection.NewInjection(&failure.Failure{}, nil, nil)
 		in.CurrentState = test.state
 		if assert.NoError(err) {
 			err = in.Fail()
@@ -209,7 +210,7 @@ func TestSystemFailureAttacksOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(in.Fail()) {
 			assert.Equal(types.ExecutingFailureState, in.CurrentState)
@@ -243,7 +244,7 @@ func TestSystemFailureAttacksOKRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at, nil)
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.NoError(err) {
 		if assert.NoError(in.Fail()) {
 			assert.Equal(types.ExecutingFailureState, in.CurrentState)
@@ -283,7 +284,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertOK(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.NoError(err) {
 		err = in.Fail()
 		if assert.Error(err) {
@@ -324,7 +325,7 @@ func TestSystemFailureFailAttacksErrorAutoRevertError(t *testing.T) {
 	reg.On("New", "attack2", attack.Opts{}).Return(at2, nil)
 	reg.On("New", "attack3", attack.Opts{}).Return(at3, nil)
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, nil)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, nil)
 	if assert.NoError(err) {
 		err = in.Fail()
 		if assert.Error(err) {
@@ -368,7 +369,7 @@ func TestSystemFailureFailAttacksFinishWithTimeout(t *testing.T) {
 	cl.On("After", f.Definition.Timeout).Return(time.After(0))
 	cl.On("Now").Return(time.Now())
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, cl)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, cl)
 	if assert.NoError(err) {
 		err = in.Fail()
 		// Wait until clock timeout to check revert called
@@ -409,7 +410,7 @@ func TestSystemFailureFailAttacksFinishForced(t *testing.T) {
 	cl.On("After", f.Definition.Timeout).Return(time.After(9999 * time.Hour)) // Never
 	cl.On("Now").Return(time.Now())
 
-	in, err := failure.NewInjectionFromReg(f, reg, nil, cl)
+	in, err := injection.NewInjectionFromReg(f, reg, nil, cl)
 	if assert.NoError(err) {
 		err = in.Fail()
 		in.Revert()

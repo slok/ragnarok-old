@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/types"
 )

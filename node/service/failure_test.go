@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mlog "github.com/slok/ragnarok/mocks/log"

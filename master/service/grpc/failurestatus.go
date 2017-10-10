@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	pb "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"

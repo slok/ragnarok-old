@@ -27,6 +27,7 @@ type Parser interface {
 	PBToFailure(fl *pbfs.Failure) (*Failure, error)
 }
 
+
 // Transformer is the Failure transformer.
 var Transformer = &transformer{
 	stateParser: types.FailureStateTransformer,

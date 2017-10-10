@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/google/uuid"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"

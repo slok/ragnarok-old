@@ -3,7 +3,7 @@ package service
 import (
 	"sync"
 
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/types"
 )
 

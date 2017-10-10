@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/types"
 )

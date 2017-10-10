@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
 	mservice "github.com/slok/ragnarok/mocks/service"

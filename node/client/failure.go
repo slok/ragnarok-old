@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/types"

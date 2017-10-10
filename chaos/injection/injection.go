@@ -1,4 +1,4 @@
-package failure
+package injection
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/slok/ragnarok/attack"
+	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/types"
@@ -23,7 +24,7 @@ type Failer interface {
 
 // Injection is a failure that can be applied.
 type Injection struct {
-	*Failure
+	*failure.Failure
 	attacks []attack.Attacker
 	ctx     context.Context
 	ctxC    context.CancelFunc
@@ -37,13 +38,13 @@ type Injection struct {
 
 // NewInjection Creates a new Failer object from a failure definition
 // using the base global registry.
-func NewInjection(f *Failure, l log.Logger, cl clock.Clock) (*Injection, error) {
+func NewInjection(f *failure.Failure, l log.Logger, cl clock.Clock) (*Injection, error) {
 	return NewInjectionFromReg(f, attack.BaseReg(), l, cl)
 }
 
 // NewInjectionFromReg Creates a new SystemFailure object from a failure definition
 // and a custom registry.
-func NewInjectionFromReg(f *Failure, reg attack.Registry, l log.Logger, cl clock.Clock) (*Injection, error) {
+func NewInjectionFromReg(f *failure.Failure, reg attack.Registry, l log.Logger, cl clock.Clock) (*Injection, error) {
 	// Set global logger if no logger
 	if l == nil {
 		l = log.Base()
