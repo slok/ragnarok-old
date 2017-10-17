@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	mpbns "github.com/slok/ragnarok/mocks/grpc/nodestatus"
@@ -66,15 +67,15 @@ func TestRegisterNode(t *testing.T) {
 func TestNodeHeartbeat(t *testing.T) {
 	tests := []struct {
 		id              string
-		state           types.NodeState
+		state           v1.NodeState
 		expState        pbns.State
 		expStParseError bool
 		expRespError    bool
 	}{
-		{"test1", types.ReadyNodeState, pbns.State_READY, false, false},
-		{"test2", types.AttackingNodeState, pbns.State_ATTACKING, false, false},
-		{"test3", types.ReadyNodeState, pbns.State_READY, true, false},
-		{"test4", types.ReadyNodeState, pbns.State_READY, false, true},
+		{"test1", v1.ReadyNodeState, pbns.State_READY, false, false},
+		{"test2", v1.AttackingNodeState, pbns.State_ATTACKING, false, false},
+		{"test3", v1.ReadyNodeState, pbns.State_READY, true, false},
+		{"test4", v1.ReadyNodeState, pbns.State_READY, false, true},
 	}
 
 	for _, test := range tests {

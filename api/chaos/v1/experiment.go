@@ -1,11 +1,16 @@
-package experiment
+package v1
 
 import (
-	"github.com/slok/ragnarok/chaos/failure"
+	"github.com/slok/ragnarok/api"
 )
 
-// Status is the status after the creation of the Experiment.
-type Status struct {
+const (
+	// ExperimentKind is the kind a failure.
+	ExperimentKind = "chaos/v1/experiment"
+)
+
+// ExperimentStatus is the status after the creation of the Experiment.
+type ExperimentStatus struct {
 	// FailureIDs are the IDs of the failures that have been created.
 	FailureIDs []string `yaml:"failureIDs,omitempty"`
 }
@@ -27,8 +32,13 @@ type Experiment struct {
 	Selector map[string]string `yaml:"selector,omitempty"`
 
 	// Definition is the definition of a Failure.
-	Spec failure.Failure `yaml:"spec,omitempty"`
+	Spec Failure `yaml:"spec,omitempty"`
 
 	// Status is the status of the experiment.
-	Status Status `yaml:"status,omitempty"`
+	Status ExperimentStatus `yaml:"status,omitempty"`
+}
+
+// GetObjectKind satisfies Object interface.
+func (e *Experiment) GetObjectKind() api.Kind {
+	return ExperimentKind
 }

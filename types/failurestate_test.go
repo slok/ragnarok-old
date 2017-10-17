@@ -5,48 +5,25 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/types"
 )
 
-func TestFailureStateStringer(t *testing.T) {
-	tests := []struct {
-		st    types.FailureState
-		expSt string
-	}{
-		{types.EnabledFailureState, "enabled"},
-		{types.ExecutingFailureState, "executing"},
-		{types.RevertingFailureState, "reverting"},
-		{types.DisabledFailureState, "disabled"},
-		{types.StaleFailureState, "stale"},
-		{types.ErroredFailureState, "errored"},
-		{types.ErroredRevertingFailureState, "erroredreverting"},
-		{types.UnknownFailureState, "unknown"},
-		{99999, "unknown"},
-	}
-
-	for _, test := range tests {
-		t.Run(test.expSt, func(t *testing.T) {
-			assert := assert.New(t)
-			assert.Equal(test.expSt, test.st.String())
-		})
-	}
-}
-
 func TestFailureStateParseStrToFS(t *testing.T) {
 	tests := []struct {
 		st     string
-		expSt  types.FailureState
+		expSt  v1.FailureState
 		expErr bool
 	}{
-		{"enabled", types.EnabledFailureState, false},
-		{"executing", types.ExecutingFailureState, false},
-		{"reverting", types.RevertingFailureState, false},
-		{"disabled", types.DisabledFailureState, false},
-		{"stale", types.StaleFailureState, false},
-		{"errored", types.ErroredFailureState, false},
-		{"erroredreverting", types.ErroredRevertingFailureState, false},
-		{"no-state", types.UnknownFailureState, true},
+		{"enabled", v1.EnabledFailureState, false},
+		{"executing", v1.ExecutingFailureState, false},
+		{"reverting", v1.RevertingFailureState, false},
+		{"disabled", v1.DisabledFailureState, false},
+		{"stale", v1.StaleFailureState, false},
+		{"errored", v1.ErroredFailureState, false},
+		{"erroredreverting", v1.ErroredRevertingFailureState, false},
+		{"no-state", v1.UnknownFailureState, true},
 	}
 
 	for _, test := range tests {
@@ -67,18 +44,18 @@ func TestFailureStateParseStrToFS(t *testing.T) {
 func TestFailureStateParsePBToFS(t *testing.T) {
 	tests := []struct {
 		st     pbfs.State
-		expSt  types.FailureState
+		expSt  v1.FailureState
 		expErr bool
 	}{
-		{pbfs.State_ENABLED, types.EnabledFailureState, false},
-		{pbfs.State_EXECUTING, types.ExecutingFailureState, false},
-		{pbfs.State_REVERTING, types.RevertingFailureState, false},
-		{pbfs.State_DISABLED, types.DisabledFailureState, false},
-		{pbfs.State_STALE, types.StaleFailureState, false},
-		{pbfs.State_ERRORED, types.ErroredFailureState, false},
-		{pbfs.State_ERRORED_REVERTING, types.ErroredRevertingFailureState, false},
-		{pbfs.State_UNKNOWN, types.UnknownFailureState, true},
-		{999999, types.UnknownFailureState, true},
+		{pbfs.State_ENABLED, v1.EnabledFailureState, false},
+		{pbfs.State_EXECUTING, v1.ExecutingFailureState, false},
+		{pbfs.State_REVERTING, v1.RevertingFailureState, false},
+		{pbfs.State_DISABLED, v1.DisabledFailureState, false},
+		{pbfs.State_STALE, v1.StaleFailureState, false},
+		{pbfs.State_ERRORED, v1.ErroredFailureState, false},
+		{pbfs.State_ERRORED_REVERTING, v1.ErroredRevertingFailureState, false},
+		{pbfs.State_UNKNOWN, v1.UnknownFailureState, true},
+		{999999, v1.UnknownFailureState, true},
 	}
 
 	for _, test := range tests {
@@ -98,18 +75,18 @@ func TestFailureStateParsePBToFS(t *testing.T) {
 
 func TestFailureStateParseFSToPB(t *testing.T) {
 	tests := []struct {
-		st     types.FailureState
+		st     v1.FailureState
 		expSt  pbfs.State
 		expErr bool
 	}{
-		{types.EnabledFailureState, pbfs.State_ENABLED, false},
-		{types.ExecutingFailureState, pbfs.State_EXECUTING, false},
-		{types.RevertingFailureState, pbfs.State_REVERTING, false},
-		{types.DisabledFailureState, pbfs.State_DISABLED, false},
-		{types.StaleFailureState, pbfs.State_STALE, false},
-		{types.ErroredFailureState, pbfs.State_ERRORED, false},
-		{types.ErroredRevertingFailureState, pbfs.State_ERRORED_REVERTING, false},
-		{types.UnknownFailureState, pbfs.State_UNKNOWN, true},
+		{v1.EnabledFailureState, pbfs.State_ENABLED, false},
+		{v1.ExecutingFailureState, pbfs.State_EXECUTING, false},
+		{v1.RevertingFailureState, pbfs.State_REVERTING, false},
+		{v1.DisabledFailureState, pbfs.State_DISABLED, false},
+		{v1.StaleFailureState, pbfs.State_STALE, false},
+		{v1.ErroredFailureState, pbfs.State_ERRORED, false},
+		{v1.ErroredRevertingFailureState, pbfs.State_ERRORED_REVERTING, false},
+		{v1.UnknownFailureState, pbfs.State_UNKNOWN, true},
 		{999999, pbfs.State_UNKNOWN, true},
 	}
 

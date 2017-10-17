@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/types"
 )
@@ -13,17 +14,16 @@ func TestNodeStateStringer(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		st    types.NodeState
+		st    v1.NodeState
 		expSt string
 	}{
-		{types.ReadyNodeState, "ready"},
-		{types.AttackingNodeState, "attacking"},
-		{types.RevertingNodeState, "reverting"},
-		{types.ErroredNodeState, "errored"},
-		{types.UnknownNodeState, "unknown"},
+		{v1.ReadyNodeState, "ready"},
+		{v1.AttackingNodeState, "attacking"},
+		{v1.RevertingNodeState, "reverting"},
+		{v1.ErroredNodeState, "errored"},
+		{v1.UnknownNodeState, "unknown"},
 		{99999, "unknown"},
 	}
-
 
 	for _, test := range tests {
 		assert.Equal(test.expSt, test.st.String())
@@ -35,15 +35,15 @@ func TestNodeStateParseStrToNS(t *testing.T) {
 
 	tests := []struct {
 		st     string
-		expSt  types.NodeState
+		expSt  v1.NodeState
 		expErr bool
 	}{
-		{"ready", types.ReadyNodeState, false},
-		{"attacking", types.AttackingNodeState, false},
-		{"reverting", types.RevertingNodeState, false},
-		{"errored", types.ErroredNodeState, false},
-		{"unknown", types.UnknownNodeState, false},
-		{"no-state", types.UnknownNodeState, true},
+		{"ready", v1.ReadyNodeState, false},
+		{"attacking", v1.AttackingNodeState, false},
+		{"reverting", v1.RevertingNodeState, false},
+		{"errored", v1.ErroredNodeState, false},
+		{"unknown", v1.UnknownNodeState, false},
+		{"no-state", v1.UnknownNodeState, true},
 	}
 
 	for _, test := range tests {
@@ -62,15 +62,15 @@ func TestNodeStateParsePBToNS(t *testing.T) {
 
 	tests := []struct {
 		st     pbns.State
-		expSt  types.NodeState
+		expSt  v1.NodeState
 		expErr bool
 	}{
-		{pbns.State_READY, types.ReadyNodeState, false},
-		{pbns.State_ATTACKING, types.AttackingNodeState, false},
-		{pbns.State_REVERTING, types.RevertingNodeState, false},
-		{pbns.State_ERRORED, types.ErroredNodeState, false},
-		{pbns.State_UNKNOWN, types.UnknownNodeState, false},
-		{999999, types.UnknownNodeState, true},
+		{pbns.State_READY, v1.ReadyNodeState, false},
+		{pbns.State_ATTACKING, v1.AttackingNodeState, false},
+		{pbns.State_REVERTING, v1.RevertingNodeState, false},
+		{pbns.State_ERRORED, v1.ErroredNodeState, false},
+		{pbns.State_UNKNOWN, v1.UnknownNodeState, false},
+		{999999, v1.UnknownNodeState, true},
 	}
 
 	for _, test := range tests {
@@ -88,15 +88,15 @@ func TestNodeStateParseNSToPB(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		st     types.NodeState
+		st     v1.NodeState
 		expSt  pbns.State
 		expErr bool
 	}{
-		{types.ReadyNodeState, pbns.State_READY, false},
-		{types.AttackingNodeState, pbns.State_ATTACKING, false},
-		{types.RevertingNodeState, pbns.State_REVERTING, false},
-		{types.ErroredNodeState, pbns.State_ERRORED, false},
-		{types.UnknownNodeState, pbns.State_UNKNOWN, false},
+		{v1.ReadyNodeState, pbns.State_READY, false},
+		{v1.AttackingNodeState, pbns.State_ATTACKING, false},
+		{v1.RevertingNodeState, pbns.State_REVERTING, false},
+		{v1.ErroredNodeState, pbns.State_ERRORED, false},
+		{v1.UnknownNodeState, pbns.State_UNKNOWN, false},
 		{999999, pbns.State_UNKNOWN, true},
 	}
 

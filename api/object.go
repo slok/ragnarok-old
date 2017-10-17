@@ -1,4 +1,4 @@
-package object
+package api
 
 // Kind represents the kind of the object
 type Kind string

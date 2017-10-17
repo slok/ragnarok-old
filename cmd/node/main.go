@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/google/uuid"
-	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
 	"github.com/slok/ragnarok/log"
@@ -51,7 +50,7 @@ func Main() error {
 		return err
 	}
 
-	fCli, err := client.NewFailureGRPCFromConnection(conn, failure.Transformer, types.FailureStateTransformer, clock.Base(), logger)
+	fCli, err := client.NewFailureGRPCFromConnection(conn, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), logger)
 	if err != nil {
 		return err
 	}

@@ -4,46 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 )
 
-// NodeState is the reprensetation of the node state.
-type NodeState int
-
-const (
-	// UnknownNodeState is an unknown status.
-	UnknownNodeState NodeState = iota
-	// ReadyNodeState is the state when a node is ready for accepting attacks.
-	ReadyNodeState
-	// AttackingNodeState is the state when a node is aplying an attack.
-	AttackingNodeState
-	// RevertingNodeState is the state when a node is reverting an applied attack.
-	RevertingNodeState
-	// ErroredNodeState is the state when a node is in error state.
-	ErroredNodeState
-)
-
-// String implements the stringer interface.
-func (n NodeState) String() string {
-	switch n {
-	case ReadyNodeState:
-		return "ready"
-	case AttackingNodeState:
-		return "attacking"
-	case RevertingNodeState:
-		return "reverting"
-	case ErroredNodeState:
-		return "errored"
-	default:
-		return "unknown"
-	}
-}
-
 // NodeStateParser has the required methods to transform node state.
 type NodeStateParser interface {
-	StrToNodeState(state string) (NodeState, error)
-	PBToNodeState(state pbns.State) (NodeState, error)
-	NodeStateToPB(state NodeState) (pbns.State, error)
+	StrToNodeState(state string) (v1.NodeState, error)
+	PBToNodeState(state pbns.State) (v1.NodeState, error)
+	NodeStateToPB(state v1.NodeState) (pbns.State, error)
 }
 
 // nodeStateParser will convert node state in different types.
@@ -53,53 +22,53 @@ type nodeStateParser struct{}
 var NodeStateTransformer = &nodeStateParser{}
 
 // ParseNodeStateStr parses an string and returns a NodeState.
-func (nodeStateParser) StrToNodeState(state string) (NodeState, error) {
+func (nodeStateParser) StrToNodeState(state string) (v1.NodeState, error) {
 	switch strings.ToLower(state) {
 	case "ready":
-		return ReadyNodeState, nil
+		return v1.ReadyNodeState, nil
 	case "attacking":
-		return AttackingNodeState, nil
+		return v1.AttackingNodeState, nil
 	case "reverting":
-		return RevertingNodeState, nil
+		return v1.RevertingNodeState, nil
 	case "errored":
-		return ErroredNodeState, nil
+		return v1.ErroredNodeState, nil
 	case "unknown":
-		return UnknownNodeState, nil
+		return v1.UnknownNodeState, nil
 	default:
-		return UnknownNodeState, fmt.Errorf("invalid node state: %s", state)
+		return v1.UnknownNodeState, fmt.Errorf("invalid node state: %s", state)
 	}
 }
 
 // ParseNodeStatePB parses a proto buffer node state and returns a NodeState.
-func (nodeStateParser) PBToNodeState(state pbns.State) (NodeState, error) {
+func (nodeStateParser) PBToNodeState(state pbns.State) (v1.NodeState, error) {
 	switch state {
 	case pbns.State_READY:
-		return ReadyNodeState, nil
+		return v1.ReadyNodeState, nil
 	case pbns.State_ATTACKING:
-		return AttackingNodeState, nil
+		return v1.AttackingNodeState, nil
 	case pbns.State_REVERTING:
-		return RevertingNodeState, nil
+		return v1.RevertingNodeState, nil
 	case pbns.State_ERRORED:
-		return ErroredNodeState, nil
+		return v1.ErroredNodeState, nil
 	case pbns.State_UNKNOWN:
-		return UnknownNodeState, nil
+		return v1.UnknownNodeState, nil
 	default:
-		return UnknownNodeState, fmt.Errorf("invalid node state: %s", state)
+		return v1.UnknownNodeState, fmt.Errorf("invalid node state: %s", state)
 	}
 }
 
 // NodeStateToPB parses a node state to proto buffer and returns a PB node state.
-func (nodeStateParser) NodeStateToPB(state NodeState) (pbns.State, error) {
+func (nodeStateParser) NodeStateToPB(state v1.NodeState) (pbns.State, error) {
 	switch state {
-	case ReadyNodeState:
+	case v1.ReadyNodeState:
 		return pbns.State_READY, nil
-	case AttackingNodeState:
+	case v1.AttackingNodeState:
 		return pbns.State_ATTACKING, nil
-	case RevertingNodeState:
+	case v1.RevertingNodeState:
 		return pbns.State_REVERTING, nil
-	case ErroredNodeState:
+	case v1.ErroredNodeState:
 		return pbns.State_ERRORED, nil
-	case UnknownNodeState:
+	case v1.UnknownNodeState:
 		return pbns.State_UNKNOWN, nil
 	default:
 		return pbns.State_UNKNOWN, fmt.Errorf("invalid node state: %s", state)

@@ -8,12 +8,11 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
-	"github.com/slok/ragnarok/master/model"
 	"github.com/slok/ragnarok/master/service"
 	mservice "github.com/slok/ragnarok/mocks/service"
-	"github.com/slok/ragnarok/types"
 )
 
 func TestNodeStatusCreation(t *testing.T) {
@@ -27,10 +26,10 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := model.Node{
+	n := v1.Node{
 		ID:     "test1",
 		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  types.UnknownNodeState,
+		State:  v1.UnknownNodeState,
 	}
 
 	// Get our registry mock.
@@ -52,10 +51,10 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := model.Node{
+	n := v1.Node{
 		ID:     "test1",
 		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  types.UnknownNodeState,
+		State:  v1.UnknownNodeState,
 	}
 
 	// Get our registry mock.
@@ -77,15 +76,15 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	stubN := model.Node{
+	stubN := v1.Node{
 		ID:     "test1",
 		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  types.UnknownNodeState,
+		State:  v1.UnknownNodeState,
 	}
-	expN := model.Node{
+	expN := v1.Node{
 		ID:     stubN.ID,
 		Labels: stubN.Labels,
-		State:  types.ReadyNodeState,
+		State:  v1.ReadyNodeState,
 	}
 
 	// Get our repository mock.
@@ -117,7 +116,7 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := ns.Heartbeat("test1", types.ReadyNodeState)
+	err := ns.Heartbeat("test1", v1.ReadyNodeState)
 	assert.Error(err)
 }
 
@@ -127,7 +126,7 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 
 	// Get our repository mock.
 	mRep := &mservice.NodeRepository{}
-	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&model.Node{}, true)
+	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&v1.Node{}, true)
 	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.Anything).Return(errors.New("wanted error"))
 
 	// Create the service.
@@ -135,6 +134,6 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := ns.Heartbeat("test1", types.ReadyNodeState)
+	err := ns.Heartbeat("test1", v1.ReadyNodeState)
 	assert.Error(err)
 }

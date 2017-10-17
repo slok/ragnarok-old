@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/types"
@@ -16,7 +17,7 @@ type Status interface {
 	// RegisterNode registers a node as available on the server
 	RegisterNode(id string, tags map[string]string) error
 	// NodeHeartbeat sends a node heartbeat to the master
-	NodeHeartbeat(id string, status types.NodeState) error
+	NodeHeartbeat(id string, status v1.NodeState) error
 }
 
 // StatusGRPC satisfies Status interface with GRPC communication
@@ -69,7 +70,7 @@ func (s *StatusGRPC) RegisterNode(id string, tags map[string]string) error {
 }
 
 // NodeHeartbeat satisfies Status interface
-func (s *StatusGRPC) NodeHeartbeat(id string, state types.NodeState) error {
+func (s *StatusGRPC) NodeHeartbeat(id string, state v1.NodeState) error {
 	logger := s.logger.WithField("call", "node-heartbeat").WithField("id", id)
 	logger.Debug("making GRPC service call")
 

@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/slok/ragnarok/chaos/failure"
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/clock"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
@@ -20,14 +20,14 @@ import (
 type FailureStateHandler interface {
 	// ProcessFailureStates processes a list of failures that should be in the expected state
 	// this is enabled or disabled (each one will be passed in a list of that state).
-	ProcessFailureStates(failures []*failure.Failure) error
+	ProcessFailureStates(failures []*v1.Failure) error
 }
 
 // Failure interface will implement the required methods to be able to
 // communicate with a failure status server.
 type Failure interface {
 	// GetFailure requests and returns a Failure usinig the ID of the failure
-	GetFailure(id string) (*failure.Failure, error)
+	GetFailure(id string) (*v1.Failure, error)
 	// ProcessFailureStateStreaming will make a request and start reading the stream from the GRPC to handle the states.
 	// It receives a handler that will be executed on every status. also receives a stop channel that will cancel the stream processing.
 	ProcessFailureStateStreaming(nodeID string, handler FailureStateHandler, stopCh <-chan struct{}) error
@@ -37,7 +37,7 @@ type Failure interface {
 type FailureGRPC struct {
 	c             pbfs.FailureStatusClient
 	stateParser   types.FailureStateParser
-	failureParser failure.Parser
+	failureParser types.FailureParser
 	clock         clock.Clock
 	logger        log.Logger
 
@@ -48,13 +48,13 @@ type FailureGRPC struct {
 }
 
 // NewFailureGRPCFromConnection returns a new FailureGRPC using a grpc connection.
-func NewFailureGRPCFromConnection(connection *grpc.ClientConn, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
+func NewFailureGRPCFromConnection(connection *grpc.ClientConn, failureParser types.FailureParser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
 	c := pbfs.NewFailureStatusClient(connection)
 	return NewFailureGRPC(c, failureParser, stateParser, clock, logger)
 }
 
 // NewFailureGRPC returns a new FailureGRPC.
-func NewFailureGRPC(client pbfs.FailureStatusClient, failureParser failure.Parser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
+func NewFailureGRPC(client pbfs.FailureStatusClient, failureParser types.FailureParser, stateParser types.FailureStateParser, clock clock.Clock, logger log.Logger) (*FailureGRPC, error) {
 	return &FailureGRPC{
 		c:             client,
 		stateParser:   stateParser,
@@ -66,7 +66,7 @@ func NewFailureGRPC(client pbfs.FailureStatusClient, failureParser failure.Parse
 }
 
 // GetFailure satisfies Failure interface.
-func (f *FailureGRPC) GetFailure(id string) (*failure.Failure, error) {
+func (f *FailureGRPC) GetFailure(id string) (*v1.Failure, error) {
 	logger := f.logger.WithField("call", "get-failure").WithField("failureID", id)
 	logger.Debug("making GRPC service call")
 
@@ -147,7 +147,7 @@ func (f *FailureGRPC) ProcessFailureStateStreaming(nodeID string, handler Failur
 				// TODO: Reconnect
 				return
 			}
-			transFs := make([]*failure.Failure, len(fss))
+			transFs := make([]*v1.Failure, len(fss))
 			for i, fl := range fss {
 				res, err := f.failureParser.PBToFailure(fl)
 				if err != nil {

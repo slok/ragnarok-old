@@ -7,9 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/slok/ragnarok/master/model"
+	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/master/service"
-	"github.com/slok/ragnarok/types"
 )
 
 func TestMemNodeRepositoryRegisterNode(t *testing.T) {
@@ -27,10 +26,10 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 		reg := service.NewMemNodeRepository()
 
 		for i := 0; i < test.quantity; i++ {
-			n := model.Node{
+			n := v1.Node{
 				ID:     fmt.Sprintf("id-%d", i),
 				Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
-				State:  types.ReadyNodeState,
+				State:  v1.ReadyNodeState,
 			}
 			err := reg.StoreNode(n.ID, n)
 			assert.NoError(err)
@@ -59,10 +58,10 @@ func TestMemNodeRepositoryDelete(t *testing.T) {
 
 	reg := service.NewMemNodeRepository()
 
-	n := model.Node{
+	n := v1.Node{
 		ID:     "test1",
 		Labels: map[string]string{"address": "127.0.0.1"},
-		State:  types.AttackingNodeState,
+		State:  v1.AttackingNodeState,
 	}
 	err := reg.StoreNode(n.ID, n)
 	require.NoError(err)
@@ -89,13 +88,13 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 
 	for _, test := range tests {
 		reg := service.NewMemNodeRepository()
-		nodes := make([]model.Node, test.quantity)
+		nodes := make([]v1.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
-			n := model.Node{
+			n := v1.Node{
 				ID:     fmt.Sprintf("id-%d", i),
 				Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
-				State:  types.ErroredNodeState,
+				State:  v1.ErroredNodeState,
 			}
 			nodes = append(nodes, n)
 			err := reg.StoreNode(n.ID, n)
@@ -111,14 +110,14 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 	tests := []struct {
 		name     string
-		nodes    []model.Node
-		selector model.Labels
-		expNodes map[string]*model.Node
+		nodes    []v1.Node
+		selector v1.NodeLabels
+		expNodes map[string]*v1.Node
 	}{
 		{
 			name: "No labels shouldn't return any node",
-			nodes: []model.Node{
-				model.Node{
+			nodes: []v1.Node{
+				v1.Node{
 					ID: "node1",
 					Labels: map[string]string{
 						"id":   "node1",
@@ -126,7 +125,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node2",
 					Labels: map[string]string{
 						"id":   "node2",
@@ -134,7 +133,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node3",
 					Labels: map[string]string{
 						"id":   "node3",
@@ -144,12 +143,12 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 				},
 			},
 			selector: map[string]string{},
-			expNodes: map[string]*model.Node{},
+			expNodes: map[string]*v1.Node{},
 		},
 		{
 			name: "Single ID label should return one node only",
-			nodes: []model.Node{
-				model.Node{
+			nodes: []v1.Node{
+				v1.Node{
 					ID: "node1",
 					Labels: map[string]string{
 						"id":   "node1",
@@ -157,7 +156,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node2",
 					Labels: map[string]string{
 						"id":   "node2",
@@ -165,7 +164,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node3",
 					Labels: map[string]string{
 						"id":   "node3",
@@ -175,8 +174,8 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 				},
 			},
 			selector: map[string]string{"id": "node2"},
-			expNodes: map[string]*model.Node{
-				"node2": &model.Node{
+			expNodes: map[string]*v1.Node{
+				"node2": &v1.Node{
 					ID: "node2",
 					Labels: map[string]string{
 						"id":   "node2",
@@ -188,8 +187,8 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 		},
 		{
 			name: "Single ID label should return one node only",
-			nodes: []model.Node{
-				model.Node{
+			nodes: []v1.Node{
+				v1.Node{
 					ID: "node1",
 					Labels: map[string]string{
 						"id":   "node1",
@@ -197,7 +196,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node2",
 					Labels: map[string]string{
 						"id":   "node2",
@@ -205,7 +204,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node3",
 					Labels: map[string]string{
 						"id":   "node3",
@@ -213,7 +212,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "node",
 					},
 				},
-				model.Node{
+				v1.Node{
 					ID: "node4",
 					Labels: map[string]string{
 						"id":   "node4",
@@ -223,8 +222,8 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 				},
 			},
 			selector: map[string]string{"env": "prod", "kind": "master"},
-			expNodes: map[string]*model.Node{
-				"node1": &model.Node{
+			expNodes: map[string]*v1.Node{
+				"node1": &v1.Node{
 					ID: "node1",
 					Labels: map[string]string{
 						"id":   "node1",
@@ -232,7 +231,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 						"kind": "master",
 					},
 				},
-				"node4": &model.Node{
+				"node4": &v1.Node{
 					ID: "node4",
 					Labels: map[string]string{
 						"id":   "node4",

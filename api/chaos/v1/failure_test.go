@@ -5,10 +5,34 @@ import (
 	"testing"
 	"time"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/chaos/failure/v1"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestFailureStateStringer(t *testing.T) {
+	tests := []struct {
+		st    v1.FailureState
+		expSt string
+	}{
+		{v1.EnabledFailureState, "enabled"},
+		{v1.ExecutingFailureState, "executing"},
+		{v1.RevertingFailureState, "reverting"},
+		{v1.DisabledFailureState, "disabled"},
+		{v1.StaleFailureState, "stale"},
+		{v1.ErroredFailureState, "errored"},
+		{v1.ErroredRevertingFailureState, "erroredreverting"},
+		{v1.UnknownFailureState, "unknown"},
+		{99999, "unknown"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.expSt, func(t *testing.T) {
+			assert := assert.New(t)
+			assert.Equal(test.expSt, test.st.String())
+		})
+	}
+}
 
 func TestGoodReadFailure(t *testing.T) {
 	assert := assert.New(t)
@@ -31,7 +55,7 @@ spec:
 	f, err := v1.ReadFailure([]byte(spec))
 	if assert.NoError(err, "YAML unmarshalling shouldn't return an error") {
 		expectedF := v1.Failure{
-			Spec: v1.Spec{
+			Spec: v1.FailureSpec{
 				Timeout: 1 * time.Hour,
 				Attacks: []v1.AttackMap{
 					{
@@ -101,7 +125,7 @@ func TestGoodRenderDefinition(t *testing.T) {
 	assert := assert.New(t)
 
 	f := v1.Failure{
-		Spec: v1.Spec{
+		Spec: v1.FailureSpec{
 			Timeout: 30 * time.Second,
 			Attacks: []v1.AttackMap{
 				{
@@ -150,7 +174,7 @@ func TestGoodRenderDefinition(t *testing.T) {
 func TestMultipleAttacksOnMapRenderFailure(t *testing.T) {
 	assert := assert.New(t)
 	f := v1.Failure{
-		Spec: v1.Spec{
+		Spec: v1.FailureSpec{
 			Timeout: 30 * time.Second,
 			Attacks: []v1.AttackMap{
 				{
@@ -174,5 +198,4 @@ func TestMultipleAttacksOnMapRenderFailure(t *testing.T) {
 	if assert.Error(err, "YAML marshalling should return an attack format error") {
 		assert.Equal(err, errors.New("each attack map of the attack list needs to be a single map"))
 	}
-
 }

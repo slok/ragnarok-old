@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/chaos/failure"
 	"github.com/slok/ragnarok/clock"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
-	mfailure "github.com/slok/ragnarok/mocks/chaos/failure"
 	mpbfs "github.com/slok/ragnarok/mocks/grpc/failurestatus"
 	mclient "github.com/slok/ragnarok/mocks/node/client"
+	mtypes "github.com/slok/ragnarok/mocks/types"
 	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/types"
 )
@@ -26,7 +26,7 @@ func TestGetFailure(t *testing.T) {
 	tests := []struct {
 		name        string
 		failure     *pbfs.Failure
-		expFailure  *failure.Failure
+		expFailure  *v1.Failure
 		expRPCErr   bool // Expect GRPC call error.
 		expTransErr bool // Expect transformation error.
 	}{
@@ -39,11 +39,13 @@ func TestGetFailure(t *testing.T) {
 				CurrentState:  pbfs.State_ENABLED,
 				ExpectedState: pbfs.State_DISABLED,
 			},
-			expFailure: &failure.Failure{
-				ID:     "test1",
-				NodeID: "node1",
-				Definition: failure.Definition{
-					Attacks: []failure.AttackMap{
+			expFailure: &v1.Failure{
+				Metadata: v1.FailureMetadata{
+					ID:     "test1",
+					NodeID: "node1",
+				},
+				Spec: v1.FailureSpec{
+					Attacks: []v1.AttackMap{
 						{
 							"attack1": attack.Opts{
 								"size": 524288000,
@@ -51,8 +53,10 @@ func TestGetFailure(t *testing.T) {
 						},
 					},
 				},
-				CurrentState:  types.EnabledFailureState,
-				ExpectedState: types.DisabledFailureState,
+				Status: v1.FailureStatus{
+					CurrentState:  v1.EnabledFailureState,
+					ExpectedState: v1.DisabledFailureState,
+				},
 			},
 			expRPCErr:   false,
 			expTransErr: false,
@@ -60,14 +64,14 @@ func TestGetFailure(t *testing.T) {
 		{
 			name:        "RPC call failed",
 			failure:     &pbfs.Failure{},
-			expFailure:  &failure.Failure{},
+			expFailure:  &v1.Failure{},
 			expRPCErr:   true,
 			expTransErr: false,
 		},
 		{
 			name:        "RPC call succesful but PB result transformation error",
 			failure:     &pbfs.Failure{},
-			expFailure:  &failure.Failure{},
+			expFailure:  &v1.Failure{},
 			expRPCErr:   false,
 			expTransErr: true,
 		},
@@ -88,7 +92,7 @@ func TestGetFailure(t *testing.T) {
 			// Create mocks.
 			mc := &mpbfs.FailureStatusClient{}
 			mc.On("GetFailure", mock.Anything, &pbfs.FailureId{Id: test.failure.GetId()}).Once().Return(test.failure, rpcErr)
-			mp := &mfailure.Parser{}
+			mp := &mtypes.FailureParser{}
 			mp.On("PBToFailure", test.failure).Return(test.expFailure, transErr)
 
 			// Create the service
@@ -167,7 +171,7 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 			mc.On("FailureStateList", mock.Anything, &pbfs.NodeId{Id: test.nodeID}).Once().Return(mstream, nil)
 
 			// Create the service
-			c, err := client.NewFailureGRPC(mc, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			c, err := client.NewFailureGRPC(mc, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
 			err = c.ProcessFailureStateStreaming(test.nodeID, mfsh, nil)
 			if assert.NoError(err) {
@@ -245,7 +249,7 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 
 			// Create the service
 			stopC := make(chan struct{})
-			c, err := client.NewFailureGRPC(mc, failure.Transformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+			c, err := client.NewFailureGRPC(mc, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 			require.NoError(err)
 			err = c.ProcessFailureStateStreaming(test.nodeID, mfsh, stopC)
 			if assert.NoError(err) {
