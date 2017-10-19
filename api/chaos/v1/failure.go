@@ -13,7 +13,9 @@ import (
 
 const (
 	// FailureKind is the kind a failure.
-	FailureKind = "chaos/v1/failure"
+	FailureKind = "failure"
+	// FailureVersion is the version of the failure
+	FailureVersion = "chaos/v1"
 )
 
 // FailureState is the state a failure can be.
@@ -100,6 +102,11 @@ type Failure struct {
 // GetObjectKind satisfies Object interface.
 func (f *Failure) GetObjectKind() api.Kind {
 	return FailureKind
+}
+
+// GetObjectVersion satisfies Object interface.
+func (f *Failure) GetObjectVersion() api.Version {
+	return FailureVersion
 }
 
 // ReadFailure reads a config yaml failure and returns a failure object.

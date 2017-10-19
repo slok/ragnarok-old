@@ -5,8 +5,10 @@ import (
 )
 
 const (
-	// ExperimentKind is the kind a failure.
-	ExperimentKind = "chaos/v1/experiment"
+	// ExperimentKind is the kind a experiment.
+	ExperimentKind = "experiment"
+	// ExperimentVersion is the version of an experiment.
+	ExperimentVersion = "chaos/v1"
 )
 
 // ExperimentStatus is the status after the creation of the Experiment.
@@ -41,4 +43,9 @@ type Experiment struct {
 // GetObjectKind satisfies Object interface.
 func (e *Experiment) GetObjectKind() api.Kind {
 	return ExperimentKind
+}
+
+// GetObjectVersion satisfies Object interface.
+func (e *Experiment) GetObjectVersion() api.Version {
+	return ExperimentVersion
 }

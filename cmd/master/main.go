@@ -46,6 +46,7 @@ func Main() error {
 		logger.Set("debug")
 	}
 
+	// TODO: Autoregister this node as a master node.
 	gserver, err := createGRPCServer(*cfg, logger)
 	if err != nil {
 		return err
