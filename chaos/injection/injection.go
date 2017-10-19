@@ -1,4 +1,4 @@
-package failure
+package injection
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/types"
 )
 
 // Failer will implement the way of making a failure of a kind on a system (high level error).
@@ -17,13 +17,13 @@ type Failer interface {
 	// Inject applies the failure to the system
 	Inject() error
 
-	// Revert will disable the failure.
+	// Revert will disable the failure
 	Revert() error
 }
 
 // Injection is a failure that can be applied.
 type Injection struct {
-	*Failure
+	*v1.Failure
 	attacks []attack.Attacker
 	ctx     context.Context
 	ctxC    context.CancelFunc
@@ -37,13 +37,13 @@ type Injection struct {
 
 // NewInjection Creates a new Failer object from a failure definition
 // using the base global registry.
-func NewInjection(f *Failure, l log.Logger, cl clock.Clock) (*Injection, error) {
+func NewInjection(f *v1.Failure, l log.Logger, cl clock.Clock) (*Injection, error) {
 	return NewInjectionFromReg(f, attack.BaseReg(), l, cl)
 }
 
 // NewInjectionFromReg Creates a new SystemFailure object from a failure definition
 // and a custom registry.
-func NewInjectionFromReg(f *Failure, reg attack.Registry, l log.Logger, cl clock.Clock) (*Injection, error) {
+func NewInjectionFromReg(f *v1.Failure, reg attack.Registry, l log.Logger, cl clock.Clock) (*Injection, error) {
 	// Set global logger if no logger
 	if l == nil {
 		l = log.Base()
@@ -54,9 +54,9 @@ func NewInjectionFromReg(f *Failure, reg attack.Registry, l log.Logger, cl clock
 	}
 
 	// Create the attacks.
-	atts := make([]attack.Attacker, len(f.Definition.Attacks))
+	atts := make([]attack.Attacker, len(f.Spec.Attacks))
 
-	for i, tAC := range f.Definition.Attacks {
+	for i, tAC := range f.Spec.Attacks {
 		// Check on each attack slice there is only one attack map.
 		if len(tAC) != 1 {
 			return nil, errors.New("configuration attack doesn't have the correct length")
@@ -74,9 +74,9 @@ func NewInjectionFromReg(f *Failure, reg attack.Registry, l log.Logger, cl clock
 		atts[i] = a
 	}
 
-	// Update the failure.
-	f.Creation = cl.Now().UTC()
-	f.CurrentState = types.EnabledFailureState
+	// Update the v1.
+	f.Status.Creation = cl.Now().UTC()
+	f.Status.CurrentState = v1.EnabledFailureState
 
 	ij := &Injection{
 		Failure: f,
@@ -93,11 +93,11 @@ func NewInjectionFromReg(f *Failure, reg attack.Registry, l log.Logger, cl clock
 func (i *Injection) Fail() error {
 	// Set correct state and only allow execution of not executed failures
 	i.Lock()
-	if i.CurrentState != types.EnabledFailureState {
-		return fmt.Errorf("invalid state. The only valid state for execution is: %s", types.EnabledFailureState)
+	if i.Status.CurrentState != v1.EnabledFailureState {
+		return fmt.Errorf("invalid state. The only valid state for execution is: %s", v1.EnabledFailureState)
 	}
-	i.CurrentState = types.ExecutingFailureState
-	i.Executed = i.clock.Now().UTC()
+	i.Status.CurrentState = v1.ExecutingFailureState
+	i.Status.Executed = i.clock.Now().UTC()
 	i.Unlock()
 
 	i.ctx, i.ctxC = context.WithCancel(i.ctx)
@@ -136,7 +136,7 @@ func (i *Injection) Fail() error {
 			return fmt.Errorf("error aplying failure & error when trying to revert the applied ones")
 		}
 		i.Lock()
-		i.CurrentState = types.ErroredFailureState
+		i.Status.CurrentState = v1.ErroredFailureState
 		i.Unlock()
 		return fmt.Errorf("error aplying failure")
 	}
@@ -146,26 +146,26 @@ func (i *Injection) Fail() error {
 		select {
 		case <-i.ctx.Done():
 			i.log.Info("context on system failure done")
-		case <-i.clock.After(i.Definition.Timeout):
+		case <-i.clock.After(i.Spec.Timeout):
 			i.log.Info("system failure finished")
 		}
 		i.Lock()
 		// Don't revert if not executing
-		if i.CurrentState != types.ExecutingFailureState {
-			i.log.Warnf("system failure attempt to finish but this is not in running state: %s", i.CurrentState)
+		if i.Status.CurrentState != v1.ExecutingFailureState {
+			i.log.Warnf("system failure attempt to finish but this is not in running state: %s", i.Status.CurrentState)
 			return
 		}
 		i.Unlock()
 		i.Revert()
 	}()
-	i.Executed = i.clock.Now().UTC()
-	i.log.Infof("execution of '%s' failure started", i.ID)
+	i.Status.Executed = i.clock.Now().UTC()
+	i.log.Infof("execution of '%s' failure started", i.Metadata.ID)
 	return nil
 }
 
 // Revert implements Revert interface.
 func (i *Injection) Revert() error {
-	i.log.Infof("reverting '%s' failure", i.ID)
+	i.log.Infof("reverting '%s' failure", i.Metadata.ID)
 	defer i.ctxC()
 
 	// Only revert the applied attacks
@@ -177,7 +177,7 @@ func (i *Injection) Revert() error {
 		}(a)
 	}
 
-	i.CurrentState = types.DisabledFailureState
+	i.Status.CurrentState = v1.DisabledFailureState
 	errStr := ""
 	for j := 0; j < len(i.appliedAtts); j++ {
 		if err := <-errsCh; err != nil {
@@ -187,9 +187,9 @@ func (i *Injection) Revert() error {
 
 	var err error
 	i.Lock()
-	i.Finished = i.clock.Now().UTC()
+	i.Status.Finished = i.clock.Now().UTC()
 	if errStr != "" {
-		i.CurrentState = types.ErroredRevertingFailureState
+		i.Status.CurrentState = v1.ErroredRevertingFailureState
 		err = fmt.Errorf("error reverting failure (triggered by errored attacks when aplying attacks): %s", errStr)
 	}
 	i.Unlock()

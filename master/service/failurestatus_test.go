@@ -6,14 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/slok/ragnarok/failure"
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
 	mservice "github.com/slok/ragnarok/mocks/service"
-	"github.com/slok/ragnarok/types"
 )
 
-type testNodeFailures map[string][]*failure.Failure
+type testNodeFailures map[string][]*v1.Failure
 
 func TestGetNodeFailures(t *testing.T) {
 	assert := assert.New(t)
@@ -27,11 +26,11 @@ func TestGetNodeFailures(t *testing.T) {
 		{
 			expectedFailures: testNodeFailures{
 				"node1": {
-					&failure.Failure{ID: "f11", NodeID: "node1"},
+					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f11", NodeID: "node1"}},
 				},
 				"node2": {
-					&failure.Failure{ID: "f21", NodeID: "node2"},
-					&failure.Failure{ID: "f21", NodeID: "node2"},
+					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
+					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
 				},
 				"node3": {},
 			},
@@ -62,33 +61,60 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*failure.Failure
-		expFailures []*failure.Failure
+		failures    []*v1.Failure
+		expFailures []*v1.Failure
 	}{
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{},
+			expFailures: []*v1.Failure{},
 		},
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			expFailures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
 		},
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
-				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
-				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f2"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f3"},
+					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f4"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{
-				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			expFailures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f2"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f4"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
 		},
 	}
@@ -111,32 +137,56 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*failure.Failure
-		expFailures []*failure.Failure
+		failures    []*v1.Failure
+		expFailures []*v1.Failure
 	}{
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.EnabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{},
+			expFailures: []*v1.Failure{},
 		},
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			expFailures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
 			},
 		},
 		{
-			failures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
-				&failure.Failure{ID: "f2", ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f3", ExpectedState: types.RevertingFailureState},
-				&failure.Failure{ID: "f4", ExpectedState: types.EnabledFailureState},
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f2"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f3"},
+					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f4"},
+					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+				},
 			},
-			expFailures: []*failure.Failure{
-				&failure.Failure{ID: "f1", ExpectedState: types.DisabledFailureState},
+			expFailures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{ID: "f1"},
+					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+				},
 			},
 		},
 	}
@@ -159,12 +209,21 @@ func TestGetFailure(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		expFailure *failure.Failure
+		expFailure *v1.Failure
 		expErr     bool
 	}{
-		{&failure.Failure{ID: "test1"}, false},
-		{&failure.Failure{ID: "test2"}, true},
-		{&failure.Failure{ID: "test3"}, false},
+		{
+			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test1"}},
+			expErr:     false,
+		},
+		{
+			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test2"}},
+			expErr:     true,
+		},
+		{
+			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test3"}},
+			expErr:     false,
+		},
 	}
 
 	for _, test := range tests {
@@ -178,7 +237,7 @@ func TestGetFailure(t *testing.T) {
 		fss := service.NewFailureStatus(mrepo, log.Dummy)
 
 		// Get & check.
-		f, err := fss.GetFailure(test.expFailure.ID)
+		f, err := fss.GetFailure(test.expFailure.Metadata.ID)
 		if test.expErr {
 			assert.Error(err)
 		} else if assert.NoError(err) {

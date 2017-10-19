@@ -4,61 +4,18 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 )
-
-// FailureState is the state a failure can be.
-type FailureState int
-
-const (
-	// UnknownFailureState is an unknown status.
-	UnknownFailureState FailureState = iota
-	// EnabledFailureState is when the failure should be making stuff.
-	EnabledFailureState
-	// ExecutingFailureState is when the failure its making stuff.
-	ExecutingFailureState
-	// RevertingFailureState is when the failure is being reverted.
-	RevertingFailureState
-	// DisabledFailureState is when the failure is should be not making stuff.
-	DisabledFailureState
-	// StaleFailureState is when the failure has go through alll the lifecycle and should be archived ((reverted already).
-	StaleFailureState
-	// ErroredFailureState is when the failure is not making stuff (due to an error).
-	ErroredFailureState
-	// ErroredRevertingFailureState is when the failure is not making stuff (due to an error reverting).
-	ErroredRevertingFailureState
-)
-
-func (f FailureState) String() string {
-	switch f {
-	case EnabledFailureState:
-		return "enabled"
-	case ExecutingFailureState:
-		return "executing"
-	case RevertingFailureState:
-		return "reverting"
-	case DisabledFailureState:
-		return "disabled"
-	case StaleFailureState:
-		return "stale"
-	case ErroredFailureState:
-		return "errored"
-	case ErroredRevertingFailureState:
-		return "erroredreverting"
-
-	default:
-		return "unknown"
-	}
-}
 
 // FailureStateParser has the required methods to transform failure state.
 type FailureStateParser interface {
 	// StrToFailureState transforms an string to a failure state.
-	StrToFailureState(state string) (FailureState, error)
+	StrToFailureState(state string) (v1.FailureState, error)
 	// PBToFailureState transforms a GRPC failure staet to a failure state.
-	PBToFailureState(state pbfs.State) (FailureState, error)
+	PBToFailureState(state pbfs.State) (v1.FailureState, error)
 	// FailureState transforms a failure state to a GRPC failure state
-	FailureStateToPB(state FailureState) (pbfs.State, error)
+	FailureStateToPB(state v1.FailureState) (pbfs.State, error)
 }
 
 // failureStateParser will convert failure state in different types.
@@ -68,65 +25,65 @@ type failureStateParser struct{}
 var FailureStateTransformer = &failureStateParser{}
 
 // StrToFailureState implements FailureStateParser interface.
-func (f *failureStateParser) StrToFailureState(state string) (FailureState, error) {
+func (f *failureStateParser) StrToFailureState(state string) (v1.FailureState, error) {
 	switch strings.ToLower(state) {
 	case "enabled":
-		return EnabledFailureState, nil
+		return v1.EnabledFailureState, nil
 	case "executing":
-		return ExecutingFailureState, nil
+		return v1.ExecutingFailureState, nil
 	case "reverting":
-		return RevertingFailureState, nil
+		return v1.RevertingFailureState, nil
 	case "disabled":
-		return DisabledFailureState, nil
+		return v1.DisabledFailureState, nil
 	case "stale":
-		return StaleFailureState, nil
+		return v1.StaleFailureState, nil
 	case "errored":
-		return ErroredFailureState, nil
+		return v1.ErroredFailureState, nil
 	case "erroredreverting":
-		return ErroredRevertingFailureState, nil
+		return v1.ErroredRevertingFailureState, nil
 	default:
-		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
+		return v1.UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
 }
 
 // PBToFailureState implements FailureStateParser interface.
-func (f *failureStateParser) PBToFailureState(state pbfs.State) (FailureState, error) {
+func (f *failureStateParser) PBToFailureState(state pbfs.State) (v1.FailureState, error) {
 	switch state {
 	case pbfs.State_ENABLED:
-		return EnabledFailureState, nil
+		return v1.EnabledFailureState, nil
 	case pbfs.State_EXECUTING:
-		return ExecutingFailureState, nil
+		return v1.ExecutingFailureState, nil
 	case pbfs.State_REVERTING:
-		return RevertingFailureState, nil
+		return v1.RevertingFailureState, nil
 	case pbfs.State_DISABLED:
-		return DisabledFailureState, nil
+		return v1.DisabledFailureState, nil
 	case pbfs.State_STALE:
-		return StaleFailureState, nil
+		return v1.StaleFailureState, nil
 	case pbfs.State_ERRORED:
-		return ErroredFailureState, nil
+		return v1.ErroredFailureState, nil
 	case pbfs.State_ERRORED_REVERTING:
-		return ErroredRevertingFailureState, nil
+		return v1.ErroredRevertingFailureState, nil
 	default:
-		return UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
+		return v1.UnknownFailureState, fmt.Errorf("invalid failure state: %s", state)
 	}
 }
 
 // FailureStateToPB implements FailureStateParser interface.
-func (f *failureStateParser) FailureStateToPB(state FailureState) (pbfs.State, error) {
+func (f *failureStateParser) FailureStateToPB(state v1.FailureState) (pbfs.State, error) {
 	switch state {
-	case EnabledFailureState:
+	case v1.EnabledFailureState:
 		return pbfs.State_ENABLED, nil
-	case ExecutingFailureState:
+	case v1.ExecutingFailureState:
 		return pbfs.State_EXECUTING, nil
-	case RevertingFailureState:
+	case v1.RevertingFailureState:
 		return pbfs.State_REVERTING, nil
-	case DisabledFailureState:
+	case v1.DisabledFailureState:
 		return pbfs.State_DISABLED, nil
-	case StaleFailureState:
+	case v1.StaleFailureState:
 		return pbfs.State_STALE, nil
-	case ErroredFailureState:
+	case v1.ErroredFailureState:
 		return pbfs.State_ERRORED, nil
-	case ErroredRevertingFailureState:
+	case v1.ErroredRevertingFailureState:
 		return pbfs.State_ERRORED_REVERTING, nil
 	default:
 		return pbfs.State_UNKNOWN, fmt.Errorf("invalid failure state: %s", state)

@@ -11,8 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
 
+	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
@@ -87,15 +88,15 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 	tests := []struct {
 		id        string
 		state     pbns.State
-		expState  types.NodeState
+		expState  clusterv1.NodeState
 		shouldErr bool
 	}{
-		{"test1", pbns.State_READY, types.ReadyNodeState, false},
-		{"test1", pbns.State_UNKNOWN, types.UnknownNodeState, false},
-		{"test1", pbns.State_ERRORED, types.ErroredNodeState, false},
-		{"test1", pbns.State_ATTACKING, types.AttackingNodeState, false},
-		{"test1", pbns.State_REVERTING, types.RevertingNodeState, false},
-		{"test1", pbns.State_REVERTING, types.RevertingNodeState, true},
+		{"test1", pbns.State_READY, clusterv1.ReadyNodeState, false},
+		{"test1", pbns.State_UNKNOWN, clusterv1.UnknownNodeState, false},
+		{"test1", pbns.State_ERRORED, clusterv1.ErroredNodeState, false},
+		{"test1", pbns.State_ATTACKING, clusterv1.AttackingNodeState, false},
+		{"test1", pbns.State_REVERTING, clusterv1.RevertingNodeState, false},
+		{"test1", pbns.State_REVERTING, clusterv1.RevertingNodeState, true},
 	}
 
 	for _, test := range tests {
@@ -148,17 +149,41 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 	tests := []struct {
 		name          string
 		nID           *pbfs.NodeId
-		fs            []*failure.Failure
+		fs            []*chaosv1.Failure
 		expFs         []*pbfs.Failure
 		stUpdateTimes int
 	}{
 		{
 			name: "receive one failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test1"},
-			fs: []*failure.Failure{
-				&failure.Failure{ID: "f1", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f2", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f3", CurrentState: types.EnabledFailureState, ExpectedState: types.DisabledFailureState},
+			fs: []*chaosv1.Failure{
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f1",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.EnabledFailureState,
+					},
+				},
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f2",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.EnabledFailureState,
+					},
+				},
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f3",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.DisabledFailureState,
+					},
+				},
 			},
 			expFs: []*pbfs.Failure{
 				&pbfs.Failure{Id: "f1", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
@@ -170,10 +195,34 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 		{
 			name: "receive multiple failure status correctly",
 			nID:  &pbfs.NodeId{Id: "test2"},
-			fs: []*failure.Failure{
-				&failure.Failure{ID: "f1", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f2", CurrentState: types.EnabledFailureState, ExpectedState: types.EnabledFailureState},
-				&failure.Failure{ID: "f3", CurrentState: types.EnabledFailureState, ExpectedState: types.DisabledFailureState},
+			fs: []*chaosv1.Failure{
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f1",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.EnabledFailureState,
+					},
+				},
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f2",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.EnabledFailureState,
+					},
+				},
+				&chaosv1.Failure{
+					Metadata: chaosv1.FailureMetadata{
+						ID: "f3",
+					},
+					Status: chaosv1.FailureStatus{
+						CurrentState:  chaosv1.EnabledFailureState,
+						ExpectedState: chaosv1.DisabledFailureState,
+					},
+				},
 			},
 			expFs: []*pbfs.Failure{
 				&pbfs.Failure{Id: "f1", CurrentState: pbfs.State_ENABLED, ExpectedState: pbfs.State_ENABLED, Definition: "{}\n"},
@@ -288,15 +337,19 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			es, err := types.FailureStateTransformer.PBToFailureState(test.expFailure.GetExpectedState())
 			require.NoError(err)
 
-			def, err := failure.ReadDefinition([]byte(test.expFailure.Definition))
+			spec, err := chaosv1.ReadFailureSpec([]byte(test.expFailure.Definition))
 			require.NoError(err)
 
-			expF := &failure.Failure{
-				ID:            test.expFailure.GetId(),
-				NodeID:        test.expFailure.GetNodeID(),
-				Definition:    def,
-				CurrentState:  cs,
-				ExpectedState: es,
+			expF := &chaosv1.Failure{
+				Metadata: chaosv1.FailureMetadata{
+					ID:     test.expFailure.GetId(),
+					NodeID: test.expFailure.GetNodeID(),
+				},
+				Spec: spec,
+				Status: chaosv1.FailureStatus{
+					CurrentState:  cs,
+					ExpectedState: es,
+				},
 			}
 
 			// Mocks.

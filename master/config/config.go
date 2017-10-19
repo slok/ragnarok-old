@@ -14,6 +14,7 @@ type Config struct {
 	Debug bool
 }
 
+
 // Validate validates the configuration
 func (c *Config) Validate() error {
 	if len(c.HTTPListenAddress) == 0 {

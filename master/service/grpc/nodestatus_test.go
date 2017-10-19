@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	pb "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/grpc"
@@ -115,8 +116,8 @@ func TestNodeStatusGRPCHeartbeatOK(t *testing.T) {
 	}
 
 	// Mock service calls on master.
-	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, nil)
-	nss.On("Heartbeat", n.Id, mock.AnythingOfType("types.NodeState")).Once().Return(nil)
+	nsp.On("PBToNodeState", mock.Anything).Once().Return(v1.ReadyNodeState, nil)
+	nss.On("Heartbeat", n.Id, mock.Anything).Once().Return(nil)
 
 	// Call and check.
 	_, err := ns.Heartbeat(context.Background(), n)
@@ -155,8 +156,8 @@ func TestNodeStatusGRPCHeartbeatError(t *testing.T) {
 	ns := grpc.NewNodeStatus(nss, nsp, log.Dummy)
 
 	// Mock service calls on master.
-	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, nil)
-	nss.On("Heartbeat", mock.AnythingOfType("string"), types.ReadyNodeState).Once().Return(errors.New("wanted error"))
+	nsp.On("PBToNodeState", mock.Anything).Once().Return(v1.ReadyNodeState, nil)
+	nss.On("Heartbeat", mock.Anything, v1.ReadyNodeState).Once().Return(errors.New("wanted error"))
 
 	// Call and check.
 	_, err := ns.Heartbeat(context.Background(), &pb.NodeState{})
@@ -175,7 +176,7 @@ func TestNodeStatusGRPCHeartbeatParseStatusError(t *testing.T) {
 	ns := grpc.NewNodeStatus(nss, nsp, log.Dummy)
 
 	// Mock service calls on master.
-	nsp.On("PBToNodeState", mock.AnythingOfType("nodestatus.State")).Once().Return(types.ReadyNodeState, errors.New("wanted error"))
+	nsp.On("PBToNodeState", mock.Anything).Once().Return(v1.ReadyNodeState, errors.New("wanted error"))
 
 	// Call and check.
 	_, err := ns.Heartbeat(context.Background(), &pb.NodeState{})

@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"
@@ -51,7 +50,7 @@ func Main() error {
 		return err
 	}
 
-	fCli, err := client.NewFailureGRPCFromConnection(conn, failure.Transformer, types.FailureStateTransformer, clock.Base(), logger)
+	fCli, err := client.NewFailureGRPCFromConnection(conn, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), logger)
 	if err != nil {
 		return err
 	}

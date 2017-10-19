@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mclient "github.com/slok/ragnarok/mocks/node/client"
 	"github.com/slok/ragnarok/node/service"
-	"github.com/slok/ragnarok/types"
 )
 
 func TestNodeStatusRegisterOnMaster(t *testing.T) {
@@ -59,10 +59,10 @@ func TestNodeStatusRegisterOnMaster(t *testing.T) {
 			err := ns.RegisterOnMaster()
 			if test.expErr {
 				assert.Error(err)
-				assert.NotEqual(types.ReadyNodeState, ns.State())
+				assert.NotEqual(v1.ReadyNodeState, ns.State())
 			} else {
 				assert.NoError(err)
-				assert.Equal(types.ReadyNodeState, ns.State())
+				assert.Equal(v1.ReadyNodeState, ns.State())
 			}
 			scm.AssertExpectations(t)
 		})

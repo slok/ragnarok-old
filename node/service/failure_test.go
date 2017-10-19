@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mlog "github.com/slok/ragnarok/mocks/log"
@@ -133,20 +133,22 @@ func TestLogFailureStateStopGoodCli(t *testing.T) {
 func TestLogFailureStateProcessing(t *testing.T) {
 	tests := []struct {
 		name     string
-		failures []*failure.Failure
+		failures []*v1.Failure
 	}{
 		{
 			name:     "No failures received shouldn't log anything.",
-			failures: []*failure.Failure{},
+			failures: []*v1.Failure{},
 		},
 		{
 			name: "One failure received should log one failure.",
-			failures: []*failure.Failure{
-				&failure.Failure{
-					ID:     "test1",
-					NodeID: "node1",
-					Definition: failure.Definition{
-						Attacks: []failure.AttackMap{
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{
+						ID:     "test1",
+						NodeID: "node1",
+					},
+					Spec: v1.FailureSpec{
+						Attacks: []v1.AttackMap{
 							{
 								"attack1": attack.Opts{
 									"size": 524288000,
@@ -154,18 +156,22 @@ func TestLogFailureStateProcessing(t *testing.T) {
 							},
 						},
 					},
-					Creation: clock.Now().UTC(),
+					Status: v1.FailureStatus{
+						Creation: clock.Now().UTC(),
+					},
 				},
 			},
 		},
 		{
 			name: "Multiple failures received should log all the failures.",
-			failures: []*failure.Failure{
-				&failure.Failure{
-					ID:     "test1",
-					NodeID: "node1",
-					Definition: failure.Definition{
-						Attacks: []failure.AttackMap{
+			failures: []*v1.Failure{
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{
+						ID:     "test1",
+						NodeID: "node1",
+					},
+					Spec: v1.FailureSpec{
+						Attacks: []v1.AttackMap{
 							{
 								"attack1": attack.Opts{
 									"size": 524288000,
@@ -173,15 +179,21 @@ func TestLogFailureStateProcessing(t *testing.T) {
 							},
 						},
 					},
-					Creation: clock.Now().UTC(),
-				},
-				&failure.Failure{
-					ID:     "test2",
-					NodeID: "node1",
-					Definition: failure.Definition{
-						Attacks: []failure.AttackMap{},
+					Status: v1.FailureStatus{
+						Creation: clock.Now().UTC(),
 					},
-					Creation: clock.Now().UTC(),
+				},
+				&v1.Failure{
+					Metadata: v1.FailureMetadata{
+						ID:     "test2",
+						NodeID: "node1",
+					},
+					Spec: v1.FailureSpec{
+						Attacks: []v1.AttackMap{},
+					},
+					Status: v1.FailureStatus{
+						Creation: clock.Now().UTC(),
+					},
 				},
 			},
 		},

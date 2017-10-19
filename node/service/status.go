@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node/client"
-	"github.com/slok/ragnarok/types"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 // to the master need to implement
 type Status interface {
 	// Returns the node status.
-	State() types.NodeState
+	State() v1.NodeState
 
 	// RegisterOnMaster registers the node on the master.
 	RegisterOnMaster() error
@@ -44,7 +44,7 @@ type NodeStatus struct {
 	logger log.Logger
 	clock  clock.Clock
 
-	state types.NodeState
+	state v1.NodeState
 	stMu  sync.Mutex // stMu is the node status mutex.
 
 	hbFinishC   chan struct{}
@@ -66,7 +66,7 @@ func NewNodeStatus(nodeID string, tags map[string]string, cli client.Status, clo
 }
 
 // State satisfies Status interface.
-func (n *NodeStatus) State() types.NodeState {
+func (n *NodeStatus) State() v1.NodeState {
 	n.stMu.Lock()
 	defer n.stMu.Unlock()
 	return n.state
@@ -80,7 +80,7 @@ func (n *NodeStatus) RegisterOnMaster() error {
 	if err := n.cli.RegisterNode(n.nodeID, n.tags); err != nil {
 		return err
 	}
-	n.state = types.ReadyNodeState
+	n.state = v1.ReadyNodeState
 
 	return nil
 }
@@ -95,7 +95,7 @@ func (n *NodeStatus) StartHeartbeat(interval time.Duration) (chan error, error) 
 	n.stMu.Lock()
 	st := n.state
 	n.stMu.Unlock()
-	if st != types.ReadyNodeState {
+	if st != v1.ReadyNodeState {
 		return nil, fmt.Errorf("register the node on the master before start heartbeating")
 	}
 

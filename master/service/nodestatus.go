@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
-	"github.com/slok/ragnarok/master/model"
-	"github.com/slok/ragnarok/types"
 )
 
 // NodeStatusService is how the master manages the status of the nodes.
 type NodeStatusService interface {
 	// Register registers a new node on the master.
-	Register(id string, tags map[string]string) error
+	Register(id string, labels map[string]string) error
 
 	// Heartbeat sets the node state after its heartbeat.
-	Heartbeat(id string, state types.NodeState) error
+	Heartbeat(id string, state v1.NodeState) error
 }
 
 // NodeStatus is the implementation of node status service.
@@ -36,22 +35,22 @@ func NewNodeStatus(_ config.Config, repository NodeRepository, logger log.Logger
 }
 
 // Register implements NodeStatusService interface.
-func (f *NodeStatus) Register(id string, tags map[string]string) error {
+func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	f.logger.WithField("nodeID", id).Infof("node registered on master")
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
-	n := &model.Node{
-		ID:    id,
-		Tags:  tags,
-		State: types.UnknownNodeState,
+	n := v1.Node{
+		ID:     id,
+		Labels: labels,
+		State:  v1.UnknownNodeState,
 	}
 
 	return f.repo.StoreNode(id, n)
 }
 
 // Heartbeat sets the node state after its heartbeat.
-func (f *NodeStatus) Heartbeat(id string, state types.NodeState) error {
+func (f *NodeStatus) Heartbeat(id string, state v1.NodeState) error {
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
@@ -63,7 +62,7 @@ func (f *NodeStatus) Heartbeat(id string, state types.NodeState) error {
 
 	// Set state and save.
 	n.State = state
-	if err := f.repo.StoreNode(id, n); err != nil {
+	if err := f.repo.StoreNode(id, *n); err != nil {
 		return fmt.Errorf("could not set the current state: %v", err)
 	}
 

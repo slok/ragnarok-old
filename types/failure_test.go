@@ -1,12 +1,12 @@
-package failure_test
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/failure"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/types"
 )
@@ -16,7 +16,7 @@ func TestFailureTrasformPB2Failure(t *testing.T) {
 	tests := []struct {
 		name       string
 		failure    *pbfs.Failure
-		expFailure *failure.Failure
+		expFailure *v1.Failure
 		expErr     bool
 	}{
 		{
@@ -28,11 +28,13 @@ func TestFailureTrasformPB2Failure(t *testing.T) {
 				CurrentState:  pbfs.State_ENABLED,
 				ExpectedState: pbfs.State_DISABLED,
 			},
-			expFailure: &failure.Failure{
-				ID:     "test1",
-				NodeID: "node1",
-				Definition: failure.Definition{
-					Attacks: []failure.AttackMap{
+			expFailure: &v1.Failure{
+				Metadata: v1.FailureMetadata{
+					ID:     "test1",
+					NodeID: "node1",
+				},
+				Spec: v1.FailureSpec{
+					Attacks: []v1.AttackMap{
 						{
 							"attack1": attack.Opts{
 								"size": 524288000,
@@ -40,8 +42,10 @@ func TestFailureTrasformPB2Failure(t *testing.T) {
 						},
 					},
 				},
-				CurrentState:  types.EnabledFailureState,
-				ExpectedState: types.DisabledFailureState,
+				Status: v1.FailureStatus{
+					CurrentState:  v1.EnabledFailureState,
+					ExpectedState: v1.DisabledFailureState,
+				},
 			},
 		},
 		{
@@ -84,7 +88,7 @@ func TestFailureTrasformPB2Failure(t *testing.T) {
 			assert := assert.New(t)
 
 			// Transform.
-			gotFailure, err := failure.Transformer.PBToFailure(test.failure)
+			gotFailure, err := types.FailureTransformer.PBToFailure(test.failure)
 
 			// Check.
 			if test.expErr {
@@ -102,17 +106,19 @@ func TestFailureTrasformFailure2PB(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		failure    *failure.Failure
+		failure    *v1.Failure
 		expFailure *pbfs.Failure
 		expErr     bool
 	}{
 		{
 			name: "Simple conversion",
-			failure: &failure.Failure{
-				ID:     "test1",
-				NodeID: "node1",
-				Definition: failure.Definition{
-					Attacks: []failure.AttackMap{
+			failure: &v1.Failure{
+				Metadata: v1.FailureMetadata{
+					ID:     "test1",
+					NodeID: "node1",
+				},
+				Spec: v1.FailureSpec{
+					Attacks: []v1.AttackMap{
 						{
 							"attack1": attack.Opts{
 								"size": 524288000,
@@ -120,8 +126,10 @@ func TestFailureTrasformFailure2PB(t *testing.T) {
 						},
 					},
 				},
-				CurrentState:  types.EnabledFailureState,
-				ExpectedState: types.DisabledFailureState,
+				Status: v1.FailureStatus{
+					CurrentState:  v1.EnabledFailureState,
+					ExpectedState: v1.DisabledFailureState,
+				},
 			},
 			expFailure: &pbfs.Failure{
 				Id:            "test1",
@@ -133,23 +141,32 @@ func TestFailureTrasformFailure2PB(t *testing.T) {
 		},
 		{
 			name: "Error on current state transformation",
-			failure: &failure.Failure{
-				ID:            "test1",
-				NodeID:        "node1",
-				Definition:    failure.Definition{},
-				CurrentState:  9999999999,
-				ExpectedState: types.DisabledFailureState,
+			failure: &v1.Failure{
+				Metadata: v1.FailureMetadata{
+					ID:     "test1",
+					NodeID: "node1",
+				},
+				Spec: v1.FailureSpec{},
+				Status: v1.FailureStatus{
+					CurrentState:  9999999999,
+					ExpectedState: v1.DisabledFailureState,
+				},
 			},
 			expErr: true,
 		},
 		{
 			name: "Error on expected state transformation",
-			failure: &failure.Failure{
-				ID:            "test1",
-				NodeID:        "node1",
-				Definition:    failure.Definition{},
-				CurrentState:  types.DisabledFailureState,
-				ExpectedState: 9999999999,
+			failure: &v1.Failure{
+				Metadata: v1.FailureMetadata{
+					ID:     "test1",
+					NodeID: "node1",
+				},
+				Spec: v1.FailureSpec{},
+				Status: v1.FailureStatus{
+
+					CurrentState:  v1.DisabledFailureState,
+					ExpectedState: 9999999999,
+				},
 			},
 			expErr: true,
 		},
@@ -160,7 +177,7 @@ func TestFailureTrasformFailure2PB(t *testing.T) {
 			assert := assert.New(t)
 
 			// Transform.
-			gotFailure, err := failure.Transformer.FailureToPB(test.failure)
+			gotFailure, err := types.FailureTransformer.FailureToPB(test.failure)
 
 			// Check.
 			if test.expErr {

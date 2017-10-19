@@ -17,6 +17,7 @@ type Config struct {
 	HeartbeatInterval time.Duration
 }
 
+
 // Validate validates the configuration.
 func (c *Config) Validate() error {
 	if c.MasterAddress == "" {

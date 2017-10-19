@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/clock"
-	"github.com/slok/ragnarok/failure"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node/client"
 )
@@ -86,9 +86,9 @@ func (l *LogFailureState) StopHandling() error {
 }
 
 // ProcessFailureStates implements client.FailureStateHandler
-func (l *LogFailureState) ProcessFailureStates(failures []*failure.Failure) error {
+func (l *LogFailureState) ProcessFailureStates(failures []*v1.Failure) error {
 	for _, fl := range failures {
-		l.logger.WithField("failure", fl.ID).Infof("%+v", fl)
+		l.logger.WithField("failure", fl.Metadata.ID).Infof("%+v", fl)
 	}
 	return nil
 }

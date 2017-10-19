@@ -3,7 +3,9 @@ Package failure manages all the failure types. A failure among other properties 
 from multiple attacks. these attacks will be started for a failure defined duration, after
 this defined period the failure will be reverted.
 
-A failure can't be executed by itself, it has all the required information to apply the attack
+Failure, attacks & injection:
+
+A failure can't be executed by itself, it has all the required information to apply the attacks
 but not the environment. A failure that can be executed is named and "Injection", the injection
 has the running attacks, locks, timers...
 This could be wrapped in:
@@ -29,5 +31,33 @@ the same time, taking this into account this will the responsability of the atta
 (periods, flushing run/state, adding on top of previous run/state of the periodic loop, etc)
 
 configuraiton/defition examples can be check on failure/testdata path
+
+Experiment:
+
+On the other part we have the name Experiment, an experiment is only a group of failures that
+have wil be (or are being) applied on targets. Every target will have the same failure
+(injection when being applied), the Experiment will match these failuresusing selectors, the
+selectors will match the tags of the targets.
+
+This would be:
+
+[Experiment0]
+	 ├──[Injection0 (Node0)]
+	 │		└──────[Failure0]
+	 │				   ├─────[Definition]
+	 │				   └─────[Attacks]
+	 │				   			 ├─────[Attack0]
+	 │							 ├─────...
+	 │							 └─────[AttackN]
+  	 │
+	 └──[Injection0  (Node1)]
+			└──────[Failure0]
+					   ├─────[Definition]
+					   └─────[Attacks]
+					   			 ├─────[Attack0]
+								 ├─────...
+								 └─────[AttackN]
+
+
 */
-package failure // import "github.com/slok/ragnarok/failure"
+package failure // import "github.com/slok/ragnarok/chaos"
