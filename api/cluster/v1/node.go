@@ -50,34 +50,46 @@ type NodeLabels map[string]string
 
 // NodeMetadata has the node metadata fields
 type NodeMetadata struct {
-	ID     string // ID is the id of the node
-	Master bool   // Master will telle what kind of node is.
+	ID     string `json:"id,omitempty"`     // ID is the id of the node
+	Master bool   `json:"master,omitempty"` // Master will telle what kind of node is.
 }
 
 // NodeSpec has the node specific fields.
 type NodeSpec struct {
-	Labels NodeLabels // Labels are the tags related with the node.
+	Labels NodeLabels `json:"labels,omitempty"` // Labels are the tags related with the node.
 }
 
 // NodeStatus has the state fo the node.
 type NodeStatus struct {
-	State    NodeState // State is the state of the Node
-	Creation time.Time // Creation is when the creation of the node happenned.
+	State    NodeState `json:"state,omitempty"`    // State is the state of the Node
+	Creation time.Time `json:"creation,omitempty"` // Creation is when the creation of the node happenned.
+}
+
+// NewNode is a plain Node object contructor.
+func NewNode() Node {
+	return Node{
+		TypeMeta: api.TypeMeta{
+			Kind:    NodeKind,
+			Version: NodeVersion,
+		},
+	}
 }
 
 // Node is an internal and simplified representation of a failure node on the masters
 type Node struct {
-	Metadata NodeMetadata
-	Spec     NodeSpec
-	Status   NodeStatus
+	api.TypeMeta `json:",inline"`
+
+	Metadata NodeMetadata `json:"metadata,omitempty"`
+	Spec     NodeSpec     `json:"spec,omitempty"`
+	Status   NodeStatus   `json:"status,omitempty"`
 }
 
 // GetObjectKind satisfies Object interface.
 func (n *Node) GetObjectKind() api.Kind {
-	return NodeKind
+	return n.Kind
 }
 
 // GetObjectVersion satisfies Object interface.
 func (n *Node) GetObjectVersion() api.Version {
-	return NodeVersion
+	return n.Version
 }
