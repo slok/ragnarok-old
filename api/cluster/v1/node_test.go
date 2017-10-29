@@ -23,7 +23,7 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 		expErr     bool
 	}{
 		{
-			name: "Simple object encoding should return an error if doesn't have kind or version",
+			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			node: &clusterv1.Node{
 				Metadata: clusterv1.NodeMetadata{
 					ID:     "testNode1",
@@ -40,8 +40,8 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: "",
-			expErr:     true,
+			expEncNode: "{\"kind\":\"node\",\"version\":\"cluster/v1\",\"metadata\":{\"id\":\"testNode1\",\"master\":true},\"spec\":{\"labels\":{\"id\":\"testNode1\",\"kind\":\"node\"}},\"status\":{\"state\":1,\"creation\":\"2012-11-01T22:08:41Z\"}}\n",
+			expErr:     false,
 		},
 		{
 			name: "Simple object encoding shouldn't return an error",
@@ -73,7 +73,7 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewJSONSerializer(apimachinery.ObjFactory, log.Dummy)
+			s := apimachinery.NewJSONSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
 			var b bytes.Buffer
 			err := s.Encode(test.node, &b)
 
@@ -118,7 +118,6 @@ func TestJSONDecodeCluserV1Node(t *testing.T) {
 		"creation": "2012-11-01T22:08:41Z"
 	}
 }`,
-
 			expNode: &clusterv1.Node{
 				TypeMeta: api.TypeMeta{Version: clusterv1.NodeVersion, Kind: clusterv1.NodeKind},
 				Metadata: clusterv1.NodeMetadata{
@@ -182,7 +181,7 @@ func TestJSONDecodeCluserV1Node(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewJSONSerializer(apimachinery.ObjFactory, log.Dummy)
+			s := apimachinery.NewJSONSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
 			obj, err := s.Decode([]byte(test.nodeJSON))
 
 			if test.expErr {

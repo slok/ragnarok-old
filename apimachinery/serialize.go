@@ -24,13 +24,15 @@ type Serializer interface {
 type JSONSerializer struct {
 	factory    Factory
 	discoverer TypeDiscoverer
+	typer      Typer
 	logger     log.Logger
 }
 
 // NewJSONSerializer returns a new JSONSerializer object
-func NewJSONSerializer(factory Factory, logger log.Logger) *JSONSerializer {
+func NewJSONSerializer(typer Typer, factory Factory, logger log.Logger) *JSONSerializer {
 	return &JSONSerializer{
 		factory:    factory,
+		typer:      typer,
 		discoverer: JSONTypeDiscoverer,
 		logger:     logger,
 	}
@@ -38,8 +40,9 @@ func NewJSONSerializer(factory Factory, logger log.Logger) *JSONSerializer {
 
 // Encode satisfies Serializer interface.
 func (j *JSONSerializer) Encode(obj api.Object, w io.Writer) error {
-	if obj.GetObjectKind() == "" || obj.GetObjectVersion() == "" {
-		return fmt.Errorf("object kind or version missing")
+	// Ensure the object has the correct type.
+	if err := j.typer.SetType(obj); err != nil {
+		return err
 	}
 	e := json.NewEncoder(w)
 	return e.Encode(obj)

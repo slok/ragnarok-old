@@ -22,6 +22,16 @@ func (t TypeMeta) String() string {
 	return fmt.Sprintf("%s/%s", t.Version, t.Kind)
 }
 
+// GetObjectKind satisfies Object interface.
+func (t TypeMeta) GetObjectKind() Kind {
+	return t.Kind
+}
+
+// GetObjectVersion satisfies Object interface.
+func (t TypeMeta) GetObjectVersion() Version {
+	return t.Version
+}
+
 // Object is an interface that every configuration object
 // that can be converted, used & stored needs to implement.
 type Object interface {

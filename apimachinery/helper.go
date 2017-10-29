@@ -25,7 +25,8 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 	// TODO: Make more elegant way of registering object creators.
 	switch {
 	case t.Kind == clusterv1.NodeKind && t.Version == clusterv1.NodeVersion:
-		return &clusterv1.Node{}, nil
+		n := clusterv1.NewNode()
+		return &n, nil
 	default:
 		return nil, fmt.Errorf("unknown %s object type", t)
 	}
@@ -55,4 +56,30 @@ func (j *jsonTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
 	}
 
 	return obj, nil
+}
+
+// Typer is the interface that knows to set the type in an object instance.
+type Typer interface {
+	// SetType sets the type of the object in the object.
+	SetType(obj api.Object) error
+}
+
+// objTyper is the default object typer.
+type objTyper struct{}
+
+// ObjTyper is a handy instance of the default object typer.
+var ObjTyper = &objTyper{}
+
+// SetType implements Typer interface.
+func (o *objTyper) SetType(obj api.Object) error {
+	// TODO: Make more elegant way of setting correct types.
+	switch v := obj.(type) {
+	case *clusterv1.Node:
+		v.Kind = clusterv1.NodeKind
+		v.Version = clusterv1.NodeVersion
+	default:
+		return fmt.Errorf("could not set the type of object because isn't a valid object type")
+	}
+
+	return nil
 }

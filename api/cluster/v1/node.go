@@ -83,13 +83,3 @@ type Node struct {
 	Spec     NodeSpec     `json:"spec,omitempty"`
 	Status   NodeStatus   `json:"status,omitempty"`
 }
-
-// GetObjectKind satisfies Object interface.
-func (n *Node) GetObjectKind() api.Kind {
-	return n.Kind
-}
-
-// GetObjectVersion satisfies Object interface.
-func (n *Node) GetObjectVersion() api.Version {
-	return n.Version
-}
