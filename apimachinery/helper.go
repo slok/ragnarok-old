@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/slok/ragnarok/api"
+	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 )
 
@@ -26,6 +27,9 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 	switch {
 	case t.Kind == clusterv1.NodeKind && t.Version == clusterv1.NodeVersion:
 		n := clusterv1.NewNode()
+		return &n, nil
+	case t.Kind == chaosv1.FailureKind && t.Version == chaosv1.FailureVersion:
+		n := chaosv1.NewFailure()
 		return &n, nil
 	default:
 		return nil, fmt.Errorf("unknown %s object type", t)
@@ -77,6 +81,9 @@ func (o *objTyper) SetType(obj api.Object) error {
 	case *clusterv1.Node:
 		v.Kind = clusterv1.NodeKind
 		v.Version = clusterv1.NodeVersion
+	case *chaosv1.Failure:
+		v.Kind = chaosv1.FailureKind
+		v.Version = chaosv1.FailureVersion
 	default:
 		return fmt.Errorf("could not set the type of object because isn't a valid object type")
 	}

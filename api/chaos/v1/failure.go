@@ -4,11 +4,10 @@ import (
 	"errors"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -67,47 +66,51 @@ type AttackMap map[string]attack.Opts
 
 // FailureMetadata has information about the object.
 type FailureMetadata struct {
-	ID     string // ID is the id of the Failure.
-	NodeID string // NodeID is the id of the Node.
+	ID     string `json:"id,omitempty" yaml:"id,omitempty"`         // ID is the id of the Failure.
+	NodeID string `json:"nodeid,omitempty" yaml:"nodeid,omitempty"` // NodeID is the id of the Node.
 }
 
 // FailureStatus has all the information of a failure to create an injection
 type FailureStatus struct {
-	CurrentState  FailureState // CurrentState is the state of the failure.
-	ExpectedState FailureState // ExpectedState is the state the failure should be.
-	Creation      time.Time    // Creation is when the failure injection was created.
-	Executed      time.Time    // Executed is when the failure injectionwas executed.
-	Finished      time.Time    // Finished is when the failure injection was reverted.
+	CurrentState  FailureState `json:"currentState,omitempty" yaml:"currentState,omitempty"`   // CurrentState is the state of the failure.
+	ExpectedState FailureState `json:"expectedState,omitempty" yaml:"expectedState,omitempty"` // ExpectedState is the state the failure should be.
+	Creation      time.Time    `json:"creation,omitempty" yaml:"creation,omitempty"`           // Creation is when the failure injection was created.
+	Executed      time.Time    `json:"executed,omitempty" yaml:"executed,omitempty"`           // Executed is when the failure injectionwas executed.
+	Finished      time.Time    `json:"finished,omitempty" yaml:"finished,omitempty"`           // Finished is when the failure injection was reverted.
 }
 
 // FailureSpec is the specification that has the information to it can be created and applied.
 type FailureSpec struct {
 	// Timeout is
-	Timeout time.Duration `yaml:"timeout,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty"`
 	// Attacks used an array so the no repeated elements of map limitation can be bypassed.
-	Attacks []AttackMap `yaml:"attacks,omitempty"`
+	Attacks []AttackMap `json:"attacks,omitempty" yaml:"attacks,omitempty"`
 	// TODO: accuracy
 }
 
 // Failure is the way a failure is defined.
 type Failure struct {
+	api.TypeMeta `json:",inline" yaml:",inline"`
+
 	// Metadta is additional data of a failure object.
-	Metadata FailureMetadata `yaml:"metadata,omitempty"`
+	Metadata FailureMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	// Spec has all the required data to create a Failure and use it.
-	Spec FailureSpec `yaml:"spec,omitempty"`
+	Spec FailureSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
 	// Status is the current information and status of the Failure.
-	Status FailureStatus `yaml:"status,omitempty"`
+	Status FailureStatus `json:"status,omitempty" yaml:"status,omitempty"`
 }
 
-// GetObjectKind satisfies Object interface.
-func (f *Failure) GetObjectKind() api.Kind {
-	return FailureKind
+// NewFailure is a plain Failure object contructor.
+func NewFailure() Failure {
+	return Failure{
+		TypeMeta: api.TypeMeta{
+			Kind:    FailureKind,
+			Version: FailureVersion,
+		},
+	}
 }
 
-// GetObjectVersion satisfies Object interface.
-func (f *Failure) GetObjectVersion() api.Version {
-	return FailureVersion
-}
+// TODO: LEGACY CODE NEEDS TO BE MIGRATED.
 
 // ReadFailure reads a config yaml failure and returns a failure object.
 func ReadFailure(data []byte) (Failure, error) {

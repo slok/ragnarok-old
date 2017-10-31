@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"time"
+
 	"github.com/slok/ragnarok/api"
 )
 
@@ -14,38 +16,49 @@ const (
 // ExperimentStatus is the status after the creation of the Experiment.
 type ExperimentStatus struct {
 	// FailureIDs are the IDs of the failures that have been created.
-	FailureIDs []string `yaml:"failureIDs,omitempty"`
+	FailureIDs []string  `json:"failureIDs,omitempty"`
+	Creation   time.Time `json:"creation,omitempty"` // Creation is when the creation of the node happenned.
+}
+
+// ExperimentFailureTemplate is the template of a failure
+type ExperimentFailureTemplate struct {
+	Spec FailureSpec `json:"spec,omitempty"`
+}
+
+// ExperimentSpec is the spec of the experiment
+type ExperimentSpec struct {
+	// Selector is the map of key-value pairs that will match the desired nodes where the attacks
+	// will be injected.
+	Selector map[string]string         `json:"selector,omitempty"`
+	Template ExperimentFailureTemplate `json:"template,omitempty"`
+}
+
+// ExperimentMetadata is the metadata of the experiment
+type ExperimentMetadata struct {
+	// ID is the id of the experiment
+	ID string `json:"id,omitempty"`
+	// Name is the name of the experiment.
+	Name string `json:"name,omitempty"`
+	// Description is the description of the experiment.
+	Description string `json:"description,omitempty"`
 }
 
 // Experiment is only a simple group of failures that are being injected in
 // the targets that have been selected by the experiment using selectors.
 type Experiment struct {
-	// ID is the id of the experiment
-	ID string `yaml:"id,omitempty"`
+	api.TypeMeta
 
-	// Name is the name of the experiment.
-	Name string `yaml:"name,omitempty"`
-
-	// Description is the description of the experiment.
-	Description string `yaml:"description,omitempty"`
-
-	// Selector is the map of key-value pairs that will match the desired nodes where the attacks
-	// will be injected.
-	Selector map[string]string `yaml:"selector,omitempty"`
-
-	// Definition is the definition of a Failure.
-	Spec Failure `yaml:"spec,omitempty"`
-
-	// Status is the status of the experiment.
-	Status ExperimentStatus `yaml:"status,omitempty"`
+	Metadata ExperimentMetadata `json:"metadata,omitempty"`
+	Spec     ExperimentSpec     `json:"spec,omitempty"`
+	Status   ExperimentStatus   `json:"status,omitempty"`
 }
 
-// GetObjectKind satisfies Object interface.
-func (e *Experiment) GetObjectKind() api.Kind {
-	return ExperimentKind
-}
-
-// GetObjectVersion satisfies Object interface.
-func (e *Experiment) GetObjectVersion() api.Version {
-	return ExperimentVersion
+// NewExperiment is a plain Experiment object contructor.
+func NewExperiment() Experiment {
+	return Experiment{
+		TypeMeta: api.TypeMeta{
+			Kind:    ExperimentKind,
+			Version: ExperimentVersion,
+		},
+	}
 }

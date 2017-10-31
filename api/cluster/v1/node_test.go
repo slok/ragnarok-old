@@ -2,6 +2,7 @@ package v1_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,7 +41,7 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: "{\"kind\":\"node\",\"version\":\"cluster/v1\",\"metadata\":{\"id\":\"testNode1\",\"master\":true},\"spec\":{\"labels\":{\"id\":\"testNode1\",\"kind\":\"node\"}},\"status\":{\"state\":1,\"creation\":\"2012-11-01T22:08:41Z\"}}\n",
+			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","master":true},"spec":{"labels":{"id":"testNode1","kind":"node"}},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 		{
@@ -65,7 +66,7 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: "{\"kind\":\"node\",\"version\":\"cluster/v1\",\"metadata\":{\"id\":\"testNode1\",\"master\":true},\"spec\":{\"labels\":{\"id\":\"testNode1\",\"kind\":\"node\"}},\"status\":{\"state\":1,\"creation\":\"2012-11-01T22:08:41Z\"}}\n",
+			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","master":true},"spec":{"labels":{"id":"testNode1","kind":"node"}},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 	}
@@ -80,7 +81,7 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 			if test.expErr {
 				assert.Error(err)
 			} else {
-				assert.Equal(test.expEncNode, b.String())
+				assert.Equal(test.expEncNode, strings.TrimSuffix(b.String(), "\n"))
 				assert.NoError(err)
 			}
 		})
