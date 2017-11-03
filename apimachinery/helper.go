@@ -31,6 +31,9 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 	case t.Kind == chaosv1.FailureKind && t.Version == chaosv1.FailureVersion:
 		n := chaosv1.NewFailure()
 		return &n, nil
+	case t.Kind == chaosv1.ExperimentKind && t.Version == chaosv1.ExperimentVersion:
+		n := chaosv1.NewExperiment()
+		return &n, nil
 	default:
 		return nil, fmt.Errorf("unknown %s object type", t)
 	}
@@ -84,6 +87,9 @@ func (o *objTyper) SetType(obj api.Object) error {
 	case *chaosv1.Failure:
 		v.Kind = chaosv1.FailureKind
 		v.Version = chaosv1.FailureVersion
+	case *chaosv1.Experiment:
+		v.Kind = chaosv1.ExperimentKind
+		v.Version = chaosv1.ExperimentVersion
 	default:
 		return fmt.Errorf("could not set the type of object because isn't a valid object type")
 	}
