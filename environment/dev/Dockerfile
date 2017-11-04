@@ -22,7 +22,7 @@ RUN curl -L https://github.com/google/protobuf/releases/download/v${PROTOBUF_VER
 USER ragnarok
 
 # golang dependencies
-RUN go get github.com/Masterminds/glide && \
+RUN go get github.com/golang/dep/cmd/dep && \
     go get github.com/vektra/mockery/.../ && \
     go get github.com/golang/protobuf/protoc-gen-go
 
