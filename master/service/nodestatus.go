@@ -41,9 +41,16 @@ func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	defer f.nodeLock.Unlock()
 
 	n := v1.Node{
-		ID:     id,
-		Labels: labels,
-		State:  v1.UnknownNodeState,
+		Metadata: v1.NodeMetadata{
+			ID:     id,
+			Master: false,
+		},
+		Spec: v1.NodeSpec{
+			Labels: labels,
+		},
+		Status: v1.NodeStatus{
+			State: v1.UnknownNodeState,
+		},
 	}
 
 	return f.repo.StoreNode(id, n)
@@ -61,7 +68,7 @@ func (f *NodeStatus) Heartbeat(id string, state v1.NodeState) error {
 	}
 
 	// Set state and save.
-	n.State = state
+	n.Status.State = state
 	if err := f.repo.StoreNode(id, *n); err != nil {
 		return fmt.Errorf("could not set the current state: %v", err)
 	}

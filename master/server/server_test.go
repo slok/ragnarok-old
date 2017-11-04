@@ -143,9 +143,6 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 }
 
 func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
 	tests := []struct {
 		name          string
 		nID           *pbfs.NodeId
@@ -235,6 +232,8 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
 
 			// Mocks.
 			mnss := &mservice.NodeStatusService{}
@@ -288,9 +287,6 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 }
 
 func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
 	tests := []struct {
 		name       string
 		failureID  *pbfs.FailureId
@@ -324,8 +320,10 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
 			var expErr error
 			if test.expErr {
 				expErr = errors.New("wanted error")
@@ -389,5 +387,4 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			mfss.AssertExpectations(t)
 		})
 	}
-
 }

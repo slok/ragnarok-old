@@ -85,7 +85,7 @@ NodeLoop:
 	for nName, node := range m.reg {
 		// Check on each node if staisfies the labels.
 		for lk, lv := range labels {
-			if nv, ok := node.Labels[lk]; !ok || (ok && nv != lv) {
+			if nv, ok := node.Spec.Labels[lk]; !ok || (ok && nv != lv) {
 				continue NodeLoop // Continue next node iteration, not valid.
 			}
 		}

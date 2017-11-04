@@ -27,15 +27,21 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := v1.Node{
-				ID:     fmt.Sprintf("id-%d", i),
-				Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
-				State:  v1.ReadyNodeState,
+				Metadata: v1.NodeMetadata{
+					ID: fmt.Sprintf("id-%d", i),
+				},
+				Spec: v1.NodeSpec{
+					Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				},
+				Status: v1.NodeStatus{
+					State: v1.ReadyNodeState,
+				},
 			}
-			err := reg.StoreNode(n.ID, n)
+			err := reg.StoreNode(n.Metadata.ID, n)
 			assert.NoError(err)
 
 			// Check stored node is ok
-			nGot, ok := reg.GetNode(n.ID)
+			nGot, ok := reg.GetNode(n.Metadata.ID)
 			if assert.True(ok) {
 				assert.Equal(&n, nGot)
 			}
@@ -59,18 +65,24 @@ func TestMemNodeRepositoryDelete(t *testing.T) {
 	reg := service.NewMemNodeRepository()
 
 	n := v1.Node{
-		ID:     "test1",
-		Labels: map[string]string{"address": "127.0.0.1"},
-		State:  v1.AttackingNodeState,
+		Metadata: v1.NodeMetadata{
+			ID: "test1",
+		},
+		Spec: v1.NodeSpec{
+			Labels: map[string]string{"address": "127.0.0.1"},
+		},
+		Status: v1.NodeStatus{
+			State: v1.AttackingNodeState,
+		},
 	}
-	err := reg.StoreNode(n.ID, n)
+	err := reg.StoreNode(n.Metadata.ID, n)
 	require.NoError(err)
-	_, ok := reg.GetNode(n.ID)
+	_, ok := reg.GetNode(n.Metadata.ID)
 	require.True(ok)
 
 	// Check delete works
-	reg.DeleteNode(n.ID)
-	_, ok = reg.GetNode(n.ID)
+	reg.DeleteNode(n.Metadata.ID)
+	_, ok = reg.GetNode(n.Metadata.ID)
 	assert.False(ok)
 }
 
@@ -92,12 +104,18 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := v1.Node{
-				ID:     fmt.Sprintf("id-%d", i),
-				Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
-				State:  v1.ErroredNodeState,
+				Metadata: v1.NodeMetadata{
+					ID: fmt.Sprintf("id-%d", i),
+				},
+				Spec: v1.NodeSpec{
+					Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
+				},
+				Status: v1.NodeStatus{
+					State: v1.ErroredNodeState,
+				},
 			}
 			nodes = append(nodes, n)
-			err := reg.StoreNode(n.ID, n)
+			err := reg.StoreNode(n.Metadata.ID, n)
 			require.NoError(err)
 		}
 
@@ -118,27 +136,33 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 			name: "No labels shouldn't return any node",
 			nodes: []v1.Node{
 				v1.Node{
-					ID: "node1",
-					Labels: map[string]string{
-						"id":   "node1",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node1"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node1",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node2",
-					Labels: map[string]string{
-						"id":   "node2",
-						"env":  "staging",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node2"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node2",
+							"env":  "staging",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node3",
-					Labels: map[string]string{
-						"id":   "node3",
-						"env":  "prod",
-						"kind": "node",
+					Metadata: v1.NodeMetadata{ID: "node3"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node3",
+							"env":  "prod",
+							"kind": "node",
+						},
 					},
 				},
 			},
@@ -149,38 +173,46 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 			name: "Single ID label should return one node only",
 			nodes: []v1.Node{
 				v1.Node{
-					ID: "node1",
-					Labels: map[string]string{
-						"id":   "node1",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node1"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node1",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node2",
-					Labels: map[string]string{
-						"id":   "node2",
-						"env":  "staging",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node2"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node2",
+							"env":  "staging",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node3",
-					Labels: map[string]string{
-						"id":   "node3",
-						"env":  "prod",
-						"kind": "node",
+					Metadata: v1.NodeMetadata{ID: "node3"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node3",
+							"env":  "prod",
+							"kind": "node",
+						},
 					},
 				},
 			},
 			selector: map[string]string{"id": "node2"},
 			expNodes: map[string]*v1.Node{
 				"node2": &v1.Node{
-					ID: "node2",
-					Labels: map[string]string{
-						"id":   "node2",
-						"env":  "staging",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node2"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node2",
+							"env":  "staging",
+							"kind": "master",
+						},
 					},
 				},
 			},
@@ -189,54 +221,66 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 			name: "Single ID label should return one node only",
 			nodes: []v1.Node{
 				v1.Node{
-					ID: "node1",
-					Labels: map[string]string{
-						"id":   "node1",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node1"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node1",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node2",
-					Labels: map[string]string{
-						"id":   "node2",
-						"env":  "staging",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node2"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node2",
+							"env":  "staging",
+							"kind": "master",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node3",
-					Labels: map[string]string{
-						"id":   "node3",
-						"env":  "prod",
-						"kind": "node",
+					Metadata: v1.NodeMetadata{ID: "node3"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node3",
+							"env":  "prod",
+							"kind": "node",
+						},
 					},
 				},
 				v1.Node{
-					ID: "node4",
-					Labels: map[string]string{
-						"id":   "node4",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node4"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node4",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 			},
 			selector: map[string]string{"env": "prod", "kind": "master"},
 			expNodes: map[string]*v1.Node{
 				"node1": &v1.Node{
-					ID: "node1",
-					Labels: map[string]string{
-						"id":   "node1",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node1"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node1",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 				"node4": &v1.Node{
-					ID: "node4",
-					Labels: map[string]string{
-						"id":   "node4",
-						"env":  "prod",
-						"kind": "master",
+					Metadata: v1.NodeMetadata{ID: "node4"},
+					Spec: v1.NodeSpec{
+						Labels: map[string]string{
+							"id":   "node4",
+							"env":  "prod",
+							"kind": "master",
+						},
 					},
 				},
 			},
@@ -252,7 +296,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 
 			// Insert the nodes.
 			for _, n := range test.nodes {
-				require.NoError(reg.StoreNode(n.ID, n))
+				require.NoError(reg.StoreNode(n.Metadata.ID, n))
 			}
 
 			gotN := reg.GetNodesByLabels(test.selector)

@@ -27,21 +27,25 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	require := require.New(t)
 
 	n := v1.Node{
-		ID:     "test1",
-		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  v1.UnknownNodeState,
+		Metadata: v1.NodeMetadata{ID: "test1"},
+		Spec: v1.NodeSpec{
+			Labels: map[string]string{"address": "127.0.0.45"},
+		},
+		Status: v1.NodeStatus{
+			State: v1.UnknownNodeState,
+		},
 	}
 
 	// Get our registry mock.
 	mReg := &mservice.NodeRepository{}
-	mReg.On("StoreNode", n.ID, n).Once().Return(nil)
+	mReg.On("StoreNode", n.Metadata.ID, n).Once().Return(nil)
 
 	// Create the service.
 	ns := service.NewNodeStatus(config.Config{}, mReg, log.Dummy)
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.ID, n.Labels)
+	err := ns.Register(n.Metadata.ID, n.Spec.Labels)
 	if assert.NoError(err) {
 		mReg.AssertExpectations(t)
 	}
@@ -52,21 +56,25 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	require := require.New(t)
 
 	n := v1.Node{
-		ID:     "test1",
-		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  v1.UnknownNodeState,
+		Metadata: v1.NodeMetadata{ID: "test1"},
+		Spec: v1.NodeSpec{
+			Labels: map[string]string{"address": "127.0.0.45"},
+		},
+		Status: v1.NodeStatus{
+			State: v1.UnknownNodeState,
+		},
 	}
 
 	// Get our registry mock.
 	mRep := &mservice.NodeRepository{}
-	mRep.On("StoreNode", n.ID, n).Once().Return(errors.New("want error"))
+	mRep.On("StoreNode", n.Metadata.ID, n).Once().Return(errors.New("want error"))
 
 	// Create the service.
 	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.ID, n.Labels)
+	err := ns.Register(n.Metadata.ID, n.Spec.Labels)
 	if assert.Error(err) {
 		mRep.AssertExpectations(t)
 	}
@@ -77,27 +85,35 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	require := require.New(t)
 
 	stubN := v1.Node{
-		ID:     "test1",
-		Labels: map[string]string{"address": "127.0.0.45"},
-		State:  v1.UnknownNodeState,
+		Metadata: v1.NodeMetadata{ID: "test1"},
+		Spec: v1.NodeSpec{
+			Labels: map[string]string{"address": "127.0.0.45"},
+		},
+		Status: v1.NodeStatus{
+			State: v1.UnknownNodeState,
+		},
 	}
 	expN := v1.Node{
-		ID:     stubN.ID,
-		Labels: stubN.Labels,
-		State:  v1.ReadyNodeState,
+		Metadata: v1.NodeMetadata{ID: stubN.Metadata.ID},
+		Spec: v1.NodeSpec{
+			Labels: stubN.Spec.Labels,
+		},
+		Status: v1.NodeStatus{
+			State: v1.ReadyNodeState,
+		},
 	}
 
 	// Get our repository mock.
 	mRep := &mservice.NodeRepository{}
-	mRep.On("GetNode", expN.ID).Once().Return(&stubN, true)
-	mRep.On("StoreNode", expN.ID, expN).Once().Return(nil)
+	mRep.On("GetNode", expN.Metadata.ID).Once().Return(&stubN, true)
+	mRep.On("StoreNode", expN.Metadata.ID, expN).Once().Return(nil)
 
 	// Create the service.
 	ns := service.NewNodeStatus(config.Config{}, mRep, log.Dummy)
 	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := ns.Heartbeat(expN.ID, expN.State)
+	err := ns.Heartbeat(expN.Metadata.ID, expN.Status.State)
 	if assert.NoError(err) {
 		mRep.AssertExpectations(t)
 	}
