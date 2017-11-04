@@ -82,7 +82,7 @@ type FailureStatus struct {
 // FailureSpec is the specification that has the information to it can be created and applied.
 type FailureSpec struct {
 	// Timeout is
-	Timeout time.Duration `json:"timeout,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	// Attacks used an array so the no repeated elements of map limitation can be bypassed.
 	Attacks []AttackMap `json:"attacks,omitempty" yaml:"attacks,omitempty"`
 	// TODO: accuracy
