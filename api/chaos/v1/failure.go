@@ -4,10 +4,11 @@ import (
 	"errors"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
