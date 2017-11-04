@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ghodss/yaml"
+
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
@@ -55,6 +57,26 @@ func (j *jsonTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
 	obj := api.TypeMeta{}
 
 	if err := json.Unmarshal(b, &obj); err != nil {
+		return obj, err
+	}
+
+	if obj.Kind == "" || obj.Version == "" {
+		return obj, fmt.Errorf("object kind could not be discoved")
+	}
+
+	return obj, nil
+}
+
+// yamlTypeDiscoverer implements the TypeDiscoverer interface for the yaml format.
+type yamlTypeDiscoverer struct{}
+
+// YAMLTypeDiscoverer is a discoverery of object kinds based on the yaml format.
+var YAMLTypeDiscoverer = &yamlTypeDiscoverer{}
+
+func (y *yamlTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
+	obj := api.TypeMeta{}
+
+	if err := yaml.Unmarshal(b, &obj); err != nil {
 		return obj, err
 	}
 
