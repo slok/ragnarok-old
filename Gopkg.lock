@@ -7,6 +7,12 @@
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
 
 [[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes/any","ptypes/empty"]
   revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
@@ -70,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c97ba4a3526b6f526b344baa803f4e64adb2fe2d6ac31d2b6419f56acd30ba64"
+  inputs-digest = "46fcfad77650731d4f49898b883dc2d73c11552fefc7b76391c8860fe56248d1"
   solver-name = "gps-cdcl"
   solver-version = 1
