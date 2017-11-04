@@ -29,8 +29,8 @@ COMMIT=$(shell git rev-parse --short HEAD)
 TAG ?= $(shell git describe --tags --exact-match)
 
 # Commands
-TEST_CMD := go test `glide nv` --tags="integration" -v
-VET_CMD := go vet `glide nv`
+TEST_CMD := go test `go list ./... | grep -v vendor` -v -tags='integration'
+VET_CMD := go vet `go list ./... | grep -v vendor`
 
 # The default action of this Makefile is to build the release
 default: build_release
