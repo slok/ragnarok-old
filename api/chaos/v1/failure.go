@@ -156,23 +156,3 @@ func (f *FailureSpec) Render() ([]byte, error) {
 	// Marshal to yaml
 	return yaml.Marshal(f)
 }
-
-// UnmarshalYAML wraps yaml lib unmarshalling to have extra validations.
-func (f *Failure) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	// Made to bypass the unmarshaling recursion.
-	type plain Failure
-	ff := &Failure{}
-	if err := unmarshal((*plain)(ff)); err != nil {
-		return err
-	}
-
-	// Check if there are more then one elements on the maps of the list.
-	for _, a := range ff.Spec.Attacks {
-		if len(a) != 1 {
-			return errors.New("attacks format error, tip: check identantion and '-' indicator")
-		}
-	}
-
-	*f = *ff
-	return nil
-}
