@@ -3,13 +3,52 @@ package apimachinery
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/ghodss/yaml"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 )
+
+// TypeAsserter has the ability to assert type interfaces safely.
+type TypeAsserter interface {
+	ByteArray(data interface{}) ([]byte, error)
+	Writer(data interface{}) (io.Writer, error)
+	ProtoMessage(data interface{}) (proto.Message, error)
+}
+
+// safeTypeAsserter is the default type asserter implementation.
+type safeTypeAsserter struct{}
+
+// SafeTypeAsserter is a global helper to use it as a safe type assertion util in the econders/decoders.
+var SafeTypeAsserter = &safeTypeAsserter{}
+
+func (s *safeTypeAsserter) ByteArray(data interface{}) ([]byte, error) {
+	bdata, ok := data.([]byte)
+	if !ok {
+		return bdata, fmt.Errorf("wrong type of data as argument, should be []byte")
+	}
+	return bdata, nil
+}
+
+func (s *safeTypeAsserter) Writer(data interface{}) (io.Writer, error) {
+	w, ok := data.(io.Writer)
+	if !ok {
+		return nil, fmt.Errorf("wrong interface as argument, should be io.Writer interface")
+	}
+	return w, nil
+}
+
+func (s *safeTypeAsserter) ProtoMessage(data interface{}) (proto.Message, error) {
+	pb, ok := data.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("wrong interface as argument, should be proto.Message interface")
+	}
+	return pb, nil
+}
 
 // Factory implements a way of obtaining objects based on the verison and kind.
 type Factory interface {
@@ -44,17 +83,27 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 // TypeDiscoverer discovers the type of an object from the encoded format.
 type TypeDiscoverer interface {
 	// Discovery will return the type of the object.
-	Discover(b []byte) (api.TypeMeta, error)
+	Discover(data interface{}) (api.TypeMeta, error)
 }
 
 // jsonTypeDiscoverer implements the TypeDiscoverer interface for the json format.
-type jsonTypeDiscoverer struct{}
+type jsonTypeDiscoverer struct {
+	asserter TypeAsserter
+}
 
 // JSONTypeDiscoverer is a discoverery of object kinds based on the json format.
-var JSONTypeDiscoverer = &jsonTypeDiscoverer{}
+var JSONTypeDiscoverer = &jsonTypeDiscoverer{
+	asserter: SafeTypeAsserter,
+}
 
-func (j *jsonTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
+func (j *jsonTypeDiscoverer) Discover(data interface{}) (api.TypeMeta, error) {
 	obj := api.TypeMeta{}
+	var b []byte
+
+	b, err := j.asserter.ByteArray(data)
+	if err != nil {
+		return obj, err
+	}
 
 	if err := json.Unmarshal(b, &obj); err != nil {
 		return obj, err
@@ -68,13 +117,23 @@ func (j *jsonTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
 }
 
 // yamlTypeDiscoverer implements the TypeDiscoverer interface for the yaml format.
-type yamlTypeDiscoverer struct{}
+type yamlTypeDiscoverer struct {
+	asserter TypeAsserter
+}
 
 // YAMLTypeDiscoverer is a discoverery of object kinds based on the yaml format.
-var YAMLTypeDiscoverer = &yamlTypeDiscoverer{}
+var YAMLTypeDiscoverer = &yamlTypeDiscoverer{
+	asserter: SafeTypeAsserter,
+}
 
-func (y *yamlTypeDiscoverer) Discover(b []byte) (api.TypeMeta, error) {
+func (y *yamlTypeDiscoverer) Discover(data interface{}) (api.TypeMeta, error) {
 	obj := api.TypeMeta{}
+	var b []byte
+
+	b, err := y.asserter.ByteArray(data)
+	if err != nil {
+		return obj, err
+	}
 
 	if err := yaml.Unmarshal(b, &obj); err != nil {
 		return obj, err
