@@ -1,4 +1,4 @@
-package apimachinery_test
+package serializer_test
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/slok/ragnarok/apimachinery"
-	pb "github.com/slok/ragnarok/apimachinery/testdata"
+	"github.com/slok/ragnarok/apimachinery/serializer"
+	pb "github.com/slok/ragnarok/apimachinery/serializer/testdata"
 )
 
 // NOTE: Serializers tests are on the api package (tests serialization per type).
@@ -44,7 +44,7 @@ func TestSafeTypeAsserterByteArray(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			got, err := apimachinery.SafeTypeAsserter.ByteArray(test.data)
+			got, err := serializer.SafeTypeAsserter.ByteArray(test.data)
 
 			if test.expErr {
 				assert.Error(err)
@@ -91,7 +91,7 @@ func TestSafeTypeAsserterWriter(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			got, err := apimachinery.SafeTypeAsserter.Writer(test.data)
+			got, err := serializer.SafeTypeAsserter.Writer(test.data)
 
 			if test.expErr {
 				assert.Error(err)
@@ -132,7 +132,7 @@ func TestSafeTypeAsserterProtoMessage(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			got, err := apimachinery.SafeTypeAsserter.ProtoMessage(test.data)
+			got, err := serializer.SafeTypeAsserter.ProtoMessage(test.data)
 
 			if test.expErr {
 				assert.Error(err)

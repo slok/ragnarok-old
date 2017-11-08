@@ -1,11 +1,9 @@
-package apimachinery
+package serializer
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
-	"github.com/ghodss/yaml"
 	"github.com/golang/protobuf/proto"
 
 	"github.com/slok/ragnarok/api"
@@ -84,66 +82,6 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 type TypeDiscoverer interface {
 	// Discovery will return the type of the object.
 	Discover(data interface{}) (api.TypeMeta, error)
-}
-
-// jsonTypeDiscoverer implements the TypeDiscoverer interface for the json format.
-type jsonTypeDiscoverer struct {
-	asserter TypeAsserter
-}
-
-// JSONTypeDiscoverer is a discoverery of object kinds based on the json format.
-var JSONTypeDiscoverer = &jsonTypeDiscoverer{
-	asserter: SafeTypeAsserter,
-}
-
-func (j *jsonTypeDiscoverer) Discover(data interface{}) (api.TypeMeta, error) {
-	obj := api.TypeMeta{}
-	var b []byte
-
-	b, err := j.asserter.ByteArray(data)
-	if err != nil {
-		return obj, err
-	}
-
-	if err := json.Unmarshal(b, &obj); err != nil {
-		return obj, err
-	}
-
-	if obj.Kind == "" || obj.Version == "" {
-		return obj, fmt.Errorf("object kind could not be discoved")
-	}
-
-	return obj, nil
-}
-
-// yamlTypeDiscoverer implements the TypeDiscoverer interface for the yaml format.
-type yamlTypeDiscoverer struct {
-	asserter TypeAsserter
-}
-
-// YAMLTypeDiscoverer is a discoverery of object kinds based on the yaml format.
-var YAMLTypeDiscoverer = &yamlTypeDiscoverer{
-	asserter: SafeTypeAsserter,
-}
-
-func (y *yamlTypeDiscoverer) Discover(data interface{}) (api.TypeMeta, error) {
-	obj := api.TypeMeta{}
-	var b []byte
-
-	b, err := y.asserter.ByteArray(data)
-	if err != nil {
-		return obj, err
-	}
-
-	if err := yaml.Unmarshal(b, &obj); err != nil {
-		return obj, err
-	}
-
-	if obj.Kind == "" || obj.Version == "" {
-		return obj, fmt.Errorf("object kind could not be discoved")
-	}
-
-	return obj, nil
 }
 
 // Typer is the interface that knows to set the type in an object instance.

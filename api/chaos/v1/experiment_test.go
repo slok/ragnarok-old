@@ -10,7 +10,7 @@ import (
 
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
-	"github.com/slok/ragnarok/apimachinery"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
 )
@@ -117,7 +117,7 @@ func TestJSONEncodeChaosV1Experiment(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewJSONSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
+			s := serializer.NewJSONSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
 			var b bytes.Buffer
 			err := s.Encode(test.experiment, &b)
 
@@ -244,7 +244,7 @@ func TestJSONDecodeChaosV1Experiment(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewJSONSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
+			s := serializer.NewJSONSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
 			obj, err := s.Decode([]byte(test.experimentJSON))
 
 			if test.expErr {
@@ -359,7 +359,7 @@ func TestYAMLEncodeChaosV1Experiment(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewYAMLSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
+			s := serializer.NewYAMLSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
 			var b bytes.Buffer
 			err := s.Encode(test.experiment, &b)
 
@@ -469,7 +469,7 @@ status:
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := apimachinery.NewYAMLSerializer(apimachinery.ObjTyper, apimachinery.ObjFactory, log.Dummy)
+			s := serializer.NewYAMLSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
 			obj, err := s.Decode([]byte(test.experimentYAML))
 
 			if test.expErr {

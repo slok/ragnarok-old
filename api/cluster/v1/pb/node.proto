@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package github.com.slok.ragnarok.api.cluster.v1.pb;
+option go_package = "pb";
+
+// Node reprensents a node information. For now use a simple json serialization.
+// TODO: create proto files from the API objects correctly.
+message Node {
+  string serializedData = 1;
+}
