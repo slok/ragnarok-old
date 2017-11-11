@@ -11,6 +11,7 @@ import (
 
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
+	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
 	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
@@ -449,6 +450,244 @@ status:
 			assert := assert.New(t)
 			s := serializer.NewYAMLSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
 			obj, err := s.Decode([]byte(test.failureYAML))
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				failure := obj.(*chaosv1.Failure)
+				assert.Equal(test.expFailure, failure)
+			}
+		})
+	}
+}
+
+func TestPBEncodeChaosV1Failure(t *testing.T) {
+	t1, _ := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+	t2, _ := time.Parse(time.RFC3339, "2012-11-01T22:18:41+00:00")
+	t3, _ := time.Parse(time.RFC3339, "2012-11-01T22:28:41+00:00")
+
+	tests := []struct {
+		name          string
+		failure       *chaosv1.Failure
+		expEncFailure *chaosv1pb.Failure
+		expErr        bool
+	}{
+		{
+			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
+			failure: &chaosv1.Failure{
+				Metadata: chaosv1.FailureMetadata{
+					ID:     "flr-001",
+					NodeID: "nd-034",
+				},
+				Spec: chaosv1.FailureSpec{
+					Timeout: 5 * time.Minute,
+					Attacks: []chaosv1.AttackMap{
+						{
+							"attack1": attack.Opts{
+								"size": 524288000,
+							},
+						},
+						{
+							"attack2": nil,
+						},
+						{
+							"attack3": attack.Opts{
+								"target":   "myTarget",
+								"quantity": 10,
+								"pace":     "10m",
+								"rest":     "30s",
+							},
+						},
+					},
+				},
+				Status: chaosv1.FailureStatus{
+					CurrentState:  chaosv1.EnabledFailureState,
+					ExpectedState: chaosv1.DisabledFailureState,
+					Creation:      t1,
+					Executed:      t2,
+					Finished:      t3,
+				},
+			},
+			expEncFailure: &chaosv1pb.Failure{
+				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+			},
+
+			expErr: false,
+		},
+		{
+			name: "Simple object encoding shouldn't return an error",
+			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{
+					Kind:    chaosv1.FailureKind,
+					Version: chaosv1.FailureVersion,
+				},
+				Metadata: chaosv1.FailureMetadata{
+					ID:     "flr-001",
+					NodeID: "nd-034",
+				},
+				Spec: chaosv1.FailureSpec{
+					Timeout: 5 * time.Minute,
+					Attacks: []chaosv1.AttackMap{
+						{
+							"attack1": attack.Opts{
+								"size": 524288000,
+							},
+						},
+						{
+							"attack2": nil,
+						},
+						{
+							"attack3": attack.Opts{
+								"target":   "myTarget",
+								"quantity": 10,
+								"pace":     "10m",
+								"rest":     "30s",
+							},
+						},
+					},
+				},
+				Status: chaosv1.FailureStatus{
+					CurrentState:  chaosv1.EnabledFailureState,
+					ExpectedState: chaosv1.DisabledFailureState,
+					Creation:      t1,
+					Executed:      t2,
+					Finished:      t3,
+				},
+			},
+			expEncFailure: &chaosv1pb.Failure{
+				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+			},
+			expErr: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			s := serializer.NewPBSerializer(log.Dummy)
+			pbflr := &chaosv1pb.Failure{}
+			err := s.Encode(test.failure, pbflr)
+
+			if test.expErr {
+				assert.Error(err)
+			} else {
+				// Small fix for the \n
+				pbflr.SerializedData = strings.TrimSuffix(pbflr.SerializedData, "\n")
+				assert.Equal(test.expEncFailure, pbflr)
+				assert.NoError(err)
+			}
+		})
+	}
+}
+
+func TestPBDecodeChaosV1Failure(t *testing.T) {
+	t1s := "2012-11-01T22:08:41Z"
+	t2s := "2012-11-01T22:18:41Z"
+	t3s := "2012-11-01T22:28:41Z"
+	t1, _ := time.Parse(time.RFC3339, t1s)
+	t2, _ := time.Parse(time.RFC3339, t2s)
+	t3, _ := time.Parse(time.RFC3339, t3s)
+
+	tests := []struct {
+		name       string
+		failurePB  *chaosv1pb.Failure
+		expFailure *chaosv1.Failure
+		expErr     bool
+	}{
+		{
+			name: "Simple object decoding shouldn't return an error",
+			failurePB: &chaosv1pb.Failure{
+				SerializedData: `
+{  
+   "kind":"failure",
+   "version":"chaos/v1",
+   "metadata":{  
+      "id":"flr-001",
+      "nodeid":"nd-034"
+   },
+   "spec":{  
+      "timeout":300000000000,
+      "attacks":[  
+         {  
+            "attack1":{  
+               "size":524288000
+            }
+         },
+         {  
+            "attack2":null
+         },
+         {  
+            "attack3":{  
+               "pace":"10m",
+               "quantity":10,
+               "rest":"30s",
+               "target":"myTarget"
+            }
+         }
+      ]
+   },
+   "status":{  
+      "currentState":1,
+      "expectedState":4,
+      "creation":"2012-11-01T22:08:41Z",
+      "executed":"2012-11-01T22:18:41Z",
+      "finished":"2012-11-01T22:28:41Z"
+   }
+}`,
+			},
+			expFailure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{
+					Kind:    chaosv1.FailureKind,
+					Version: chaosv1.FailureVersion,
+				},
+				Metadata: chaosv1.FailureMetadata{
+					ID:     "flr-001",
+					NodeID: "nd-034",
+				},
+				Spec: chaosv1.FailureSpec{
+					Timeout: 5 * time.Minute,
+					Attacks: []chaosv1.AttackMap{
+						{
+							"attack1": attack.Opts{
+								"size": float64(524288000),
+							},
+						},
+						{
+							"attack2": nil,
+						},
+						{
+							"attack3": attack.Opts{
+								"pace":     "10m",
+								"quantity": float64(10),
+								"rest":     "30s",
+								"target":   "myTarget",
+							},
+						},
+					},
+				},
+				Status: chaosv1.FailureStatus{
+					CurrentState:  chaosv1.EnabledFailureState,
+					ExpectedState: chaosv1.DisabledFailureState,
+					Creation:      t1,
+					Executed:      t2,
+					Finished:      t3,
+				},
+			},
+			expErr: false,
+		},
+		{
+			name:       "Simple object decoding without kind or version should return an error",
+			failurePB:  &chaosv1pb.Failure{SerializedData: ``},
+			expFailure: &chaosv1.Failure{},
+			expErr:     true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			s := serializer.NewPBSerializer(log.Dummy)
+			obj, err := s.Decode(test.failurePB)
 
 			if test.expErr {
 				assert.Error(err)

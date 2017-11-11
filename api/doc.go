@@ -7,3 +7,6 @@ package api // import "github.com/slok/ragnarok/api"
 
 // cluster/v1
 //go:generate protoc -I. -I${GOOGLEPROTO_PATH} cluster/v1/pb/node.proto --gofast_out=plugins=grpc:.
+
+// chaos/v1
+//go:generate protoc -I. -I${GOOGLEPROTO_PATH} chaos/v1/pb/failure.proto --gofast_out=plugins=grpc:.
