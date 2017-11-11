@@ -3,7 +3,6 @@ package serializer
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	clusterv1pb "github.com/slok/ragnarok/api/cluster/v1/pb"
 
@@ -20,7 +19,7 @@ type PBSerializer struct {
 // NewPBSerializer returns a new PBSerializer object.
 func NewPBSerializer(logger log.Logger) *PBSerializer {
 	return &PBSerializer{
-		serializer: JSONSerializerDefault,
+		serializer: DefaultSerializer,
 		logger:     logger,
 	}
 }
@@ -30,7 +29,7 @@ func (p *PBSerializer) encodeClusterV1Node(obj api.Object, out *clusterv1pb.Node
 	if err := p.serializer.Encode(obj, &b); err != nil {
 		return err
 	}
-	out.SerializedData = strings.TrimSuffix(b.String(), "\n")
+	out.SerializedData = b.String()
 	return nil
 }
 

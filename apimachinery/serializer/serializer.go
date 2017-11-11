@@ -7,11 +7,13 @@ import (
 
 // Global helpers.
 var (
-	//JSONSerializerDefault is the default base serializer for json.
+	// JSONSerializerDefault is the default base serializer for json.
 	JSONSerializerDefault = NewJSONSerializer(ObjTyper, ObjFactory, log.Base())
-	//YAMLSerializerDefault is the default base serializer for yaml.
+	// YAMLSerializerDefault is the default base serializer for yaml.
 	YAMLSerializerDefault = NewYAMLSerializer(ObjTyper, ObjFactory, log.Base())
-	//DefaultSerializer is the default serializer for the applicaton.
+	// PBSerializerDefault is the default base serializer for pb.
+	PBSerializerDefault = NewPBSerializer(log.Base())
+	// DefaultSerializer is the default serializer for the applicaton.
 	DefaultSerializer = JSONSerializerDefault
 )
 
