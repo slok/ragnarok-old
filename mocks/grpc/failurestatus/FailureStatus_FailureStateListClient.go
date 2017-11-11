@@ -2,7 +2,7 @@
 package failurestatus
 
 import context "golang.org/x/net/context"
-import failure "github.com/slok/ragnarok/grpc/failurestatus"
+import github_com_slok_ragnarok_grpc_failurestatus "github.com/slok/ragnarok/grpc/failurestatus"
 import metadata "google.golang.org/grpc/metadata"
 import mock "github.com/stretchr/testify/mock"
 
@@ -65,15 +65,15 @@ func (_m *FailureStatus_FailureStateListClient) Header() (metadata.MD, error) {
 }
 
 // Recv provides a mock function with given fields:
-func (_m *FailureStatus_FailureStateListClient) Recv() (*failure.FailuresState, error) {
+func (_m *FailureStatus_FailureStateListClient) Recv() (*github_com_slok_ragnarok_grpc_failurestatus.FailuresState, error) {
 	ret := _m.Called()
 
-	var r0 *failure.FailuresState
-	if rf, ok := ret.Get(0).(func() *failure.FailuresState); ok {
+	var r0 *github_com_slok_ragnarok_grpc_failurestatus.FailuresState
+	if rf, ok := ret.Get(0).(func() *github_com_slok_ragnarok_grpc_failurestatus.FailuresState); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*failure.FailuresState)
+			r0 = ret.Get(0).(*github_com_slok_ragnarok_grpc_failurestatus.FailuresState)
 		}
 	}
 
