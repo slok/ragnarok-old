@@ -3,14 +3,14 @@ syntax = "proto3";
 package nodestatus;
 
 import "google/protobuf/empty.proto";
-import "api/cluster/v1/node.proto";
+import "github.com/slok/ragnarok/api/cluster/v1/pb/node.proto";
 
 
 // NodeStatus is the node status service definition.
 service NodeStatus {
   // Register registers a node.
-  rpc Register(github.com.slok.ragnarok.api.cluster.v1.Node) returns (google.protobuf.Empty);
+  rpc Register(github.com.slok.ragnarok.api.cluster.v1.pb.Node) returns (google.protobuf.Empty);
   // Heartbeat sends the current status of the node and receives 
   // the expected status that should have.
-  rpc Heartbeat(github.com.slok.ragnarok.api.cluster.v1.Node) returns (google.protobuf.Empty);
+  rpc Heartbeat(github.com.slok.ragnarok.api.cluster.v1.pb.Node) returns (google.protobuf.Empty);
 }
