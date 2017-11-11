@@ -7,19 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/slok/ragnarok/api/cluster/v1"
-	pbns "github.com/slok/ragnarok/grpc/nodestatus"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/log"
 	mpbns "github.com/slok/ragnarok/mocks/grpc/nodestatus"
-	mtypes "github.com/slok/ragnarok/mocks/types"
 	"github.com/slok/ragnarok/node/client"
-	"github.com/slok/ragnarok/types"
+	testpb "github.com/slok/ragnarok/test/pb"
 )
 
 func TestRegisterNode(t *testing.T) {
 	tests := []struct {
 		id          string
-		tags        map[string]string
+		labels      map[string]string
 		expectError bool
 	}{
 		{"test1", map[string]string{}, false},
@@ -39,18 +38,18 @@ func TestRegisterNode(t *testing.T) {
 				expectErr = errors.New("wanted error")
 			}
 
-			expectN := &pbns.Node{
-				Id:   test.id,
-				Tags: test.tags,
-			}
-			resp := &pbns.RegisteredResponse{Message: "called"}
-			mc.On("Register", mock.Anything, expectN).Once().Return(resp, expectErr)
+			expectN := testpb.CreateLabelsPBNode(test.id, test.labels, t)
+			mc.On("Register", mock.Anything, expectN).Once().Return(nil, expectErr)
 
 			// Create our client and make our service call
-			s, err := client.NewStatusGRPC(mc, types.NodeStateTransformer, log.Dummy)
+			s, err := client.NewStatusGRPC(mc, serializer.PBSerializerDefault, log.Dummy)
 			if assert.NoError(err) {
 				// Check check result is ok
-				err := s.RegisterNode(test.id, test.tags)
+				node := &clusterv1.Node{
+					Metadata: clusterv1.NodeMetadata{ID: test.id},
+					Spec:     clusterv1.NodeSpec{Labels: test.labels},
+				}
+				err := s.RegisterNode(node)
 				if test.expectError {
 					assert.Error(err)
 				} else {
@@ -66,58 +65,40 @@ func TestRegisterNode(t *testing.T) {
 
 func TestNodeHeartbeat(t *testing.T) {
 	tests := []struct {
-		id              string
-		state           v1.NodeState
-		expState        pbns.State
-		expStParseError bool
-		expRespError    bool
+		id           string
+		expRespError bool
 	}{
-		{"test1", v1.ReadyNodeState, pbns.State_READY, false, false},
-		{"test2", v1.AttackingNodeState, pbns.State_ATTACKING, false, false},
-		{"test3", v1.ReadyNodeState, pbns.State_READY, true, false},
-		{"test4", v1.ReadyNodeState, pbns.State_READY, false, true},
+		{"test1", false},
+		{"test2", true},
 	}
 
 	for _, test := range tests {
 		t.Run(test.id, func(t *testing.T) {
 			assert := assert.New(t)
 
-			var expStParseErr error
 			var expRespErr error
-
-			if test.expStParseError {
-				expStParseErr = errors.New("wanted error")
-			}
-
 			if test.expRespError {
 				expRespErr = errors.New("wanted error")
 			}
 
 			// Create the mocks.
 			mc := &mpbns.NodeStatusClient{}
-			mstp := &mtypes.NodeStateParser{}
-			ns := &pbns.NodeState{
-				Id:    test.id,
-				State: test.expState,
-			}
-			mstp.On("NodeStateToPB", mock.Anything).Once().Return(test.expState, expStParseErr)
-			// Don't call the client if there is a previous error.
-			if !test.expStParseError {
-				mc.On("Heartbeat", mock.Anything, ns).Once().Return(nil, expRespErr)
+			n := &clusterv1.Node{
+				Metadata: clusterv1.NodeMetadata{ID: test.id},
+				Status:   clusterv1.NodeStatus{State: clusterv1.ReadyNodeState},
 			}
 
+			mc.On("Heartbeat", mock.Anything, mock.Anything).Once().Return(nil, expRespErr)
+
 			// Create the client.
-			s, err := client.NewStatusGRPC(mc, mstp, log.Dummy)
+			s, err := client.NewStatusGRPC(mc, serializer.PBSerializerDefault, log.Dummy)
 			if assert.NoError(err) {
-				err := s.NodeHeartbeat(test.id, test.state)
-				if test.expRespError || test.expStParseError {
+				err := s.NodeHeartbeat(n)
+				if test.expRespError {
 					assert.Error(err)
 				} else {
 					assert.NoError(err)
 				}
-
-				mc.AssertExpectations(t)
-				mstp.AssertExpectations(t)
 			}
 		})
 	}

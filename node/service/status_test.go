@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/slok/ragnarok/api/cluster/v1"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 	mclock "github.com/slok/ragnarok/mocks/clock"
@@ -50,19 +50,21 @@ func TestNodeStatusRegisterOnMaster(t *testing.T) {
 			// Create the mock
 			cm := &mclock.Clock{}
 			scm := &mclient.Status{}
-			scm.On("RegisterNode", id, mock.Anything).Once().Return(regErr)
+			scm.On("RegisterNode", mock.Anything).Once().Return(regErr)
 
 			// Create
-			ns := service.NewNodeStatus(id, nil, scm, cm, log.Dummy)
+			n := clusterv1.NewNode()
+			n.Metadata.ID = id
+			ns := service.NewNodeStatus(&n, scm, cm, log.Dummy)
 
 			// Check
 			err := ns.RegisterOnMaster()
 			if test.expErr {
 				assert.Error(err)
-				assert.NotEqual(v1.ReadyNodeState, ns.State())
+				assert.NotEqual(clusterv1.ReadyNodeState, ns.State())
 			} else {
 				assert.NoError(err)
-				assert.Equal(v1.ReadyNodeState, ns.State())
+				assert.Equal(clusterv1.ReadyNodeState, ns.State())
 			}
 			scm.AssertExpectations(t)
 		})
@@ -116,14 +118,16 @@ func TestNodeStatusStartHeartbeat(t *testing.T) {
 			cm.On("NewTicker", mock.Anything).Return(clock.NewTicker(1))
 			cm.On("After", mock.Anything).Return(clock.After(9999999999)) // No timeout on error senders.
 			scm := &mclient.Status{}
-			scm.On("RegisterNode", id, mock.Anything).Once().Return(nil)
+			scm.On("RegisterNode", mock.Anything).Once().Return(nil)
 			hbCall := make(chan struct{})
-			scm.On("NodeHeartbeat", id, mock.Anything).Return(hbErr).Run(func(_ mock.Arguments) {
+			scm.On("NodeHeartbeat", mock.Anything).Return(hbErr).Run(func(_ mock.Arguments) {
 				hbCall <- struct{}{}
 			})
 
 			// Create
-			ns := service.NewNodeStatus(id, nil, scm, cm, log.Dummy)
+			n := clusterv1.NewNode()
+			n.Metadata.ID = id
+			ns := service.NewNodeStatus(&n, scm, cm, log.Dummy)
 			if test.reg {
 				err := ns.RegisterOnMaster()
 				require.NoError(err)
@@ -181,13 +185,15 @@ func TestNodeStatusStopHeartbeat(t *testing.T) {
 			cm.On("NewTicker", mock.Anything).Return(clock.NewTicker(1))
 			cm.On("After", mock.Anything).Return(clock.After(9999999999)) // No timeout on error senders.
 			scm := &mclient.Status{}
-			scm.On("RegisterNode", id, mock.Anything).Once().Return(nil)
+			scm.On("RegisterNode", mock.Anything).Once().Return(nil)
 			readyC := make(chan struct{})
-			scm.On("NodeHeartbeat", id, mock.Anything).Return(nil).Run(func(_ mock.Arguments) {
+			scm.On("NodeHeartbeat", mock.Anything).Return(nil).Run(func(_ mock.Arguments) {
 				readyC <- struct{}{}
 			})
 
-			ns := service.NewNodeStatus(id, nil, scm, cm, log.Dummy)
+			n := clusterv1.NewNode()
+			n.Metadata.ID = id
+			ns := service.NewNodeStatus(&n, scm, cm, log.Dummy)
 			err := ns.RegisterOnMaster()
 			require.NoError(err)
 			if test.startHB {
