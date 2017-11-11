@@ -17,7 +17,6 @@ import (
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/node/service"
-	"github.com/slok/ragnarok/types"
 )
 
 // Main run main logic.
@@ -52,7 +51,7 @@ func Main() error {
 		return err
 	}
 
-	fCli, err := client.NewFailureGRPCFromConnection(conn, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), logger)
+	fCli, err := client.NewFailureGRPCFromConnection(conn, serializer.PBSerializerDefault, clock.Base(), logger)
 	if err != nil {
 		return err
 	}
