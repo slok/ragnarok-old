@@ -3,61 +3,49 @@ package grpc_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 
-	"time"
-
-	"github.com/slok/ragnarok/api/chaos/v1"
+	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
-	pb "github.com/slok/ragnarok/grpc/failurestatus"
+	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/grpc"
 	mclock "github.com/slok/ragnarok/mocks/clock"
-	mpb "github.com/slok/ragnarok/mocks/grpc/failurestatus"
+	mpbfs "github.com/slok/ragnarok/mocks/grpc/failurestatus"
 	mservice "github.com/slok/ragnarok/mocks/service"
-	"github.com/slok/ragnarok/types"
+	testpb "github.com/slok/ragnarok/test/pb"
 )
 
 func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	assert := assert.New(t)
-	require := require.New(t)
 
-	spec := v1.FailureSpec{}
-	bs, err := spec.Render()
-	require.NoError(err)
-
-	expF := &pb.Failure{
-		Id:            "test1",
-		NodeID:        "node1",
-		Definition:    string(bs),
-		CurrentState:  pb.State_ENABLED,
-		ExpectedState: pb.State_DISABLED,
-	}
-	stubF := &v1.Failure{
-		Metadata: v1.FailureMetadata{
-			ID:     expF.GetId(),
-			NodeID: expF.GetNodeID(),
+	stubF := &chaosv1.Failure{
+		Metadata: chaosv1.FailureMetadata{
+			ID:     "test1",
+			NodeID: "node1",
 		},
-		Spec: spec,
-		Status: v1.FailureStatus{
-			CurrentState:  v1.EnabledFailureState,
-			ExpectedState: v1.DisabledFailureState,
+		Spec: chaosv1.FailureSpec{},
+		Status: chaosv1.FailureStatus{
+			CurrentState:  chaosv1.EnabledFailureState,
+			ExpectedState: chaosv1.DisabledFailureState,
 		},
 	}
+	expF := testpb.CreatePBFailure(stubF, t)
 
 	// Create mocks.
 	mfss := &mservice.FailureStatusService{}
-	mfss.On("GetFailure", expF.Id).Once().Return(stubF, nil)
+	mfss.On("GetFailure", mock.Anything).Once().Return(stubF, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.PBSerializerDefault, mfss, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
-	fID := &pb.FailureId{Id: stubF.Metadata.ID}
+	fID := &pbfs.FailureId{Id: stubF.Metadata.ID}
 	gotF, err := fs.GetFailure(context.Background(), fID)
 	if assert.NoError(err) {
 		assert.Equal(expF, gotF)
@@ -72,10 +60,10 @@ func TestFailureStatusGRPCGetFailureError(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, errors.New("wanted error"))
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.PBSerializerDefault, mfss, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
-	fID := &pb.FailureId{Id: "test"}
+	fID := &pbfs.FailureId{Id: "test"}
 	_, err := fs.GetFailure(context.Background(), fID)
 	assert.Error(err)
 }
@@ -88,14 +76,14 @@ func TestFailureStatusGRPCGetFailureCtxCanceled(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.PBSerializerDefault, mfss, clock.Base(), log.Dummy)
 
 	// Cancel context.
 	ctx, cncl := context.WithCancel(context.Background())
 	cncl()
 
 	// Get the failure and check.
-	fID := &pb.FailureId{Id: "test"}
+	fID := &pbfs.FailureId{Id: "test"}
 	_, err := fs.GetFailure(ctx, fID)
 	assert.Error(err)
 }
@@ -103,34 +91,34 @@ func TestFailureStatusGRPCGetFailureCtxCanceled(t *testing.T) {
 func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 	assert := assert.New(t)
 
-	nodeID := &pb.NodeId{Id: "test1"}
+	nodeID := &pbfs.NodeId{Id: "test1"}
 	times := 5
-	fss := []*v1.Failure{
-		&v1.Failure{
-			Metadata: v1.FailureMetadata{
+	fss := []*chaosv1.Failure{
+		&chaosv1.Failure{
+			Metadata: chaosv1.FailureMetadata{
 				ID: "test11",
 			},
-			Status: v1.FailureStatus{
-				CurrentState:  v1.EnabledFailureState,
-				ExpectedState: v1.EnabledFailureState,
+			Status: chaosv1.FailureStatus{
+				CurrentState:  chaosv1.EnabledFailureState,
+				ExpectedState: chaosv1.EnabledFailureState,
 			},
 		},
-		&v1.Failure{
-			Metadata: v1.FailureMetadata{
+		&chaosv1.Failure{
+			Metadata: chaosv1.FailureMetadata{
 				ID: "test12",
 			},
-			Status: v1.FailureStatus{
-				CurrentState:  v1.EnabledFailureState,
-				ExpectedState: v1.EnabledFailureState,
+			Status: chaosv1.FailureStatus{
+				CurrentState:  chaosv1.EnabledFailureState,
+				ExpectedState: chaosv1.EnabledFailureState,
 			},
 		},
-		&v1.Failure{
-			Metadata: v1.FailureMetadata{
+		&chaosv1.Failure{
+			Metadata: chaosv1.FailureMetadata{
 				ID: "test13",
 			},
-			Status: v1.FailureStatus{
-				CurrentState:  v1.EnabledFailureState,
-				ExpectedState: v1.DisabledFailureState,
+			Status: chaosv1.FailureStatus{
+				CurrentState:  chaosv1.EnabledFailureState,
+				ExpectedState: chaosv1.DisabledFailureState,
 			},
 		},
 	}
@@ -139,7 +127,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 	mfss := &mservice.FailureStatusService{}
 	mfss.On("GetNodeFailures", nodeID.GetId()).Times(times).Return(fss)
 
-	mstream := &mpb.FailureStatus_FailureStateListServer{}
+	mstream := &mpbfs.FailureStatus_FailureStateListServer{}
 	mstream.On("Context").Return(context.Background())
 	mstream.On("Send", mock.Anything).Return(nil)
 
@@ -148,7 +136,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.PBSerializerDefault, mfss, mtime, log.Dummy)
 
 	// Simulate the ticker that triggers the update.
 	go func() {
@@ -170,12 +158,12 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 func TestFailureStatusGRPCFailureStateListContextClosed(t *testing.T) {
 	assert := assert.New(t)
 
-	nodeID := &pb.NodeId{Id: "test1"}
+	nodeID := &pbfs.NodeId{Id: "test1"}
 
 	// Create mocks.
 	mfss := &mservice.FailureStatusService{}
 
-	mstream := &mpb.FailureStatus_FailureStateListServer{}
+	mstream := &mpbfs.FailureStatus_FailureStateListServer{}
 	ctx, clfn := context.WithCancel(context.Background())
 	clfn() // Cancel the context.
 	mstream.On("Context").Return(ctx)
@@ -185,7 +173,7 @@ func TestFailureStatusGRPCFailureStateListContextClosed(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.PBSerializerDefault, mfss, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {
@@ -205,13 +193,13 @@ func TestFailureStatusGRPCFailureStateListContextClosed(t *testing.T) {
 func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 	assert := assert.New(t)
 
-	nodeID := &pb.NodeId{Id: "test1"}
+	nodeID := &pbfs.NodeId{Id: "test1"}
 
 	// Create mocks.
 	mfss := &mservice.FailureStatusService{}
 	mfss.On("GetNodeFailures", nodeID.GetId()).Once().Return(nil)
 
-	mstream := &mpb.FailureStatus_FailureStateListServer{}
+	mstream := &mpbfs.FailureStatus_FailureStateListServer{}
 	mstream.On("Context").Return(context.Background())
 	mstream.On("Send", mock.Anything).Return(errors.New("wanted error"))
 
@@ -220,7 +208,7 @@ func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.PBSerializerDefault, mfss, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {

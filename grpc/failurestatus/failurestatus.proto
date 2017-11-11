@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package failure;
+package github.com.slok.ragnarok.grpc.failurestatus;
 
-//import "google/protobuf/empty.proto";
+import "github.com/slok/ragnarok/api/chaos/v1/pb/failure.proto";
 
 
 // FailureStatus is the service that will have all the operations regarding the failure.
@@ -10,11 +10,7 @@ service FailureStatus {
     // FailureStateList asks for a list of the failures that should begin, continue or stop.
     rpc FailureStateList(NodeId) returns (stream FailuresState);
     // GetFailure asks for a failure.
-    rpc GetFailure(FailureId) returns (Failure);
-    // FailureStarted sets when the failure started
-    //rpc FailureStarted(FailureId) returns (google.protobuf.Empty);
-    // FailureFinished sets when the failure finished
-    //rpc FailureFinished(FailureId) returns (google.protobuf.Empty);
+    rpc GetFailure(FailureId) returns (github.com.slok.ragnarok.api.chaos.v1.pb.Failure);
 }
 
 // NodeId is a node id.
@@ -27,28 +23,7 @@ message FailureId {
     string id = 1;
 }
 
-// Failure represents an failure.
-message Failure {
-    string id = 1;
-    string nodeID = 2;
-    string definition = 3;
-    State current_state = 4;
-    State expected_state = 5; 
-}
-
 // FailuresExpectedState reprensents the state of the failures.
 message FailuresState {
-    repeated Failure failures = 1;
-}
-
-// State is the state a failure can be.
-enum State{
-    UNKNOWN = 0;
-    ENABLED = 1;
-    EXECUTING = 2;
-    REVERTING = 3;
-    DISABLED = 4;
-    ERRORED = 5;
-    ERRORED_REVERTING = 6;
-    STALE = 7;
+    repeated github.com.slok.ragnarok.api.chaos.v1.pb.Failure failures = 1;
 }

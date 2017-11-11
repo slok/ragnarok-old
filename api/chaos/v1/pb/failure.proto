@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package github.com.slok.ragnarok.api.chaos.v1.pb;
+option go_package = "pb";
+
+// Failure reprensents a failure information. For now use a simple json serialization.
+// TODO: create proto files from the API objects correctly.
+message Failure {
+  string serializedData = 1;
+}

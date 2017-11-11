@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/slok/ragnarok/api/cluster/v1"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node/client"
@@ -19,7 +19,7 @@ const (
 // to the master need to implement
 type Status interface {
 	// Returns the node status.
-	State() v1.NodeState
+	State() clusterv1.NodeState
 
 	// RegisterOnMaster registers the node on the master.
 	RegisterOnMaster() error
@@ -38,14 +38,13 @@ type Status interface {
 
 // NodeStatus is a service that a node will use to report its status to its master.
 type NodeStatus struct {
-	nodeID string
+	node   *clusterv1.Node
 	cli    client.Status
 	tags   map[string]string
 	logger log.Logger
 	clock  clock.Clock
 
-	state v1.NodeState
-	stMu  sync.Mutex // stMu is the node status mutex.
+	stMu sync.Mutex // stMu is the node status mutex.
 
 	hbFinishC   chan struct{}
 	hearbeating bool
@@ -54,11 +53,10 @@ type NodeStatus struct {
 }
 
 // NewNodeStatus returns a new NodeStatus.
-func NewNodeStatus(nodeID string, tags map[string]string, cli client.Status, clock clock.Clock, logger log.Logger) *NodeStatus {
+func NewNodeStatus(node *clusterv1.Node, cli client.Status, clock clock.Clock, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
-		nodeID:    nodeID,
+		node:      node,
 		cli:       cli,
-		tags:      tags,
 		logger:    logger,
 		clock:     clock,
 		hbFinishC: make(chan struct{}),
@@ -66,10 +64,10 @@ func NewNodeStatus(nodeID string, tags map[string]string, cli client.Status, clo
 }
 
 // State satisfies Status interface.
-func (n *NodeStatus) State() v1.NodeState {
+func (n *NodeStatus) State() clusterv1.NodeState {
 	n.stMu.Lock()
 	defer n.stMu.Unlock()
-	return n.state
+	return n.node.Status.State
 }
 
 // RegisterOnMaster satisfies Status interface.
@@ -77,10 +75,10 @@ func (n *NodeStatus) RegisterOnMaster() error {
 	n.stMu.Lock()
 	defer n.stMu.Unlock()
 
-	if err := n.cli.RegisterNode(n.nodeID, n.tags); err != nil {
+	if err := n.cli.RegisterNode(n.node); err != nil {
 		return err
 	}
-	n.state = v1.ReadyNodeState
+	n.node.Status.State = clusterv1.ReadyNodeState
 
 	return nil
 }
@@ -93,9 +91,9 @@ func (n *NodeStatus) DeregisterOnMaster() error {
 // StartHeartbeat satisfies Status interface.
 func (n *NodeStatus) StartHeartbeat(interval time.Duration) (chan error, error) {
 	n.stMu.Lock()
-	st := n.state
+	st := n.node.Status.State
 	n.stMu.Unlock()
-	if st != v1.ReadyNodeState {
+	if st != clusterv1.ReadyNodeState {
 		return nil, fmt.Errorf("register the node on the master before start heartbeating")
 	}
 
@@ -130,12 +128,12 @@ func (n *NodeStatus) StartHeartbeat(interval time.Duration) (chan error, error) 
 
 			case <-n.hbT.C:
 				n.stMu.Lock()
-				st := n.state
+				node := *n.node
 				n.stMu.Unlock()
 
 				// The show must go on, if heartbeat error it will be notified and the one that started
 				// the heartbeat is responsible of stopping it.
-				if err := n.cli.NodeHeartbeat(n.nodeID, st); err != nil {
+				if err := n.cli.NodeHeartbeat(&node); err != nil {
 					select {
 					case <-n.clock.After(hbErrTimeout):
 						n.logger.Errorf("timeout notifying heartbeat error. Heartbeat error: %v", err)

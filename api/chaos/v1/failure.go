@@ -1,14 +1,10 @@
 package v1
 
 import (
-	"errors"
 	"time"
-
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/attack"
-	"github.com/slok/ragnarok/log"
 )
 
 const (
@@ -109,70 +105,4 @@ func NewFailure() Failure {
 			Version: FailureVersion,
 		},
 	}
-}
-
-// TODO: LEGACY CODE NEEDS TO BE MIGRATED.
-
-// ReadFailure reads a config yaml failure and returns a failure object.
-func ReadFailure(data []byte) (Failure, error) {
-	log.Debug("reading failure")
-	d := &Failure{}
-	err := yaml.Unmarshal(data, d)
-	return *d, err
-}
-
-// ReadFailureSpec reads a config yaml failure spec and returns a failure Spec object.
-func ReadFailureSpec(data []byte) (FailureSpec, error) {
-	log.Debug("reading failure spec")
-	s := &FailureSpec{}
-	err := yaml.Unmarshal(data, s)
-	return *s, err
-}
-
-// Render renders a yaml form a Failure object.
-func (f *Failure) Render() ([]byte, error) {
-	log.Debug("rendering failure")
-
-	// Check if there are more than one elements on the maps of the list.
-	for _, a := range f.Spec.Attacks {
-		if len(a) != 1 {
-			return nil, errors.New("each attack map of the attack list needs to be a single map")
-		}
-	}
-	// Marshal to yaml
-	return yaml.Marshal(f)
-}
-
-// Render renders a yaml form of a Failure Spec object.
-func (f *FailureSpec) Render() ([]byte, error) {
-	log.Debug("rendering failure spec")
-
-	// Check if there are more than one elements on the maps of the list.
-	for _, a := range f.Attacks {
-		if len(a) != 1 {
-			return nil, errors.New("each attack map of the attack list needs to be a single map")
-		}
-	}
-	// Marshal to yaml
-	return yaml.Marshal(f)
-}
-
-// UnmarshalYAML wraps yaml lib unmarshalling to have extra validations.
-func (f *Failure) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	// Made to bypass the unmarshaling recursion.
-	type plain Failure
-	ff := &Failure{}
-	if err := unmarshal((*plain)(ff)); err != nil {
-		return err
-	}
-
-	// Check if there are more then one elements on the maps of the list.
-	for _, a := range ff.Spec.Attacks {
-		if len(a) != 1 {
-			return errors.New("attacks format error, tip: check identantion and '-' indicator")
-		}
-	}
-
-	*f = *ff
-	return nil
 }

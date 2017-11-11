@@ -1,78 +1,81 @@
 package grpc
 
 import (
-	"fmt"
-
-	pbempty "github.com/golang/protobuf/ptypes/empty"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context.
 
-	pb "github.com/slok/ragnarok/grpc/nodestatus"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	clusterv1pb "github.com/slok/ragnarok/api/cluster/v1/pb"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	"github.com/slok/ragnarok/types"
 )
 
 // NodeStatus implements the required GRPC service methods for node status service.
 type NodeStatus struct {
-	service  service.NodeStatusService // The service that has the real logic
-	nsParser types.NodeStateParser
-	logger   log.Logger
+	service    service.NodeStatusService // The service that has the real logic
+	serializer serializer.Serializer
+	logger     log.Logger
 }
 
 // NewNodeStatus returns a new NodeStatus.
-func NewNodeStatus(service service.NodeStatusService, nsParser types.NodeStateParser, logger log.Logger) *NodeStatus {
+func NewNodeStatus(service service.NodeStatusService, serializer serializer.Serializer, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
-		service:  service,
-		nsParser: nsParser,
-		logger:   logger,
+		service:    service,
+		serializer: serializer,
+		logger:     logger,
 	}
 }
 
 // Register registers a node on the master.
-func (n *NodeStatus) Register(ctx context.Context, node *pb.Node) (*pb.RegisteredResponse, error) {
-	n.logger.WithField("node", node.GetId()).Debugf("node registration GRPC call received")
+func (n *NodeStatus) Register(ctx context.Context, nodepb *clusterv1pb.Node) (*emptypb.Empty, error) {
+	empty := &emptypb.Empty{}
 
+	// Decode pb object.
+	nodeObj, err := n.serializer.Decode(nodepb)
+	if err != nil {
+		return empty, err
+	}
+	node := nodeObj.(*clusterv1.Node)
+
+	n.logger.WithField("node", node.Metadata.ID).Debugf("node registration GRPC call received")
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
-		return &pb.RegisteredResponse{
-			Message: fmt.Sprintf("context was cancelled, not registered: %v", ctx.Err()),
-		}, ctx.Err()
+		return empty, ctx.Err()
 	default:
 	}
 
-	if err := n.service.Register(node.Id, node.Tags); err != nil {
-		return &pb.RegisteredResponse{
-			Message: fmt.Sprintf("couldn't register node '%s' on master: %v", node.Id, err),
-		}, err
+	if err := n.service.Register(node.Metadata.ID, node.Spec.Labels); err != nil {
+		return empty, err
 	}
 
-	return &pb.RegisteredResponse{
-		Message: fmt.Sprintf("node '%s' registered on master", node.Id),
-	}, nil
+	return empty, nil
 }
 
 // Heartbeat sets the current status of a node.
-func (n *NodeStatus) Heartbeat(ctx context.Context, state *pb.NodeState) (*pbempty.Empty, error) {
-	n.logger.WithField("node", state.GetId()).Debugf("node heartbeat GRPC call received")
+func (n *NodeStatus) Heartbeat(ctx context.Context, nodepb *clusterv1pb.Node) (*emptypb.Empty, error) {
+	empty := &emptypb.Empty{}
 
+	// Decode pb object.
+	nodeObj, err := n.serializer.Decode(nodepb)
+	if err != nil {
+		return empty, err
+	}
+	node := nodeObj.(*clusterv1.Node)
+
+	n.logger.WithField("node", node.Metadata.ID).Debugf("node heartbeat GRPC call received")
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return empty, ctx.Err()
 	default:
 	}
 
-	// Transform the pb state to our state kind.
-	st, err := n.nsParser.PBToNodeState(state.State)
-	if err != nil {
-		return nil, fmt.Errorf("wrong node state: %v", state.State)
-	}
-
 	// Set the node heartbeat.
-	if err := n.service.Heartbeat(state.Id, st); err != nil {
+	if err := n.service.Heartbeat(node.Metadata.ID, node.Status.State); err != nil {
 		return nil, err
 	}
 
-	return &pbempty.Empty{}, nil
+	return empty, nil
 }

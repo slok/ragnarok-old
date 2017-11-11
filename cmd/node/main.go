@@ -9,13 +9,14 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/google/uuid"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/node/flags"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/node"
 	"github.com/slok/ragnarok/node/client"
 	"github.com/slok/ragnarok/node/service"
-	"github.com/slok/ragnarok/types"
 )
 
 // Main run main logic.
@@ -45,18 +46,21 @@ func Main() error {
 	//defer conn.Close()
 
 	// Create GRPC clients.
-	nsCli, err := client.NewStatusGRPCFromConnection(conn, types.NodeStateTransformer, logger)
+	nsCli, err := client.NewStatusGRPCFromConnection(conn, serializer.PBSerializerDefault, logger)
 	if err != nil {
 		return err
 	}
 
-	fCli, err := client.NewFailureGRPCFromConnection(conn, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), logger)
+	fCli, err := client.NewFailureGRPCFromConnection(conn, serializer.PBSerializerDefault, clock.Base(), logger)
 	if err != nil {
 		return err
 	}
 
 	// Create services.
-	stSrv := service.NewNodeStatus(nodeID, nodeTags, nsCli, clock.Base(), logger)
+	apiNode := clusterv1.NewNode()
+	apiNode.Metadata.ID = nodeID
+	apiNode.Spec.Labels = nodeTags
+	stSrv := service.NewNodeStatus(&apiNode, nsCli, clock.Base(), logger)
 	fSrv := service.NewLogFailureState(nodeID, fCli, clock.Base(), logger)
 
 	// Create the node.

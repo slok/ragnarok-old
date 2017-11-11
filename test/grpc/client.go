@@ -7,6 +7,8 @@ import (
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 
+	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
+	clusterv1pb "github.com/slok/ragnarok/api/cluster/v1/pb"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 )
@@ -39,17 +41,17 @@ func (t *TestClient) Close() error {
 }
 
 // NodeStatusRegister wraps the call to nodestatus service.
-func (t *TestClient) NodeStatusRegister(ctx context.Context, ni *pbns.Node) (*pbns.RegisteredResponse, error) {
-	return t.nsCli.Register(ctx, ni)
+func (t *TestClient) NodeStatusRegister(ctx context.Context, n *clusterv1pb.Node) (*pbempty.Empty, error) {
+	return t.nsCli.Register(ctx, n)
 }
 
 // NodeStatusHeartbeat wraps the call to nodestatus service.
-func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, ns *pbns.NodeState) (*pbempty.Empty, error) {
-	return t.nsCli.Heartbeat(ctx, ns)
+func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, n *clusterv1pb.Node) (*pbempty.Empty, error) {
+	return t.nsCli.Heartbeat(ctx, n)
 }
 
 // FailureStatusGetFailure wraps the call to failurestatus service.
-func (t *TestClient) FailureStatusGetFailure(ctx context.Context, fID *pbfs.FailureId) (*pbfs.Failure, error) {
+func (t *TestClient) FailureStatusGetFailure(ctx context.Context, fID *pbfs.FailureId) (*chaosv1pb.Failure, error) {
 	return t.fsCli.GetFailure(ctx, fID)
 }
 

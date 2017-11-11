@@ -6,50 +6,49 @@ import (
 
 	"golang.org/x/net/context"
 
+	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
-	pb "github.com/slok/ragnarok/grpc/failurestatus"
+	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	"github.com/slok/ragnarok/types"
 )
 
 // FailureStatus implements the required methods for the FailureStatus GRPC service.
 type FailureStatus struct {
 	service             service.FailureStatusService // The service that has the real logic.
-	fParser             types.FailureParser
-	fsParser            types.FailureStateParser
+	serializer          serializer.Serializer
 	stateUpdateInterval time.Duration // The interval the server will send the sate of the failures to the client.
 	clock               clock.Clock
 	logger              log.Logger
 }
 
 // NewFailureStatus returns a new FailureStatus.
-func NewFailureStatus(stateUpdateInterval time.Duration, service service.FailureStatusService, fParser types.FailureParser, fsParser types.FailureStateParser, clock clock.Clock, logger log.Logger) *FailureStatus {
+func NewFailureStatus(stateUpdateInterval time.Duration, serializer serializer.Serializer, service service.FailureStatusService, clock clock.Clock, logger log.Logger) *FailureStatus {
 	return &FailureStatus{
 		service:             service,
-		fParser:             fParser,
-		fsParser:            fsParser,
+		serializer:          serializer,
 		stateUpdateInterval: stateUpdateInterval,
 		clock:               clock,
 		logger:              logger,
 	}
 }
 
-func (f *FailureStatus) getNodeFailures(nodeID string) ([]*pb.Failure, error) {
+func (f *FailureStatus) getNodeFailures(nodeID string) ([]*chaosv1pb.Failure, error) {
 	fss := f.service.GetNodeFailures(nodeID)
-	pbFSs := make([]*pb.Failure, len(fss))
+	pbfss := make([]*chaosv1pb.Failure, len(fss))
 	for i, fs := range fss {
-		pbf, err := f.fParser.FailureToPB(fs)
-		if err != nil {
-			return pbFSs, fmt.Errorf("error while converting failure to PB failure: %s", err)
+		pbfs := &chaosv1pb.Failure{}
+		if err := f.serializer.Encode(fs, pbfs); err != nil {
+			return pbfss, fmt.Errorf("error while converting failure to PB failure: %s", err)
 		}
-		pbFSs[i] = pbf
+		pbfss[i] = pbfs
 	}
-	return pbFSs, nil
+	return pbfss, nil
 }
 
 // FailureStateList returns periodically the state of the current state of the failures.
-func (f *FailureStatus) FailureStateList(nodeID *pb.NodeId, stream pb.FailureStatus_FailureStateListServer) error {
+func (f *FailureStatus) FailureStateList(nodeID *pbfs.NodeId, stream pbfs.FailureStatus_FailureStateListServer) error {
 	f.logger.Debugf("start node %s failure update loop", nodeID.GetId())
 
 	// Start the loop of state update for the client.
@@ -69,7 +68,7 @@ func (f *FailureStatus) FailureStateList(nodeID *pb.NodeId, stream pb.FailureSta
 		if err != nil {
 			return err
 		}
-		fs := &pb.FailuresState{Failures: fss}
+		fs := &pbfs.FailuresState{Failures: fss}
 		if err := stream.Send(fs); err != nil {
 			return fmt.Errorf("stream update loop canceled: %v", err)
 		}
@@ -79,7 +78,7 @@ func (f *FailureStatus) FailureStateList(nodeID *pb.NodeId, stream pb.FailureSta
 }
 
 // GetFailure returns a failure detail.
-func (f *FailureStatus) GetFailure(ctx context.Context, fID *pb.FailureId) (*pb.Failure, error) {
+func (f *FailureStatus) GetFailure(ctx context.Context, fID *pbfs.FailureId) (*chaosv1pb.Failure, error) {
 	// Check context already cancelled.
 	select {
 	case <-ctx.Done():
@@ -92,27 +91,9 @@ func (f *FailureStatus) GetFailure(ctx context.Context, fID *pb.FailureId) (*pb.
 		return nil, err
 	}
 
-	cSt, err := f.fsParser.FailureStateToPB(flr.Status.CurrentState)
-	if err != nil {
-		return nil, err
-	}
-	eSt, err := f.fsParser.FailureStateToPB(flr.Status.ExpectedState)
-	if err != nil {
-		return nil, err
-	}
-
-	// Marshal the definition to bytearray.
-	bs, err := flr.Spec.Render()
-	if err != nil {
+	res := &chaosv1pb.Failure{}
+	if err := f.serializer.Encode(flr, res); err != nil {
 		return nil, fmt.Errorf("could not make the call because of marshaling error on definition: %v", err)
-	}
-
-	res := &pb.Failure{
-		Id:            flr.Metadata.ID,
-		NodeID:        flr.Metadata.NodeID,
-		Definition:    string(bs),
-		CurrentState:  cSt,
-		ExpectedState: eSt,
 	}
 
 	return res, nil

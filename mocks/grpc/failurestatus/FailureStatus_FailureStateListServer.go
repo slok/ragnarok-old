@@ -2,7 +2,7 @@
 package failurestatus
 
 import context "golang.org/x/net/context"
-import failure "github.com/slok/ragnarok/grpc/failurestatus"
+import github_com_slok_ragnarok_grpc_failurestatus "github.com/slok/ragnarok/grpc/failurestatus"
 import metadata "google.golang.org/grpc/metadata"
 import mock "github.com/stretchr/testify/mock"
 
@@ -42,11 +42,11 @@ func (_m *FailureStatus_FailureStateListServer) RecvMsg(m interface{}) error {
 }
 
 // Send provides a mock function with given fields: _a0
-func (_m *FailureStatus_FailureStateListServer) Send(_a0 *failure.FailuresState) error {
+func (_m *FailureStatus_FailureStateListServer) Send(_a0 *github_com_slok_ragnarok_grpc_failurestatus.FailuresState) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*failure.FailuresState) error); ok {
+	if rf, ok := ret.Get(0).(func(*github_com_slok_ragnarok_grpc_failurestatus.FailuresState) error); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)

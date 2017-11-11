@@ -9,13 +9,13 @@ type Status struct {
 	mock.Mock
 }
 
-// NodeHeartbeat provides a mock function with given fields: id, status
-func (_m *Status) NodeHeartbeat(id string, status v1.NodeState) error {
-	ret := _m.Called(id, status)
+// NodeHeartbeat provides a mock function with given fields: node
+func (_m *Status) NodeHeartbeat(node *v1.Node) error {
+	ret := _m.Called(node)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, v1.NodeState) error); ok {
-		r0 = rf(id, status)
+	if rf, ok := ret.Get(0).(func(*v1.Node) error); ok {
+		r0 = rf(node)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -23,13 +23,13 @@ func (_m *Status) NodeHeartbeat(id string, status v1.NodeState) error {
 	return r0
 }
 
-// RegisterNode provides a mock function with given fields: id, tags
-func (_m *Status) RegisterNode(id string, tags map[string]string) error {
-	ret := _m.Called(id, tags)
+// RegisterNode provides a mock function with given fields: node
+func (_m *Status) RegisterNode(node *v1.Node) error {
+	ret := _m.Called(node)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, map[string]string) error); ok {
-		r0 = rf(id, tags)
+	if rf, ok := ret.Get(0).(func(*v1.Node) error); ok {
+		r0 = rf(node)
 	} else {
 		r0 = ret.Error(0)
 	}
