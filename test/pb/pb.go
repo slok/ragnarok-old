@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
+	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	clusterv1pb "github.com/slok/ragnarok/api/cluster/v1/pb"
 	"github.com/slok/ragnarok/apimachinery/serializer"
@@ -43,6 +45,16 @@ func CreatePBNode(n *clusterv1.Node, t *testing.T) *clusterv1pb.Node {
 	assert.NoError(t, serializer.DefaultSerializer.Encode(n, &b))
 
 	return &clusterv1pb.Node{
+		SerializedData: b.String(),
+	}
+}
+
+// CreatePBFailure helper function to create pb failures.
+func CreatePBFailure(f *chaosv1.Failure, t *testing.T) *chaosv1pb.Failure {
+	var b bytes.Buffer
+	assert.NoError(t, serializer.DefaultSerializer.Encode(f, &b))
+
+	return &chaosv1pb.Failure{
 		SerializedData: b.String(),
 	}
 }
