@@ -7,6 +7,7 @@ import (
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 
+	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
 	clusterv1pb "github.com/slok/ragnarok/api/cluster/v1/pb"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
@@ -50,7 +51,7 @@ func (t *TestClient) NodeStatusHeartbeat(ctx context.Context, n *clusterv1pb.Nod
 }
 
 // FailureStatusGetFailure wraps the call to failurestatus service.
-func (t *TestClient) FailureStatusGetFailure(ctx context.Context, fID *pbfs.FailureId) (*pbfs.Failure, error) {
+func (t *TestClient) FailureStatusGetFailure(ctx context.Context, fID *pbfs.FailureId) (*chaosv1pb.Failure, error) {
 	return t.fsCli.GetFailure(ctx, fID)
 }
 
