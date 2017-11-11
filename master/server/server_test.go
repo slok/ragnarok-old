@@ -15,12 +15,12 @@ import (
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
-	pbns "github.com/slok/ragnarok/grpc/nodestatus"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/server"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mservice "github.com/slok/ragnarok/mocks/service"
 	tgrpc "github.com/slok/ragnarok/test/grpc"
+	testpb "github.com/slok/ragnarok/test/pb"
 	"github.com/slok/ragnarok/types"
 )
 
@@ -30,7 +30,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 
 	tests := []struct {
 		id        string
-		tags      map[string]string
+		labels    map[string]string
 		shouldErr bool
 	}{
 		{"test1", nil, false},
@@ -46,7 +46,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 		if test.shouldErr {
 			expErr = errors.New("wanted error")
 		}
-		mnss.On("Register", test.id, test.tags).Once().Return(expErr)
+		mnss.On("Register", test.id, test.labels).Once().Return(expErr)
 
 		// Create our server.
 		l, err := net.Listen("tcp", "127.0.0.1:0") // :0 for a random port.
@@ -64,10 +64,7 @@ func TestMasterGRPCServiceServerRegisterNode(t *testing.T) {
 		defer testCli.Close()
 
 		// Make call.
-		n := &pbns.Node{
-			Id:   test.id,
-			Tags: test.tags,
-		}
+		n := testpb.CreateLabelsPBNode(test.id, test.labels, t)
 		_, err = testCli.NodeStatusRegister(context.Background(), n)
 
 		// Check.
@@ -87,16 +84,15 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 
 	tests := []struct {
 		id        string
-		state     pbns.State
 		expState  clusterv1.NodeState
 		shouldErr bool
 	}{
-		{"test1", pbns.State_READY, clusterv1.ReadyNodeState, false},
-		{"test1", pbns.State_UNKNOWN, clusterv1.UnknownNodeState, false},
-		{"test1", pbns.State_ERRORED, clusterv1.ErroredNodeState, false},
-		{"test1", pbns.State_ATTACKING, clusterv1.AttackingNodeState, false},
-		{"test1", pbns.State_REVERTING, clusterv1.RevertingNodeState, false},
-		{"test1", pbns.State_REVERTING, clusterv1.RevertingNodeState, true},
+		{"test1", clusterv1.ReadyNodeState, false},
+		{"test1", clusterv1.UnknownNodeState, false},
+		{"test1", clusterv1.ErroredNodeState, false},
+		{"test1", clusterv1.AttackingNodeState, false},
+		{"test1", clusterv1.RevertingNodeState, false},
+		{"test1", clusterv1.RevertingNodeState, true},
 	}
 
 	for _, test := range tests {
@@ -125,11 +121,9 @@ func TestMasterGRPCServiceServerNodeHeartbeat(t *testing.T) {
 		defer testCli.Close()
 
 		// Make call.
-		ns := &pbns.NodeState{
-			Id:    test.id,
-			State: test.state,
-		}
-		_, err = testCli.NodeStatusHeartbeat(context.Background(), ns)
+
+		n := testpb.CreateStatePBNode(test.id, test.expState, t)
+		_, err = testCli.NodeStatusHeartbeat(context.Background(), n)
 
 		// Check.
 		if test.shouldErr {

@@ -1,11 +1,13 @@
 package grpc
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
 
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
 	pb "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
@@ -16,6 +18,7 @@ import (
 // FailureStatus implements the required methods for the FailureStatus GRPC service.
 type FailureStatus struct {
 	service             service.FailureStatusService // The service that has the real logic.
+	serializer          serializer.Serializer
 	fParser             types.FailureParser
 	fsParser            types.FailureStateParser
 	stateUpdateInterval time.Duration // The interval the server will send the sate of the failures to the client.
@@ -24,9 +27,10 @@ type FailureStatus struct {
 }
 
 // NewFailureStatus returns a new FailureStatus.
-func NewFailureStatus(stateUpdateInterval time.Duration, service service.FailureStatusService, fParser types.FailureParser, fsParser types.FailureStateParser, clock clock.Clock, logger log.Logger) *FailureStatus {
+func NewFailureStatus(stateUpdateInterval time.Duration, serializer serializer.Serializer, service service.FailureStatusService, fParser types.FailureParser, fsParser types.FailureStateParser, clock clock.Clock, logger log.Logger) *FailureStatus {
 	return &FailureStatus{
 		service:             service,
+		serializer:          serializer,
 		fParser:             fParser,
 		fsParser:            fsParser,
 		stateUpdateInterval: stateUpdateInterval,
@@ -102,15 +106,15 @@ func (f *FailureStatus) GetFailure(ctx context.Context, fID *pb.FailureId) (*pb.
 	}
 
 	// Marshal the definition to bytearray.
-	bs, err := flr.Spec.Render()
-	if err != nil {
+	var b bytes.Buffer
+	if err := f.serializer.Encode(flr, &b); err != nil {
 		return nil, fmt.Errorf("could not make the call because of marshaling error on definition: %v", err)
 	}
 
 	res := &pb.Failure{
 		Id:            flr.Metadata.ID,
 		NodeID:        flr.Metadata.NodeID,
-		Definition:    string(bs),
+		Definition:    b.String(),
 		CurrentState:  cSt,
 		ExpectedState: eSt,
 	}

@@ -1,6 +1,7 @@
 package grpc_test
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/slok/ragnarok/api/chaos/v1"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
 	pb "github.com/slok/ragnarok/grpc/failurestatus"
 	"github.com/slok/ragnarok/log"
@@ -26,14 +28,15 @@ func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	spec := v1.FailureSpec{}
-	bs, err := spec.Render()
+	flr := v1.Failure{}
+	var b bytes.Buffer
+	err := serializer.DefaultSerializer.Encode(flr, &b)
 	require.NoError(err)
 
 	expF := &pb.Failure{
 		Id:            "test1",
 		NodeID:        "node1",
-		Definition:    string(bs),
+		Definition:    b.String(),
 		CurrentState:  pb.State_ENABLED,
 		ExpectedState: pb.State_DISABLED,
 	}
@@ -42,7 +45,7 @@ func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 			ID:     expF.GetId(),
 			NodeID: expF.GetNodeID(),
 		},
-		Spec: spec,
+		Spec: flr.Spec,
 		Status: v1.FailureStatus{
 			CurrentState:  v1.EnabledFailureState,
 			ExpectedState: v1.DisabledFailureState,
@@ -54,7 +57,7 @@ func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	mfss.On("GetFailure", expF.Id).Once().Return(stubF, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
 	fID := &pb.FailureId{Id: stubF.Metadata.ID}
@@ -72,7 +75,7 @@ func TestFailureStatusGRPCGetFailureError(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, errors.New("wanted error"))
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Get the failure and check.
 	fID := &pb.FailureId{Id: "test"}
@@ -88,7 +91,7 @@ func TestFailureStatusGRPCGetFailureCtxCanceled(t *testing.T) {
 	mfss.On("GetFailure", mock.AnythingOfType("string")).Once().Return(nil, nil)
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(0, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
+	fs := grpc.NewFailureStatus(0, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, clock.Base(), log.Dummy)
 
 	// Cancel context.
 	ctx, cncl := context.WithCancel(context.Background())
@@ -148,7 +151,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Simulate the ticker that triggers the update.
 	go func() {
@@ -185,7 +188,7 @@ func TestFailureStatusGRPCFailureStateListContextClosed(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {
@@ -220,7 +223,7 @@ func TestFailureStatusGRPCFailureStateListErr(t *testing.T) {
 	mtime.On("NewTicker", mock.Anything).Once().Return(&time.Ticker{C: tC})
 
 	// Create the GRPC service.
-	fs := grpc.NewFailureStatus(1, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
+	fs := grpc.NewFailureStatus(1, serializer.DefaultSerializer, mfss, types.FailureTransformer, types.FailureStateTransformer, mtime, log.Dummy)
 
 	// Trigger one round on the update loop.
 	go func() {

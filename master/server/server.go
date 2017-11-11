@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
 	pbfs "github.com/slok/ragnarok/grpc/failurestatus"
 	pbns "github.com/slok/ragnarok/grpc/nodestatus"
@@ -41,8 +42,8 @@ type MasterGRPCServiceServer struct {
 func NewMasterGRPCServiceServer(fss service.FailureStatusService, nss service.NodeStatusService, listener net.Listener, clock clock.Clock, logger log.Logger) *MasterGRPCServiceServer {
 
 	// Create different grpc services.
-	gnss := grpcservice.NewNodeStatus(nss, types.NodeStateTransformer, logger)
-	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, fss, types.FailureTransformer, types.FailureStateTransformer, clock, logger)
+	gnss := grpcservice.NewNodeStatus(nss, serializer.PBSerializerDefault, logger)
+	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, serializer.PBSerializerDefault, fss, types.FailureTransformer, types.FailureStateTransformer, clock, logger)
 
 	// TODO: Authentication.
 	// Create the GRPC server.
