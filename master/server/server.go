@@ -13,7 +13,6 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
 	grpcservice "github.com/slok/ragnarok/master/service/grpc"
-	"github.com/slok/ragnarok/types"
 )
 
 // TODO: set this as configurable.
@@ -43,7 +42,7 @@ func NewMasterGRPCServiceServer(fss service.FailureStatusService, nss service.No
 
 	// Create different grpc services.
 	gnss := grpcservice.NewNodeStatus(nss, serializer.PBSerializerDefault, logger)
-	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, serializer.PBSerializerDefault, fss, types.FailureTransformer, types.FailureStateTransformer, clock, logger)
+	gfss := grpcservice.NewFailureStatus(failureStatusUpInterval, serializer.PBSerializerDefault, fss, clock, logger)
 
 	// TODO: Authentication.
 	// Create the GRPC server.
