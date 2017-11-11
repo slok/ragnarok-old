@@ -369,13 +369,15 @@ func TestPBEncodeCluserV1Node(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := serializer.NewPBSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
+			s := serializer.NewPBSerializer(log.Dummy)
 			pbNode := &clusterv1pb.Node{}
 			err := s.Encode(test.node, pbNode)
 
 			if test.expErr {
 				assert.Error(err)
 			} else {
+				// Small fix for the \n
+				pbNode.SerializedData = strings.TrimSuffix(pbNode.SerializedData, "\n")
 				assert.Equal(test.expEncNode, pbNode)
 				assert.NoError(err)
 			}
@@ -464,7 +466,7 @@ func TestPBDecodeCluserV1Node(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
-			s := serializer.NewPBSerializer(serializer.ObjTyper, serializer.ObjFactory, log.Dummy)
+			s := serializer.NewPBSerializer(log.Dummy)
 			obj, err := s.Decode(test.nodePB)
 
 			if test.expErr {

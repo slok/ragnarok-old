@@ -24,6 +24,7 @@ USER ragnarok
 # golang dependencies
 RUN go get github.com/golang/dep/cmd/dep && \
     go get github.com/vektra/mockery/.../ && \
-    go get github.com/golang/protobuf/protoc-gen-go
+    #go get github.com/golang/protobuf/protoc-gen-go && \
+    go get github.com/gogo/protobuf/protoc-gen-gofast
 
 
