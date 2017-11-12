@@ -1,6 +1,7 @@
 package scheduler_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -207,6 +208,10 @@ func TestNodeLabelsSchedule(t *testing.T) {
 				assert.Error(err)
 			} else {
 				if assert.NoError(err) {
+					sort.Slice(flrs, func(i, j int) bool {
+						return flrs[i].Metadata.NodeID < flrs[j].Metadata.NodeID
+					})
+
 					for i, expFlr := range test.expFailures {
 						assert.Equal(expFlr.Spec, flrs[i].Spec)
 						assert.Equal(expFlr.Metadata.NodeID, flrs[i].Metadata.NodeID)
