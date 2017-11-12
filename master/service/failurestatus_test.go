@@ -9,7 +9,7 @@ import (
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	mservice "github.com/slok/ragnarok/mocks/service"
+	mservice "github.com/slok/ragnarok/mocks/master/service"
 )
 
 type testNodeFailures map[string][]*v1.Failure
