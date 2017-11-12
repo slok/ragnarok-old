@@ -17,7 +17,7 @@ import (
 	"github.com/slok/ragnarok/master/service/grpc"
 	mclock "github.com/slok/ragnarok/mocks/clock"
 	mpbfs "github.com/slok/ragnarok/mocks/grpc/failurestatus"
-	mservice "github.com/slok/ragnarok/mocks/service"
+	mservice "github.com/slok/ragnarok/mocks/master/service"
 	testpb "github.com/slok/ragnarok/test/pb"
 )
 

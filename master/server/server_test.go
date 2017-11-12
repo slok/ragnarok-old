@@ -19,7 +19,7 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/server"
 	mclock "github.com/slok/ragnarok/mocks/clock"
-	mservice "github.com/slok/ragnarok/mocks/service"
+	mservice "github.com/slok/ragnarok/mocks/master/service"
 	tgrpc "github.com/slok/ragnarok/test/grpc"
 	testpb "github.com/slok/ragnarok/test/pb"
 )

@@ -14,7 +14,7 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/grpc"
 	mserializer "github.com/slok/ragnarok/mocks/apimachinery/serializer"
-	mservice "github.com/slok/ragnarok/mocks/service"
+	mservice "github.com/slok/ragnarok/mocks/master/service"
 	testpb "github.com/slok/ragnarok/test/pb"
 )
 
