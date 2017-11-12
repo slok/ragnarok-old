@@ -13,6 +13,8 @@ import (
 	"github.com/slok/ragnarok/master/server"
 	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/master/service/repository"
+	"github.com/slok/ragnarok/master/web"
+	webapiv1 "github.com/slok/ragnarok/master/web/handler/api/v1"
 )
 
 func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
@@ -29,6 +31,21 @@ func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCS
 	}
 	srvServer := server.NewMasterGRPCServiceServer(fss, nss, l, clock.Base(), logger)
 	return srvServer, nil
+}
+
+func createHTTPServer(cfg config.Config, logger log.Logger) (web.Server, error) {
+	// Create the GRPC service server
+	l, err := net.Listen("tcp", cfg.HTTPListenAddress)
+	if err != nil {
+		return nil, err
+	}
+	handler := struct {
+		webapiv1.Handler
+	}{
+		Handler: webapiv1.NewJSONHandler(logger),
+	}
+	server := web.NewHTTPServer(web.DefaultHTTPRoutes, handler, l, logger)
+	return server, nil
 }
 
 // Main run main logic.
@@ -48,11 +65,19 @@ func Main() error {
 	}
 
 	// TODO: Autoregister this node as a master node.
-	gserver, err := createGRPCServer(*cfg, logger)
+	grpcServer, err := createGRPCServer(*cfg, logger)
 	if err != nil {
 		return err
 	}
-	gserver.Serve()
+	go func() {
+		grpcServer.Serve()
+	}()
+
+	httpServer, err := createHTTPServer(*cfg, logger)
+	if err != nil {
+		return err
+	}
+	httpServer.Serve()
 
 	return nil
 }
