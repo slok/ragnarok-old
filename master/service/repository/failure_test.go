@@ -1,4 +1,4 @@
-package service_test
+package repository_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/api/chaos/v1"
-	"github.com/slok/ragnarok/master/service"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
 func TestMemStoreFailure(t *testing.T) {
@@ -23,7 +23,7 @@ func TestMemStoreFailure(t *testing.T) {
 	for _, test := range tests {
 		t.Run(string(test.quantity), func(t *testing.T) {
 			assert := assert.New(t)
-			r := service.NewMemFailureRepository()
+			r := repository.NewMemFailure()
 			for i := 0; i < test.quantity; i++ {
 				f := &v1.Failure{
 					Metadata: v1.FailureMetadata{
@@ -55,7 +55,7 @@ func TestMemDeleteFailure(t *testing.T) {
 	require := require.New(t)
 
 	// Create the repository.
-	r := service.NewMemFailureRepository()
+	r := repository.NewMemFailure()
 
 	// Store a failure and check is there.
 	f := &v1.Failure{Metadata: v1.FailureMetadata{ID: "test"}}
@@ -72,7 +72,7 @@ func TestMemDeleteFailure(t *testing.T) {
 
 func TestMemGetFailureMissing(t *testing.T) {
 	assert := assert.New(t)
-	r := service.NewMemFailureRepository()
+	r := repository.NewMemFailure()
 	fGot, ok := r.Get("wrong-id")
 	if assert.False(ok) {
 		assert.Nil(fGot)
@@ -91,7 +91,7 @@ func TestMemGetAllFailures(t *testing.T) {
 	for _, test := range tests {
 		t.Run(string(test.quantity), func(t *testing.T) {
 			assert := assert.New(t)
-			r := service.NewMemFailureRepository()
+			r := repository.NewMemFailure()
 			for i := 0; i < test.quantity; i++ {
 				f := &v1.Failure{
 					Metadata: v1.FailureMetadata{
@@ -164,7 +164,7 @@ func TestMemGetNotStaleByNodeFailures(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			r := service.NewMemFailureRepository()
+			r := repository.NewMemFailure()
 			// For each node.
 			for nID, q := range test.nodeFailures {
 				// For each failure per node.
@@ -259,7 +259,7 @@ func TestMemGetAllByNodeFailures(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			r := service.NewMemFailureRepository()
+			r := repository.NewMemFailure()
 			// For each node.
 			for nID, q := range test.nodeFailures {
 				// For each failure per node.
@@ -294,7 +294,7 @@ func TestMemGetAllByNodeFailures(t *testing.T) {
 func TestMemGetAllByNodeFailuresMissing(t *testing.T) {
 	assert := assert.New(t)
 
-	r := service.NewMemFailureRepository()
+	r := repository.NewMemFailure()
 	fsGot := r.GetAllByNode("wrongID")
 	assert.Empty(fsGot)
 }
@@ -304,7 +304,7 @@ func TestDeleteFailureByNode(t *testing.T) {
 	require := require.New(t)
 
 	// Create the repository.
-	r := service.NewMemFailureRepository()
+	r := repository.NewMemFailure()
 
 	// Store failures on different nodes.
 	f11 := &v1.Failure{Metadata: v1.FailureMetadata{ID: "test1", NodeID: "nid1"}}

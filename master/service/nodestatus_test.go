@@ -12,12 +12,13 @@ import (
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
 	"github.com/slok/ragnarok/master/service"
-	mservice "github.com/slok/ragnarok/mocks/master/service"
+	"github.com/slok/ragnarok/master/service/repository"
+	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
 )
 
 func TestNodeStatusCreation(t *testing.T) {
 	assert := assert.New(t)
-	reg := service.NewMemNodeRepository()
+	reg := repository.NewMemNode()
 	m := service.NewNodeStatus(config.Config{}, reg, log.Dummy)
 	assert.NotNil(m)
 }
@@ -37,7 +38,7 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	}
 
 	// Get our registry mock.
-	mReg := &mservice.NodeRepository{}
+	mReg := &mrepository.Node{}
 	mReg.On("StoreNode", n.Metadata.ID, n).Once().Return(nil)
 
 	// Create the service.
@@ -66,7 +67,7 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	}
 
 	// Get our registry mock.
-	mRep := &mservice.NodeRepository{}
+	mRep := &mrepository.Node{}
 	mRep.On("StoreNode", n.Metadata.ID, n).Once().Return(errors.New("want error"))
 
 	// Create the service.
@@ -104,7 +105,7 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	}
 
 	// Get our repository mock.
-	mRep := &mservice.NodeRepository{}
+	mRep := &mrepository.Node{}
 	mRep.On("GetNode", expN.Metadata.ID).Once().Return(&stubN, true)
 	mRep.On("StoreNode", expN.Metadata.ID, expN).Once().Return(nil)
 
@@ -124,7 +125,7 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	require := require.New(t)
 
 	// Get our repository mock.
-	mRep := &mservice.NodeRepository{}
+	mRep := &mrepository.Node{}
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(nil, false)
 
 	// Create the service.
@@ -141,7 +142,7 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	require := require.New(t)
 
 	// Get our repository mock.
-	mRep := &mservice.NodeRepository{}
+	mRep := &mrepository.Node{}
 	mRep.On("GetNode", mock.AnythingOfType("string")).Return(&v1.Node{}, true)
 	mRep.On("StoreNode", mock.AnythingOfType("string"), mock.Anything).Return(errors.New("wanted error"))
 

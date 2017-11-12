@@ -7,6 +7,7 @@ import (
 	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
 // NodeStatusService is how the master manages the status of the nodes.
@@ -20,14 +21,14 @@ type NodeStatusService interface {
 
 // NodeStatus is the implementation of node status service.
 type NodeStatus struct {
-	repo   NodeRepository // Repo is the repository where all the nodes will be stored.
+	repo   repository.Node // Repo is the repository where all the nodes will be stored.
 	logger log.Logger
 
 	nodeLock sync.Mutex
 }
 
 // NewNodeStatus returns a new node status service.
-func NewNodeStatus(_ config.Config, repository NodeRepository, logger log.Logger) *NodeStatus {
+func NewNodeStatus(_ config.Config, repository repository.Node, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
 		repo:   repository,
 		logger: logger,

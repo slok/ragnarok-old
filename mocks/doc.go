@@ -24,9 +24,9 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 
 // Services mocks
 //go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name NodeStatusService
-//go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name NodeRepository
 //go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name FailureStatusService
-//go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name FailureRepository
+//go:generate mockery -output ./master/service/repository -outpkg service -dir ../master/service/repository -name Node
+//go:generate mockery -output ./master/service/repository -outpkg service -dir ../master/service/repository -name Failure
 
 // GRPC proto clients
 //go:generate mockery -output ./grpc/nodestatus -outpkg nodestatus -dir ../grpc/nodestatus -name NodeStatusClient

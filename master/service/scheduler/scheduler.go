@@ -8,7 +8,7 @@ import (
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/service"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
 const (
@@ -50,13 +50,13 @@ type Scheduler interface {
 // NodeLabels is an scheduler that will schedule the failures based on the labels of an experiment.
 // appart from returning the failures it will store them on the repository based on the required node.
 type NodeLabels struct {
-	nodeRepo    service.NodeRepository
-	failureRepo service.FailureRepository
+	nodeRepo    repository.Node
+	failureRepo repository.Failure
 	logger      log.Logger
 }
 
 // NewNodeLabels will return a new NodeLabels scheduler.
-func NewNodeLabels(failureRepo service.FailureRepository, nodeRepo service.NodeRepository, logger log.Logger) *NodeLabels {
+func NewNodeLabels(failureRepo repository.Failure, nodeRepo repository.Node, logger log.Logger) *NodeLabels {
 	return &NodeLabels{
 		nodeRepo:    nodeRepo,
 		failureRepo: failureRepo,

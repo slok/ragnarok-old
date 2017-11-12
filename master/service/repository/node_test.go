@@ -1,4 +1,4 @@
-package service_test
+package repository_test
 
 import (
 	"fmt"
@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/api/cluster/v1"
-	"github.com/slok/ragnarok/master/service"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
-func TestMemNodeRepositoryRegisterNode(t *testing.T) {
+func TestMemNodeRegisterNode(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
@@ -23,7 +23,7 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := service.NewMemNodeRepository()
+		reg := repository.NewMemNode()
 
 		for i := 0; i < test.quantity; i++ {
 			n := v1.Node{
@@ -49,20 +49,20 @@ func TestMemNodeRepositoryRegisterNode(t *testing.T) {
 	}
 }
 
-func TestMemNodeRepositoryGetMissing(t *testing.T) {
+func TestMemNodeGetMissing(t *testing.T) {
 	assert := assert.New(t)
 
-	reg := service.NewMemNodeRepository()
+	reg := repository.NewMemNode()
 	nGot, ok := reg.GetNode("missing")
 	if assert.False(ok) {
 		assert.Nil(nGot)
 	}
 }
-func TestMemNodeRepositoryDelete(t *testing.T) {
+func TestMemNodeDelete(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	reg := service.NewMemNodeRepository()
+	reg := repository.NewMemNode()
 
 	n := v1.Node{
 		Metadata: v1.NodeMetadata{
@@ -86,7 +86,7 @@ func TestMemNodeRepositoryDelete(t *testing.T) {
 	assert.False(ok)
 }
 
-func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
+func TestMemNodeStoreGetAll(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -99,7 +99,7 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reg := service.NewMemNodeRepository()
+		reg := repository.NewMemNode()
 		nodes := make([]v1.Node, test.quantity)
 
 		for i := 0; i < test.quantity; i++ {
@@ -125,7 +125,7 @@ func TestMemNodeRepositoryStoreGetAll(t *testing.T) {
 	}
 }
 
-func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
+func TestMemNodeGetNodesByLabels(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []v1.Node
@@ -292,7 +292,7 @@ func TestMemNodeRepositoryGetNodesByLabels(t *testing.T) {
 		require := require.New(t)
 
 		t.Run(test.name, func(t *testing.T) {
-			reg := service.NewMemNodeRepository()
+			reg := repository.NewMemNode()
 
 			// Insert the nodes.
 			for _, n := range test.nodes {
