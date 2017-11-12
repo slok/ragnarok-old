@@ -12,12 +12,13 @@ import (
 	"github.com/slok/ragnarok/master/config"
 	"github.com/slok/ragnarok/master/server"
 	"github.com/slok/ragnarok/master/service"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
 func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
 	// Create the services.
-	nodeReg := service.NewMemNodeRepository()
-	failureReg := service.NewMemFailureRepository()
+	nodeReg := repository.NewMemNode()
+	failureReg := repository.NewMemFailure()
 	nss := service.NewNodeStatus(cfg, nodeReg, logger)
 	fss := service.NewFailureStatus(failureReg, logger)
 

@@ -14,7 +14,7 @@ import (
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/scheduler"
-	mservice "github.com/slok/ragnarok/mocks/master/service"
+	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
 )
 
 func TestNodeLabelsSchedule(t *testing.T) {
@@ -196,9 +196,9 @@ func TestNodeLabelsSchedule(t *testing.T) {
 			assert := assert.New(t)
 
 			// Create mocks.
-			mnr := &mservice.NodeRepository{}
+			mnr := &mrepository.Node{}
 			mnr.On("GetNodesByLabels", mock.Anything).Return(test.nodes)
-			mfr := &mservice.FailureRepository{}
+			mfr := &mrepository.Failure{}
 			mfr.On("Store", mock.Anything).Return(nil)
 
 			s := scheduler.NewNodeLabels(mfr, mnr, log.Dummy)

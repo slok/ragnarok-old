@@ -1,4 +1,4 @@
-package service
+package repository
 
 import (
 	"sync"
@@ -6,8 +6,8 @@ import (
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 )
 
-// NodeRepository is the way the master should store the nodes.
-type NodeRepository interface {
+// Node is the way the master should store the nodes.
+type Node interface {
 	// StoreNode adds a node to the registry.
 	StoreNode(id string, node clusterv1.Node) error
 
@@ -24,22 +24,22 @@ type NodeRepository interface {
 	GetNodesByLabels(labels clusterv1.NodeLabels) map[string]*clusterv1.Node
 }
 
-// NewMemNodeRepository returns a new memory node registry.
-func NewMemNodeRepository() *MemNodeRepository {
-	return &MemNodeRepository{
+// NewMemNode returns a new memory node registry.
+func NewMemNode() *MemNode {
+	return &MemNode{
 		reg: map[string]*clusterv1.Node{},
 	}
 }
 
-// MemNodeRepository is a representation of the node registry using memorymap, used only
+// MemNode is a representation of the node registry using memorymap, used only
 // as a first implementation to get working the first version.
-type MemNodeRepository struct {
+type MemNode struct {
 	reg map[string]*clusterv1.Node
 	sync.Mutex
 }
 
-// StoreNode satisfies NodeRepository interface.
-func (m *MemNodeRepository) StoreNode(id string, node clusterv1.Node) error {
+// StoreNode satisfies Node interface.
+func (m *MemNode) StoreNode(id string, node clusterv1.Node) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -48,31 +48,31 @@ func (m *MemNodeRepository) StoreNode(id string, node clusterv1.Node) error {
 	return nil
 }
 
-// DeleteNode satisfies NodeRepository interface.
-func (m *MemNodeRepository) DeleteNode(id string) {
+// DeleteNode satisfies Node interface.
+func (m *MemNode) DeleteNode(id string) {
 	m.Lock()
 	defer m.Unlock()
 
 	delete(m.reg, id)
 }
 
-// GetNode satisfies NodeRepository interface.
-func (m *MemNodeRepository) GetNode(id string) (*clusterv1.Node, bool) {
+// GetNode satisfies Node interface.
+func (m *MemNode) GetNode(id string) (*clusterv1.Node, bool) {
 	m.Lock()
 	defer m.Unlock()
 	n, ok := m.reg[id]
 	return n, ok
 }
 
-// GetNodes satisfies NodeRepository interface.
-func (m *MemNodeRepository) GetNodes() map[string]*clusterv1.Node {
+// GetNodes satisfies Node interface.
+func (m *MemNode) GetNodes() map[string]*clusterv1.Node {
 	m.Lock()
 	defer m.Unlock()
 	return m.reg
 }
 
-// GetNodesByLabels satisfies NodeRepository interface.
-func (m *MemNodeRepository) GetNodesByLabels(labels clusterv1.NodeLabels) map[string]*clusterv1.Node {
+// GetNodesByLabels satisfies Node interface.
+func (m *MemNode) GetNodesByLabels(labels clusterv1.NodeLabels) map[string]*clusterv1.Node {
 	result := map[string]*clusterv1.Node{}
 	if len(labels) == 0 {
 		return result

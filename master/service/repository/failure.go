@@ -1,4 +1,4 @@
-package service
+package repository
 
 import (
 	"sync"
@@ -6,8 +6,8 @@ import (
 	"github.com/slok/ragnarok/api/chaos/v1"
 )
 
-// FailureRepository is the way the master keeps track of the failures.
-type FailureRepository interface {
+// Failure is the way the master keeps track of the failures.
+type Failure interface {
 	// Store adds a failure to the registry.
 	Store(failure *v1.Failure) error
 
@@ -27,23 +27,23 @@ type FailureRepository interface {
 	GetNotStaleByNode(nodeID string) []*v1.Failure
 }
 
-// MemFailureRepository is a represententation of the failure regsitry using a memory map.
-type MemFailureRepository struct {
+// MemFailure is a represententation of the failure regsitry using a memory map.
+type MemFailure struct {
 	reg       map[string]*v1.Failure
 	regByNode map[string]map[string]*v1.Failure
 	sync.Mutex
 }
 
-// NewMemFailureRepository returns a new MemFailureRepository
-func NewMemFailureRepository() *MemFailureRepository {
-	return &MemFailureRepository{
+// NewMemFailure returns a new MemFailure
+func NewMemFailure() *MemFailure {
+	return &MemFailure{
 		reg:       map[string]*v1.Failure{},
 		regByNode: map[string]map[string]*v1.Failure{},
 	}
 }
 
-// Store satisfies FailureRepository interface.
-func (m *MemFailureRepository) Store(f *v1.Failure) error {
+// Store satisfies Failure interface.
+func (m *MemFailure) Store(f *v1.Failure) error {
 	m.Lock()
 	defer m.Unlock()
 	m.reg[f.Metadata.ID] = f
@@ -55,8 +55,8 @@ func (m *MemFailureRepository) Store(f *v1.Failure) error {
 	return nil
 }
 
-// Delete satisfies FailureRepository interface.
-func (m *MemFailureRepository) Delete(id string) {
+// Delete satisfies Failure interface.
+func (m *MemFailure) Delete(id string) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -69,8 +69,8 @@ func (m *MemFailureRepository) Delete(id string) {
 	delete(m.regByNode[f.Metadata.NodeID], id)
 }
 
-// Get satisfies FailureRepository interface.
-func (m *MemFailureRepository) Get(id string) (*v1.Failure, bool) {
+// Get satisfies Failure interface.
+func (m *MemFailure) Get(id string) (*v1.Failure, bool) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -79,8 +79,8 @@ func (m *MemFailureRepository) Get(id string) (*v1.Failure, bool) {
 	return f, ok
 }
 
-// GetAll satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetAll() []*v1.Failure {
+// GetAll satisfies Failure interface.
+func (m *MemFailure) GetAll() []*v1.Failure {
 	m.Lock()
 	defer m.Unlock()
 	res := []*v1.Failure{}
@@ -92,7 +92,7 @@ func (m *MemFailureRepository) GetAll() []*v1.Failure {
 
 // getAllByNode gets all the failures with an stale filter, if the filter is true
 // then it will return also the stale ones, if not then it will return all expect the stale ones.
-func (m *MemFailureRepository) getAllByNode(nodeID string, stale bool) []*v1.Failure {
+func (m *MemFailure) getAllByNode(nodeID string, stale bool) []*v1.Failure {
 	m.Lock()
 	defer m.Unlock()
 	res := []*v1.Failure{}
@@ -109,12 +109,12 @@ func (m *MemFailureRepository) getAllByNode(nodeID string, stale bool) []*v1.Fai
 	return res
 }
 
-// GetAllByNode satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetAllByNode(nodeID string) []*v1.Failure {
+// GetAllByNode satisfies Failure interface.
+func (m *MemFailure) GetAllByNode(nodeID string) []*v1.Failure {
 	return m.getAllByNode(nodeID, true)
 }
 
-// GetNotStaleByNode satisfies FailureRepository interface.
-func (m *MemFailureRepository) GetNotStaleByNode(nodeID string) []*v1.Failure {
+// GetNotStaleByNode satisfies Failure interface.
+func (m *MemFailure) GetNotStaleByNode(nodeID string) []*v1.Failure {
 	return m.getAllByNode(nodeID, false)
 }

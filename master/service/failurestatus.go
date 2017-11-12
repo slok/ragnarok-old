@@ -5,6 +5,7 @@ import (
 
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
+	"github.com/slok/ragnarok/master/service/repository"
 )
 
 // FailureStatusService is how the master manages, enables, disables... attacks on the nodes.
@@ -21,12 +22,12 @@ type FailureStatusService interface {
 
 // FailureStatus is the implementation of failure status service.
 type FailureStatus struct {
-	repo   FailureRepository // Repo is the failure repository.
+	repo   repository.Failure // Repo is the failure repository.
 	logger log.Logger
 }
 
 // NewFailureStatus returns a new FailureStatus
-func NewFailureStatus(repository FailureRepository, logger log.Logger) *FailureStatus {
+func NewFailureStatus(repository repository.Failure, logger log.Logger) *FailureStatus {
 	return &FailureStatus{
 		repo:   repository,
 		logger: logger,

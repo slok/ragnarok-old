@@ -9,7 +9,7 @@ import (
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	mservice "github.com/slok/ragnarok/mocks/master/service"
+	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
 )
 
 type testNodeFailures map[string][]*v1.Failure
@@ -39,7 +39,7 @@ func TestGetNodeFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mservice.FailureRepository{}
+		mrepo := &mrepository.Failure{}
 
 		// Mock the call.
 		for nID, expfs := range test.expectedFailures {
@@ -121,7 +121,7 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mservice.FailureRepository{}
+		mrepo := &mrepository.Failure{}
 		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
 
 		// Create the service.
@@ -193,7 +193,7 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mservice.FailureRepository{}
+		mrepo := &mrepository.Failure{}
 		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
 
 		// Create the service.
@@ -230,7 +230,7 @@ func TestGetFailure(t *testing.T) {
 		var err error
 
 		// Create mocks.
-		mrepo := &mservice.FailureRepository{}
+		mrepo := &mrepository.Failure{}
 		mrepo.On("Get", mock.Anything).Once().Return(test.expFailure, !test.expErr)
 
 		// Create the service.
