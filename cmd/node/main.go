@@ -22,8 +22,9 @@ import (
 // Main run main logic.
 func Main() error {
 	nodeID := uuid.New().String()
-	nodeTags := map[string]string{"id": nodeID, "version": "v0.1alpha"}
+	nodeTags := map[string]string{"id": nodeID, "version": "v0.1alpha", "kind": "node"}
 	logger := log.Base().WithField("id", nodeID)
+	logger.Infof("starting node with %+v tags...", nodeTags)
 
 	// Get the command line arguments.
 	cfg, err := flags.GetNodeConfig(os.Args[1:])

@@ -146,6 +146,7 @@ func (f *FailureGRPC) ProcessFailureStateStreaming(nodeID string, handler Failur
 
 			fs, err := stream.Recv()
 			pbflrs := fs.GetFailures()
+			f.logger.Debugf("received: %d failures", len(pbflrs))
 			if pbflrs == nil || len(pbflrs) == 0 {
 				continue
 			}

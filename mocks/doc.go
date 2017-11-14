@@ -27,6 +27,7 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 //go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name FailureStatusService
 //go:generate mockery -output ./master/service/repository -outpkg service -dir ../master/service/repository -name Node
 //go:generate mockery -output ./master/service/repository -outpkg service -dir ../master/service/repository -name Failure
+//go:generate mockery -output ./master/service/scheduler -outpkg service -dir ../master/service/scheduler -name Scheduler
 
 // GRPC proto clients
 //go:generate mockery -output ./grpc/nodestatus -outpkg nodestatus -dir ../grpc/nodestatus -name NodeStatusClient
@@ -36,3 +37,6 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 
 // apimachinery mocks
 //go:generate mockery -output ./apimachinery/serializer -outpkg serializer -dir ../apimachinery/serializer -name Serializer
+
+// web mocks
+//go:generate mockery -output ./master/web/handler -outpkg serializer -dir ../master/web/handler -name Handler

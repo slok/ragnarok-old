@@ -13,22 +13,46 @@ import (
 	"github.com/slok/ragnarok/master/server"
 	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/master/service/repository"
+	"github.com/slok/ragnarok/master/service/scheduler"
+	"github.com/slok/ragnarok/master/web"
+	webapiv1 "github.com/slok/ragnarok/master/web/handler/api/v1"
 )
 
-func createGRPCServer(cfg config.Config, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
-	// Create the services.
-	nodeReg := repository.NewMemNode()
-	failureReg := repository.NewMemFailure()
-	nss := service.NewNodeStatus(cfg, nodeReg, logger)
-	fss := service.NewFailureStatus(failureReg, logger)
+// master dependencies is a helper object to group all the app dependencies
+type masterDependencies struct {
+	scheduler     scheduler.Scheduler
+	nodeRepo      repository.Node
+	failureRepo   repository.Failure
+	logger        log.Logger
+	nodeStatus    service.NodeStatusService
+	failureStatus service.FailureStatusService
+}
+
+func createGRPCServer(cfg config.Config, deps masterDependencies, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
 
 	// Create the GRPC service server
 	l, err := net.Listen("tcp", cfg.RPCListenAddress)
 	if err != nil {
 		return nil, err
 	}
-	srvServer := server.NewMasterGRPCServiceServer(fss, nss, l, clock.Base(), logger)
+	srvServer := server.NewMasterGRPCServiceServer(deps.failureStatus, deps.nodeStatus, l, clock.Base(), logger)
 	return srvServer, nil
+}
+
+func createHTTPServer(cfg config.Config, deps masterDependencies, logger log.Logger) (web.Server, error) {
+	// Create the GRPC service server
+	l, err := net.Listen("tcp", cfg.HTTPListenAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	handler := struct {
+		webapiv1.Handler
+	}{
+		Handler: webapiv1.NewJSONHandler(deps.scheduler, logger),
+	}
+	server := web.NewHTTPServer(web.DefaultHTTPRoutes, handler, l, logger)
+	return server, nil
 }
 
 // Main run main logic.
@@ -47,12 +71,31 @@ func Main() error {
 		logger.Set("debug")
 	}
 
+	// Create dependencies
+	nodeRepo := repository.NewMemNode()
+	failureRepo := repository.NewMemFailure()
+	deps := masterDependencies{
+		nodeRepo:      nodeRepo,
+		failureRepo:   failureRepo,
+		nodeStatus:    service.NewNodeStatus(*cfg, nodeRepo, logger),
+		failureStatus: service.NewFailureStatus(failureRepo, logger),
+		scheduler:     scheduler.NewNodeLabels(failureRepo, nodeRepo, logger),
+	}
+
 	// TODO: Autoregister this node as a master node.
-	gserver, err := createGRPCServer(*cfg, logger)
+	grpcServer, err := createGRPCServer(*cfg, deps, logger)
 	if err != nil {
 		return err
 	}
-	gserver.Serve()
+	go func() {
+		grpcServer.Serve()
+	}()
+
+	httpServer, err := createHTTPServer(*cfg, deps, logger)
+	if err != nil {
+		return err
+	}
+	httpServer.Serve()
 
 	return nil
 }

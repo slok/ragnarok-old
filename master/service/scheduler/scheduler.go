@@ -81,6 +81,7 @@ func (n *NodeLabels) Schedule(experiment *chaosv1.Experiment) ([]*chaosv1.Failur
 			return flrs, err
 		}
 	}
+	n.logger.WithField("experiment", experiment.Metadata.ID).Infof("scheduled %d failures", len(flrs))
 
 	// TODO: Save experiment, or update required fields.
 	return flrs, nil
