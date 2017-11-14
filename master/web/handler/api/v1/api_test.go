@@ -117,7 +117,7 @@ func TestJSONHandlerCreateExperiment(t *testing.T) {
 			req := httptest.NewRequest(test.reqMethod, test.reqURL, b)
 			w := httptest.NewRecorder()
 
-			h.CreateExperiment(w, req)
+			h.WriteExperiment(w, req)
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expBody, w.Body.String())
 		})

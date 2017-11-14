@@ -33,7 +33,7 @@ func TestServerServe(t *testing.T) {
 			// Mocks.
 			mh := &mhandler.Handler{}
 			mh.On("Debug", mock.Anything, mock.Anything).Once().Return()
-			mh.On("CreateExperiment", mock.Anything, mock.Anything).Once().Return()
+			mh.On("WriteExperiment", mock.Anything, mock.Anything).Once().Return()
 
 			server := web.NewHTTPServer(web.DefaultHTTPRoutes, mh, l, log.Dummy)
 			go func() {
@@ -44,7 +44,7 @@ func TestServerServe(t *testing.T) {
 			apiV1DebugURL := fmt.Sprintf("http://%s%s", l.Addr(), web.DefaultHTTPRoutes.APIV1.Debug)
 			_, err = http.Get(apiV1DebugURL)
 			assert.NoError(err)
-			apiV1CreateExperimentURL := fmt.Sprintf("http://%s%s", l.Addr(), web.DefaultHTTPRoutes.APIV1.CreateExperiment)
+			apiV1CreateExperimentURL := fmt.Sprintf("http://%s%s", l.Addr(), web.DefaultHTTPRoutes.APIV1.WriteExperiment)
 			_, err = http.Get(apiV1CreateExperimentURL)
 			assert.NoError(err)
 

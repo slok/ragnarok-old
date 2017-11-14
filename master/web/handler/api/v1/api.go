@@ -17,8 +17,8 @@ import (
 type Handler interface {
 	// Debug will create a new debug experiment on the desired node.
 	Debug(w http.ResponseWriter, r *http.Request)
-	// CreateExperiment will create a new experiment on the master node.
-	CreateExperiment(w http.ResponseWriter, r *http.Request)
+	// WriteExperiment will handle the WR operations on an experiment (create & update).
+	WriteExperiment(w http.ResponseWriter, r *http.Request)
 }
 
 // JSONHandler is the base implementation of Handler using JSON format. Satisfies Handler interface.
@@ -74,8 +74,8 @@ func (j *JSONHandler) Debug(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Not implemented"))
 }
 
-// CreateExperiment will get an experiment in JSON and store an experiment on the repository.
-func (j *JSONHandler) CreateExperiment(w http.ResponseWriter, r *http.Request) {
+// WriteExperiment will get an experiment in JSON and store an experiment on the repository.
+func (j *JSONHandler) WriteExperiment(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		// TODO: Check experiment exists before creating a new one.

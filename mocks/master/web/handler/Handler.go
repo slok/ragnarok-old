@@ -9,12 +9,12 @@ type Handler struct {
 	mock.Mock
 }
 
-// CreateExperiment provides a mock function with given fields: w, r
-func (_m *Handler) CreateExperiment(w http.ResponseWriter, r *http.Request) {
+// Debug provides a mock function with given fields: w, r
+func (_m *Handler) Debug(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
-// Debug provides a mock function with given fields: w, r
-func (_m *Handler) Debug(w http.ResponseWriter, r *http.Request) {
+// WriteExperiment provides a mock function with given fields: w, r
+func (_m *Handler) WriteExperiment(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }

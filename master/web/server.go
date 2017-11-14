@@ -24,7 +24,7 @@ type HTTPServer struct {
 func registerRoutes(routes HTTPRoutes, handler handler.Handler, sm *http.ServeMux) {
 	// API v1 routes
 	sm.Handle(routes.APIV1.Debug, http.HandlerFunc(handler.Debug))
-	sm.Handle(routes.APIV1.CreateExperiment, http.HandlerFunc(handler.CreateExperiment))
+	sm.Handle(routes.APIV1.WriteExperiment, http.HandlerFunc(handler.WriteExperiment))
 }
 
 // NewHTTPServer will return a new http handler.

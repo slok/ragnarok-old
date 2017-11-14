@@ -1,15 +1,15 @@
 package web
 
-// DefaultAPIV1Routes are the default routes for the rest v1 api paths.
-var DefaultAPIV1Routes = APIV1Routes{
-	Debug:            "/api/v1/debug",
-	CreateExperiment: "/api/v1/experiment",
-}
-
 // APIV1Routes are the rest api v1 routes.
 type APIV1Routes struct {
-	Debug            string
-	CreateExperiment string
+	Debug           string
+	WriteExperiment string
+}
+
+// DefaultAPIV1Routes are the default routes for the rest v1 api paths.
+var DefaultAPIV1Routes = APIV1Routes{
+	Debug:           "/api/v1/debug",
+	WriteExperiment: "/api/v1/experiment",
 }
 
 // DefaultHTTPRoutes are the default routes for the HTTP paths.
