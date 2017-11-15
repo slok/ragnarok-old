@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
@@ -16,10 +17,8 @@ import (
 // CreateLabelsPBNode helper function to create pb nodes.
 func CreateLabelsPBNode(id string, labels map[string]string, t *testing.T) *clusterv1pb.Node {
 	n := &clusterv1.Node{
-		Metadata: clusterv1.NodeMetadata{
-			ID: id,
-		},
-		Spec: clusterv1.NodeSpec{
+		Metadata: api.ObjectMeta{
+			ID:     id,
 			Labels: labels,
 		},
 	}
@@ -29,7 +28,7 @@ func CreateLabelsPBNode(id string, labels map[string]string, t *testing.T) *clus
 // CreateStatePBNode helper function to create pb nodes.
 func CreateStatePBNode(id string, state clusterv1.NodeState, t *testing.T) *clusterv1pb.Node {
 	n := &clusterv1.Node{
-		Metadata: clusterv1.NodeMetadata{
+		Metadata: api.ObjectMeta{
 			ID: id,
 		},
 		Status: clusterv1.NodeStatus{

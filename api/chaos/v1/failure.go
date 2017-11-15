@@ -61,40 +61,33 @@ func (f FailureState) String() string {
 // AttackMap is a type that defines a list of map of attackers.
 type AttackMap map[string]attack.Opts
 
-// FailureMetadata has information about the object.
-type FailureMetadata struct {
-	ID     string `json:"id,omitempty" yaml:"id,omitempty"`         // ID is the id of the Failure.
-	NodeID string `json:"nodeid,omitempty" yaml:"nodeid,omitempty"` // NodeID is the id of the Node.
-}
-
 // FailureStatus has all the information of a failure to create an injection
 type FailureStatus struct {
-	CurrentState  FailureState `json:"currentState,omitempty" yaml:"currentState,omitempty"`   // CurrentState is the state of the failure.
-	ExpectedState FailureState `json:"expectedState,omitempty" yaml:"expectedState,omitempty"` // ExpectedState is the state the failure should be.
-	Creation      time.Time    `json:"creation,omitempty" yaml:"creation,omitempty"`           // Creation is when the failure injection was created.
-	Executed      time.Time    `json:"executed,omitempty" yaml:"executed,omitempty"`           // Executed is when the failure injectionwas executed.
-	Finished      time.Time    `json:"finished,omitempty" yaml:"finished,omitempty"`           // Finished is when the failure injection was reverted.
+	CurrentState  FailureState `json:"currentState,omitempty"`  // CurrentState is the state of the failure.
+	ExpectedState FailureState `json:"expectedState,omitempty"` // ExpectedState is the state the failure should be.
+	Creation      time.Time    `json:"creation,omitempty"`      // Creation is when the failure injection was created.
+	Executed      time.Time    `json:"executed,omitempty"`      // Executed is when the failure injectionwas executed.
+	Finished      time.Time    `json:"finished,omitempty"`      // Finished is when the failure injection was reverted.
 }
 
 // FailureSpec is the specification that has the information to it can be created and applied.
 type FailureSpec struct {
 	// Timeout is
-	Timeout time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty"`
 	// Attacks used an array so the no repeated elements of map limitation can be bypassed.
-	Attacks []AttackMap `json:"attacks,omitempty" yaml:"attacks,omitempty"`
+	Attacks []AttackMap `json:"attacks,omitempty"`
 	// TODO: accuracy
 }
 
 // Failure is the way a failure is defined.
 type Failure struct {
-	api.TypeMeta `json:",inline" yaml:",inline"`
-
-	// Metadta is additional data of a failure object.
-	Metadata FailureMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	api.TypeMeta `json:",inline"`
+	// Metdata is additional data of a failure object.
+	Metadata api.ObjectMeta `json:"metadata,omitempty"`
 	// Spec has all the required data to create a Failure and use it.
-	Spec FailureSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
+	Spec FailureSpec `json:"spec,omitempty"`
 	// Status is the current information and status of the Failure.
-	Status FailureStatus `json:"status,omitempty" yaml:"status,omitempty"`
+	Status FailureStatus `json:"status,omitempty"`
 }
 
 // NewFailure is a plain Failure object contructor.

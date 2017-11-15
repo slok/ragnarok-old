@@ -45,19 +45,8 @@ func (n NodeState) String() string {
 	}
 }
 
-// NodeLabels is a key value pair map.
-type NodeLabels map[string]string
-
-// NodeMetadata has the node metadata fields
-type NodeMetadata struct {
-	ID     string `json:"id,omitempty"`     // ID is the id of the node
-	Master bool   `json:"master,omitempty"` // Master will telle what kind of node is.
-}
-
 // NodeSpec has the node specific fields.
-type NodeSpec struct {
-	Labels NodeLabels `json:"labels,omitempty"` // Labels are the tags related with the node.
-}
+type NodeSpec struct{}
 
 // NodeStatus has the state fo the node.
 type NodeStatus struct {
@@ -79,7 +68,7 @@ func NewNode() Node {
 type Node struct {
 	api.TypeMeta `json:",inline"`
 
-	Metadata NodeMetadata `json:"metadata,omitempty"`
-	Spec     NodeSpec     `json:"spec,omitempty"`
-	Status   NodeStatus   `json:"status,omitempty"`
+	Metadata api.ObjectMeta `json:"metadata,omitempty"`
+	Spec     NodeSpec       `json:"spec,omitempty"`
+	Status   NodeStatus     `json:"status,omitempty"`
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
@@ -28,8 +29,8 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	require := require.New(t)
 
 	n := v1.Node{
-		Metadata: v1.NodeMetadata{ID: "test1"},
-		Spec: v1.NodeSpec{
+		Metadata: api.ObjectMeta{
+			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
 		Status: v1.NodeStatus{
@@ -46,7 +47,7 @@ func TestNodeStatusNodeRegistration(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.Metadata.ID, n.Spec.Labels)
+	err := ns.Register(n.Metadata.ID, n.Metadata.Labels)
 	if assert.NoError(err) {
 		mReg.AssertExpectations(t)
 	}
@@ -57,8 +58,8 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	require := require.New(t)
 
 	n := v1.Node{
-		Metadata: v1.NodeMetadata{ID: "test1"},
-		Spec: v1.NodeSpec{
+		Metadata: api.ObjectMeta{
+			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
 		Status: v1.NodeStatus{
@@ -75,7 +76,7 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our registered node.
-	err := ns.Register(n.Metadata.ID, n.Spec.Labels)
+	err := ns.Register(n.Metadata.ID, n.Metadata.Labels)
 	if assert.Error(err) {
 		mRep.AssertExpectations(t)
 	}
@@ -86,8 +87,8 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	require := require.New(t)
 
 	stubN := v1.Node{
-		Metadata: v1.NodeMetadata{ID: "test1"},
-		Spec: v1.NodeSpec{
+		Metadata: api.ObjectMeta{
+			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
 		Status: v1.NodeStatus{
@@ -95,9 +96,9 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 		},
 	}
 	expN := v1.Node{
-		Metadata: v1.NodeMetadata{ID: stubN.Metadata.ID},
-		Spec: v1.NodeSpec{
-			Labels: stubN.Spec.Labels,
+		Metadata: api.ObjectMeta{
+			ID:     stubN.Metadata.ID,
+			Labels: stubN.Metadata.Labels,
 		},
 		Status: v1.NodeStatus{
 			State: v1.ReadyNodeState,

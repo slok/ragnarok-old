@@ -37,8 +37,7 @@ type MemFailure struct {
 // NewMemFailure returns a new MemFailure
 func NewMemFailure() *MemFailure {
 	return &MemFailure{
-		reg:       map[string]*v1.Failure{},
-		regByNode: map[string]map[string]*v1.Failure{},
+		reg: map[string]*v1.Failure{},
 	}
 }
 
@@ -47,10 +46,6 @@ func (m *MemFailure) Store(f *v1.Failure) error {
 	m.Lock()
 	defer m.Unlock()
 	m.reg[f.Metadata.ID] = f
-	if _, ok := m.regByNode[f.Metadata.NodeID]; !ok {
-		m.regByNode[f.Metadata.NodeID] = map[string]*v1.Failure{}
-	}
-	m.regByNode[f.Metadata.NodeID][f.Metadata.ID] = f
 
 	return nil
 }
@@ -60,13 +55,7 @@ func (m *MemFailure) Delete(id string) {
 	m.Lock()
 	defer m.Unlock()
 
-	f, ok := m.reg[id]
-	if !ok {
-		return
-	}
-
 	delete(m.reg, id)
-	delete(m.regByNode[f.Metadata.NodeID], id)
 }
 
 // Get satisfies Failure interface.

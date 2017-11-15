@@ -30,7 +30,6 @@ func createFailureFromExperiment(experiment *chaosv1.Experiment, node *clusterv1
 		node.Metadata.ID,
 		randID(),
 	)
-	flr.Metadata.NodeID = node.Metadata.ID
 	flr.Spec = experiment.Spec.Template.Spec
 	flr.Status.CurrentState = chaosv1.DisabledFailureState
 	flr.Status.ExpectedState = chaosv1.EnabledFailureState

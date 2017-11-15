@@ -21,7 +21,7 @@ type Node interface {
 	GetNodes() map[string]*clusterv1.Node
 
 	// GetNodesByLabels gets all the nodes from the registry using labels.
-	GetNodesByLabels(labels clusterv1.NodeLabels) map[string]*clusterv1.Node
+	GetNodesByLabels(labels map[string]string) map[string]*clusterv1.Node
 }
 
 // NewMemNode returns a new memory node registry.
@@ -72,7 +72,7 @@ func (m *MemNode) GetNodes() map[string]*clusterv1.Node {
 }
 
 // GetNodesByLabels satisfies Node interface.
-func (m *MemNode) GetNodesByLabels(labels clusterv1.NodeLabels) map[string]*clusterv1.Node {
+func (m *MemNode) GetNodesByLabels(labels map[string]string) map[string]*clusterv1.Node {
 	result := map[string]*clusterv1.Node{}
 	if len(labels) == 0 {
 		return result
@@ -85,7 +85,7 @@ NodeLoop:
 	for nName, node := range m.reg {
 		// Check on each node if staisfies the labels.
 		for lk, lv := range labels {
-			if nv, ok := node.Spec.Labels[lk]; !ok || (ok && nv != lv) {
+			if nv, ok := node.Metadata.Labels[lk]; !ok || (ok && nv != lv) {
 				continue NodeLoop // Continue next node iteration, not valid.
 			}
 		}

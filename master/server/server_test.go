@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context" // TODO: Change when GRPC supports std librarie context
 
+	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	chaosv1pb "github.com/slok/ragnarok/api/chaos/v1/pb"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
@@ -149,7 +150,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 			nID:  &pbfs.NodeId{Id: "test1"},
 			fs: []*chaosv1.Failure{
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f1",
 					},
 					Status: chaosv1.FailureStatus{
@@ -158,7 +159,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f2",
 					},
 					Status: chaosv1.FailureStatus{
@@ -167,7 +168,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f3",
 					},
 					Status: chaosv1.FailureStatus{
@@ -178,7 +179,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 			},
 			expFs: []*chaosv1.Failure{
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f1",
 					},
 					Status: chaosv1.FailureStatus{
@@ -187,7 +188,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f2",
 					},
 					Status: chaosv1.FailureStatus{
@@ -196,7 +197,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f3",
 					},
 					Status: chaosv1.FailureStatus{
@@ -212,7 +213,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 			nID:  &pbfs.NodeId{Id: "test2"},
 			fs: []*chaosv1.Failure{
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f1",
 					},
 					Status: chaosv1.FailureStatus{
@@ -221,7 +222,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f2",
 					},
 					Status: chaosv1.FailureStatus{
@@ -230,7 +231,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f3",
 					},
 					Status: chaosv1.FailureStatus{
@@ -241,7 +242,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 			},
 			expFs: []*chaosv1.Failure{
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f1",
 					},
 					Status: chaosv1.FailureStatus{
@@ -250,7 +251,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f2",
 					},
 					Status: chaosv1.FailureStatus{
@@ -259,7 +260,7 @@ func TestMasterGRPCServiceServerFailureStateList(t *testing.T) {
 					},
 				},
 				&chaosv1.Failure{
-					Metadata: chaosv1.FailureMetadata{
+					Metadata: api.ObjectMeta{
 						ID: "f3",
 					},
 					Status: chaosv1.FailureStatus{
@@ -346,9 +347,8 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			name:      "Correct GetFailure GRPC request",
 			failureID: &pbfs.FailureId{Id: "test1"},
 			expFailure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "test1",
-					NodeID: "test1node",
+				Metadata: api.ObjectMeta{
+					ID: "test1",
 				},
 				Spec: chaosv1.FailureSpec{},
 				Status: chaosv1.FailureStatus{
@@ -362,9 +362,8 @@ func TestMasterGRPCServiceServerGetFailure(t *testing.T) {
 			name:      "Error GetFailure GRPC request",
 			failureID: &pbfs.FailureId{Id: "test2"},
 			expFailure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "test2",
-					NodeID: "test2node",
+				Metadata: api.ObjectMeta{
+					ID: "test2",
 				},
 				Spec: chaosv1.FailureSpec{},
 				Status: chaosv1.FailureStatus{

@@ -46,7 +46,7 @@ func (n *NodeStatus) Register(ctx context.Context, nodepb *clusterv1pb.Node) (*e
 	default:
 	}
 
-	if err := n.service.Register(node.Metadata.ID, node.Spec.Labels); err != nil {
+	if err := n.service.Register(node.Metadata.ID, node.Metadata.Labels); err != nil {
 		return empty, err
 	}
 

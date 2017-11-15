@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/clock"
@@ -143,9 +144,8 @@ func TestLogFailureStateProcessing(t *testing.T) {
 			name: "One failure received should log one failure.",
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{
-						ID:     "test1",
-						NodeID: "node1",
+					Metadata: api.ObjectMeta{
+						ID: "test1",
 					},
 					Spec: v1.FailureSpec{
 						Attacks: []v1.AttackMap{
@@ -166,9 +166,8 @@ func TestLogFailureStateProcessing(t *testing.T) {
 			name: "Multiple failures received should log all the failures.",
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{
-						ID:     "test1",
-						NodeID: "node1",
+					Metadata: api.ObjectMeta{
+						ID: "test1",
 					},
 					Spec: v1.FailureSpec{
 						Attacks: []v1.AttackMap{
@@ -184,9 +183,8 @@ func TestLogFailureStateProcessing(t *testing.T) {
 					},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{
-						ID:     "test2",
-						NodeID: "node1",
+					Metadata: api.ObjectMeta{
+						ID: "test2",
 					},
 					Spec: v1.FailureSpec{
 						Attacks: []v1.AttackMap{},

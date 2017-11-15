@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
@@ -42,11 +43,8 @@ func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	defer f.nodeLock.Unlock()
 
 	n := v1.Node{
-		Metadata: v1.NodeMetadata{
+		Metadata: api.ObjectMeta{
 			ID:     id,
-			Master: false,
-		},
-		Spec: v1.NodeSpec{
 			Labels: labels,
 		},
 		Status: v1.NodeStatus{

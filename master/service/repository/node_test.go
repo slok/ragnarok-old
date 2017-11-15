@@ -7,47 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/master/service/repository"
 )
-
-func TestMemNodeRegisterNode(t *testing.T) {
-	assert := assert.New(t)
-
-	tests := []struct {
-		quantity int
-	}{
-		{quantity: 1},
-		{quantity: 5},
-		{quantity: 100},
-	}
-
-	for _, test := range tests {
-		reg := repository.NewMemNode()
-
-		for i := 0; i < test.quantity; i++ {
-			n := v1.Node{
-				Metadata: v1.NodeMetadata{
-					ID: fmt.Sprintf("id-%d", i),
-				},
-				Spec: v1.NodeSpec{
-					Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
-				},
-				Status: v1.NodeStatus{
-					State: v1.ReadyNodeState,
-				},
-			}
-			err := reg.StoreNode(n.Metadata.ID, n)
-			assert.NoError(err)
-
-			// Check stored node is ok
-			nGot, ok := reg.GetNode(n.Metadata.ID)
-			if assert.True(ok) {
-				assert.Equal(&n, nGot)
-			}
-		}
-	}
-}
 
 func TestMemNodeGetMissing(t *testing.T) {
 	assert := assert.New(t)
@@ -65,10 +28,8 @@ func TestMemNodeDelete(t *testing.T) {
 	reg := repository.NewMemNode()
 
 	n := v1.Node{
-		Metadata: v1.NodeMetadata{
-			ID: "test1",
-		},
-		Spec: v1.NodeSpec{
+		Metadata: api.ObjectMeta{
+			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.1"},
 		},
 		Status: v1.NodeStatus{
@@ -104,10 +65,8 @@ func TestMemNodeStoreGetAll(t *testing.T) {
 
 		for i := 0; i < test.quantity; i++ {
 			n := v1.Node{
-				Metadata: v1.NodeMetadata{
-					ID: fmt.Sprintf("id-%d", i),
-				},
-				Spec: v1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID:     fmt.Sprintf("id-%d", i),
 					Labels: map[string]string{"address": fmt.Sprintf("127.0.0.%d", i)},
 				},
 				Status: v1.NodeStatus{
@@ -129,15 +88,15 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []v1.Node
-		selector v1.NodeLabels
+		selector map[string]string
 		expNodes map[string]*v1.Node
 	}{
 		{
 			name: "No labels shouldn't return any node",
 			nodes: []v1.Node{
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node1"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node1",
 						Labels: map[string]string{
 							"id":   "node1",
 							"env":  "prod",
@@ -146,8 +105,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node2"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node2",
 						Labels: map[string]string{
 							"id":   "node2",
 							"env":  "staging",
@@ -156,8 +115,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node3"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node3",
 						Labels: map[string]string{
 							"id":   "node3",
 							"env":  "prod",
@@ -173,8 +132,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 			name: "Single ID label should return one node only",
 			nodes: []v1.Node{
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node1"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node1",
 						Labels: map[string]string{
 							"id":   "node1",
 							"env":  "prod",
@@ -183,8 +142,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node2"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node2",
 						Labels: map[string]string{
 							"id":   "node2",
 							"env":  "staging",
@@ -193,8 +152,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node3"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node3",
 						Labels: map[string]string{
 							"id":   "node3",
 							"env":  "prod",
@@ -206,8 +165,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 			selector: map[string]string{"id": "node2"},
 			expNodes: map[string]*v1.Node{
 				"node2": &v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node2"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node2",
 						Labels: map[string]string{
 							"id":   "node2",
 							"env":  "staging",
@@ -221,8 +180,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 			name: "Single ID label should return one node only",
 			nodes: []v1.Node{
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node1"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node1",
 						Labels: map[string]string{
 							"id":   "node1",
 							"env":  "prod",
@@ -231,8 +190,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node2"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node2",
 						Labels: map[string]string{
 							"id":   "node2",
 							"env":  "staging",
@@ -241,8 +200,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node3"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node3",
 						Labels: map[string]string{
 							"id":   "node3",
 							"env":  "prod",
@@ -251,8 +210,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node4"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node4",
 						Labels: map[string]string{
 							"id":   "node4",
 							"env":  "prod",
@@ -264,8 +223,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 			selector: map[string]string{"env": "prod", "kind": "master"},
 			expNodes: map[string]*v1.Node{
 				"node1": &v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node1"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node1",
 						Labels: map[string]string{
 							"id":   "node1",
 							"env":  "prod",
@@ -274,8 +233,8 @@ func TestMemNodeGetNodesByLabels(t *testing.T) {
 					},
 				},
 				"node4": &v1.Node{
-					Metadata: v1.NodeMetadata{ID: "node4"},
-					Spec: v1.NodeSpec{
+					Metadata: api.ObjectMeta{
+						ID: "node4",
 						Labels: map[string]string{
 							"id":   "node4",
 							"env":  "prod",

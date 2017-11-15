@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
@@ -26,11 +27,11 @@ func TestGetNodeFailures(t *testing.T) {
 		{
 			expectedFailures: testNodeFailures{
 				"node1": {
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f11", NodeID: "node1"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f11"}},
 				},
 				"node2": {
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f21"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f21"}},
 				},
 				"node3": {},
 			},
@@ -67,7 +68,7 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -76,13 +77,13 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -90,29 +91,29 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f3"},
+					Metadata: api.ObjectMeta{ID: "f3"},
 					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -143,7 +144,7 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -152,13 +153,13 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -166,25 +167,25 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f3"},
+					Metadata: api.ObjectMeta{ID: "f3"},
 					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -213,15 +214,15 @@ func TestGetFailure(t *testing.T) {
 		expErr     bool
 	}{
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test1"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test1"}},
 			expErr:     false,
 		},
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test2"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test2"}},
 			expErr:     true,
 		},
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test3"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test3"}},
 			expErr:     false,
 		},
 	}

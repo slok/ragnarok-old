@@ -55,11 +55,11 @@ func (_m *Node) GetNodes() map[string]*v1.Node {
 }
 
 // GetNodesByLabels provides a mock function with given fields: labels
-func (_m *Node) GetNodesByLabels(labels v1.NodeLabels) map[string]*v1.Node {
+func (_m *Node) GetNodesByLabels(labels map[string]string) map[string]*v1.Node {
 	ret := _m.Called(labels)
 
 	var r0 map[string]*v1.Node
-	if rf, ok := ret.Get(0).(func(v1.NodeLabels) map[string]*v1.Node); ok {
+	if rf, ok := ret.Get(0).(func(map[string]string) map[string]*v1.Node); ok {
 		r0 = rf(labels)
 	} else {
 		if ret.Get(0) != nil {

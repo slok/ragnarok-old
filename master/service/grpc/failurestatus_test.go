@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
 
+	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/clock"
@@ -25,9 +26,8 @@ func TestFailureStatusGRPCGetFailureOK(t *testing.T) {
 	assert := assert.New(t)
 
 	stubF := &chaosv1.Failure{
-		Metadata: chaosv1.FailureMetadata{
-			ID:     "test1",
-			NodeID: "node1",
+		Metadata: api.ObjectMeta{
+			ID: "test1",
 		},
 		Spec: chaosv1.FailureSpec{},
 		Status: chaosv1.FailureStatus{
@@ -95,7 +95,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 	times := 5
 	fss := []*chaosv1.Failure{
 		&chaosv1.Failure{
-			Metadata: chaosv1.FailureMetadata{
+			Metadata: api.ObjectMeta{
 				ID: "test11",
 			},
 			Status: chaosv1.FailureStatus{
@@ -104,7 +104,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 			},
 		},
 		&chaosv1.Failure{
-			Metadata: chaosv1.FailureMetadata{
+			Metadata: api.ObjectMeta{
 				ID: "test12",
 			},
 			Status: chaosv1.FailureStatus{
@@ -113,7 +113,7 @@ func TestFailureStatusGRPCFailureStateListOK(t *testing.T) {
 			},
 		},
 		&chaosv1.Failure{
-			Metadata: chaosv1.FailureMetadata{
+			Metadata: api.ObjectMeta{
 				ID: "test13",
 			},
 			Status: chaosv1.FailureStatus{
