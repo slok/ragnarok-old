@@ -37,6 +37,7 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 
 // apimachinery mocks
 //go:generate mockery -output ./apimachinery/serializer -outpkg serializer -dir ../apimachinery/serializer -name Serializer
+//go:generate mockery -output ./apimachinery/validator -outpkg validator -dir ../apimachinery/validator -name ObjectValidator
 
 // web mocks
 //go:generate mockery -output ./master/web/handler -outpkg serializer -dir ../master/web/handler -name Handler

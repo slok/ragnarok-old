@@ -8,3 +8,13 @@ const (
 	LabelExperiment = "experiment"
 	LabelID         = "id"
 )
+
+// GetAllReserverLabels will return all the reserved labels on the system.
+func GetAllReserverLabels() map[string]struct{} {
+	return map[string]struct{}{
+		LabelNode:       struct{}{},
+		LabelFailure:    struct{}{},
+		LabelExperiment: struct{}{},
+		LabelID:         struct{}{},
+	}
+}
