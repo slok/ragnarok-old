@@ -6,6 +6,7 @@ import (
 
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/apimachinery/validator"
+	"github.com/slok/ragnarok/apimachinery/watch"
 	"github.com/slok/ragnarok/client/util"
 )
 
@@ -127,6 +128,6 @@ func (n *NodeMem) List(opts NodeListOptions) ([]*clusterv1.Node, error) {
 }
 
 // Watch will return a channel where the new objects will be sent.
-func (n *NodeMem) Watch(opts NodeListOptions) (NodeWatch, error) {
+func (n *NodeMem) Watch(opts NodeListOptions) (watch.Watch, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
