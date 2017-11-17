@@ -5,10 +5,10 @@ import (
 	"sync"
 
 	"github.com/slok/ragnarok/api"
-	"github.com/slok/ragnarok/api/cluster/v1"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
-	"github.com/slok/ragnarok/master/service/repository"
 )
 
 // NodeStatusService is how the master manages the status of the nodes.
@@ -17,21 +17,21 @@ type NodeStatusService interface {
 	Register(id string, labels map[string]string) error
 
 	// Heartbeat sets the node state after its heartbeat.
-	Heartbeat(id string, state v1.NodeState) error
+	Heartbeat(id string, state clusterv1.NodeState) error
 }
 
 // NodeStatus is the implementation of node status service.
 type NodeStatus struct {
-	repo   repository.Node // Repo is the repository where all the nodes will be stored.
+	client cliclusterv1.Node // client will manage the node object operations.
 	logger log.Logger
 
 	nodeLock sync.Mutex
 }
 
 // NewNodeStatus returns a new node status service.
-func NewNodeStatus(_ config.Config, repository repository.Node, logger log.Logger) *NodeStatus {
+func NewNodeStatus(_ config.Config, client cliclusterv1.Node, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
-		repo:   repository,
+		client: client,
 		logger: logger,
 	}
 }
@@ -42,34 +42,34 @@ func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
-	n := v1.Node{
+	n := clusterv1.Node{
 		Metadata: api.ObjectMeta{
 			ID:     id,
 			Labels: labels,
 		},
-		Status: v1.NodeStatus{
-			State: v1.UnknownNodeState,
+		Status: clusterv1.NodeStatus{
+			State: clusterv1.UnknownNodeState,
 		},
 	}
-
-	return f.repo.StoreNode(id, n)
+	_, err := f.client.Create(&n)
+	return err
 }
 
 // Heartbeat sets the node state after its heartbeat.
-func (f *NodeStatus) Heartbeat(id string, state v1.NodeState) error {
+func (f *NodeStatus) Heartbeat(id string, state clusterv1.NodeState) error {
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
 	// Get the node.
-	n, ok := f.repo.GetNode(id)
-	if !ok {
+	n, err := f.client.Get(id)
+	if err != nil {
 		return fmt.Errorf("node '%s' not registered", id)
 	}
 
 	// Set state and save.
 	n.Status.State = state
-	if err := f.repo.StoreNode(id, *n); err != nil {
-		return fmt.Errorf("could not set the current state: %v", err)
+	if _, err := f.client.Update(n); err != nil {
+		return err
 	}
 
 	f.logger.WithField("nodeID", id).Infof("node in state %s", state)

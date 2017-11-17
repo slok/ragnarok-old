@@ -34,9 +34,11 @@ func TestGetFailure(t *testing.T) {
 		{
 			name: "Get a failure correctly",
 			failure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "test1",
-					NodeID: "node1",
+				Metadata: api.ObjectMeta{
+					ID: "test1",
+					Labels: map[string]string{
+						api.LabelNode: "node1",
+					},
 				},
 				Spec: chaosv1.FailureSpec{
 					Attacks: []chaosv1.AttackMap{
@@ -57,9 +59,11 @@ func TestGetFailure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "test1",
-					NodeID: "node1",
+				Metadata: api.ObjectMeta{
+					ID: "test1",
+					Labels: map[string]string{
+						api.LabelNode: "node1",
+					},
 				},
 				Spec: chaosv1.FailureSpec{
 					Attacks: []chaosv1.AttackMap{
@@ -130,16 +134,16 @@ func TestFailureStateListStreamingOK(t *testing.T) {
 			nodeID: "test1",
 			failures: [][]*chaosv1.Failure{
 				[]*chaosv1.Failure{
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id1"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id2"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id3"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id4"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id5"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id1"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id2"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id3"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id4"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id5"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
 				},
 				[]*chaosv1.Failure{
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id6"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id7"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id8"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id6"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id7"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id8"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
 				},
 			},
 		},
@@ -209,16 +213,16 @@ func TestFailureStateListStreamingOKWithStop(t *testing.T) {
 			nodeID: "test1",
 			failures: [][]*chaosv1.Failure{
 				[]*chaosv1.Failure{
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id1"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id2"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id3"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id4"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id5"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id1"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id2"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id3"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id4"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id5"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
 				},
 				[]*chaosv1.Failure{
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id6"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id7"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
-					&chaosv1.Failure{Metadata: chaosv1.FailureMetadata{ID: "id8"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id6"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id7"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.DisabledFailureState}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "id8"}, Status: chaosv1.FailureStatus{ExpectedState: chaosv1.EnabledFailureState}},
 				},
 			},
 		},

@@ -18,16 +18,6 @@ type TypeMeta struct {
 	Version Version `json:"version,omitempty"`
 }
 
-// ObjectMeta is the metadata all the objects should have.
-type ObjectMeta struct {
-	// ID is the id of the object.
-	ID string `json:"id,omitempty"`
-	// Labels are key/value pairs related with the object used to identify the object.
-	Labels map[string]string `json:"labels,omitempty"`
-	// Annotations are free key/value pairs related with the object that aren't queryable.
-	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
 func (t TypeMeta) String() string {
 	return fmt.Sprintf("%s/%s", t.Version, t.Kind)
 }
@@ -40,6 +30,16 @@ func (t TypeMeta) GetObjectKind() Kind {
 // GetObjectVersion satisfies Object interface.
 func (t TypeMeta) GetObjectVersion() Version {
 	return t.Version
+}
+
+// ObjectMeta is the metadata all the objects should have.
+type ObjectMeta struct {
+	// ID is the id of the object.
+	ID string `json:"id,omitempty"`
+	// Labels are key/value pairs related with the object used to identify the object.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Annotations are free key/value pairs related with the object that aren't queryable.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // Object is an interface that every configuration object

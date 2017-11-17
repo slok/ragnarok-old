@@ -5,8 +5,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/repository"
 )
@@ -30,6 +32,10 @@ func createFailureFromExperiment(experiment *chaosv1.Experiment, node *clusterv1
 		node.Metadata.ID,
 		randID(),
 	)
+	flr.Metadata.Labels = map[string]string{
+		api.LabelNode:       node.Metadata.ID,
+		api.LabelExperiment: experiment.Metadata.ID,
+	}
 	flr.Spec = experiment.Spec.Template.Spec
 	flr.Status.CurrentState = chaosv1.DisabledFailureState
 	flr.Status.ExpectedState = chaosv1.EnabledFailureState
@@ -49,15 +55,15 @@ type Scheduler interface {
 // NodeLabels is an scheduler that will schedule the failures based on the labels of an experiment.
 // appart from returning the failures it will store them on the repository based on the required node.
 type NodeLabels struct {
-	nodeRepo    repository.Node
+	nodecli     cliclusterv1.Node
 	failureRepo repository.Failure
 	logger      log.Logger
 }
 
 // NewNodeLabels will return a new NodeLabels scheduler.
-func NewNodeLabels(failureRepo repository.Failure, nodeRepo repository.Node, logger log.Logger) *NodeLabels {
+func NewNodeLabels(failureRepo repository.Failure, nodecli cliclusterv1.Node, logger log.Logger) *NodeLabels {
 	return &NodeLabels{
-		nodeRepo:    nodeRepo,
+		nodecli:     nodecli,
 		failureRepo: failureRepo,
 		logger:      logger,
 	}
@@ -68,7 +74,13 @@ func (n *NodeLabels) Schedule(experiment *chaosv1.Experiment) ([]*chaosv1.Failur
 	flrs := []*chaosv1.Failure{}
 
 	// Get all the nodes of the experiment based on the experiment labels.
-	nodes := n.nodeRepo.GetNodesByLabels(experiment.Spec.Selector)
+	opts := cliclusterv1.NodeListOptions{
+		Selector: experiment.Spec.Selector,
+	}
+	nodes, err := n.nodecli.List(opts)
+	if err != nil {
+		return flrs, err
+	}
 
 	// TODO: Check failure already running on node.
 	for _, node := range nodes {

@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/master/flags"
 	"github.com/slok/ragnarok/log"
@@ -21,7 +22,7 @@ import (
 // master dependencies is a helper object to group all the app dependencies
 type masterDependencies struct {
 	scheduler     scheduler.Scheduler
-	nodeRepo      repository.Node
+	nodeClient    cliclusterv1.Node
 	failureRepo   repository.Failure
 	logger        log.Logger
 	nodeStatus    service.NodeStatusService
@@ -72,14 +73,14 @@ func Main() error {
 	}
 
 	// Create dependencies
-	nodeRepo := repository.NewMemNode()
+	nodeCli := cliclusterv1.NewDefaultNodeMem()
 	failureRepo := repository.NewMemFailure()
 	deps := masterDependencies{
-		nodeRepo:      nodeRepo,
+		nodeClient:    nodeCli,
 		failureRepo:   failureRepo,
-		nodeStatus:    service.NewNodeStatus(*cfg, nodeRepo, logger),
+		nodeStatus:    service.NewNodeStatus(*cfg, nodeCli, logger),
 		failureStatus: service.NewFailureStatus(failureRepo, logger),
-		scheduler:     scheduler.NewNodeLabels(failureRepo, nodeRepo, logger),
+		scheduler:     scheduler.NewNodeLabels(failureRepo, nodeCli, logger),
 	}
 
 	// TODO: Autoregister this node as a master node.

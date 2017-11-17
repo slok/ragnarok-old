@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/ragnarok/api"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/log"
@@ -46,8 +47,10 @@ func TestRegisterNode(t *testing.T) {
 			if assert.NoError(err) {
 				// Check check result is ok
 				node := &clusterv1.Node{
-					Metadata: clusterv1.NodeMetadata{ID: test.id},
-					Spec:     clusterv1.NodeSpec{Labels: test.labels},
+					Metadata: api.ObjectMeta{
+						ID:     test.id,
+						Labels: test.labels,
+					},
 				}
 				err := s.RegisterNode(node)
 				if test.expectError {
@@ -84,7 +87,7 @@ func TestNodeHeartbeat(t *testing.T) {
 			// Create the mocks.
 			mc := &mpbns.NodeStatusClient{}
 			n := &clusterv1.Node{
-				Metadata: clusterv1.NodeMetadata{ID: test.id},
+				Metadata: api.ObjectMeta{ID: test.id},
 				Status:   clusterv1.NodeStatus{State: clusterv1.ReadyNodeState},
 			}
 
