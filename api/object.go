@@ -32,6 +32,27 @@ func (t TypeMeta) GetObjectVersion() Version {
 	return t.Version
 }
 
+// ListOptions are the options required to list & watch objects.
+type ListOptions struct {
+	TypeMeta      `json:",inline"`
+	LabelSelector map[string]string `json:"labelSelector,omitempty"`
+}
+
+// GetObjectKind satisfies Object interface.
+func (l ListOptions) GetObjectKind() Kind {
+	return l.Kind
+}
+
+// GetObjectVersion satisfies Object interface.
+func (l ListOptions) GetObjectVersion() Version {
+	return l.Version
+}
+
+// GetObjectMetadata isn't needed in this kind of object.
+func (l ListOptions) GetObjectMetadata() ObjectMeta {
+	return ObjectMeta{}
+}
+
 // ObjectMeta is the metadata all the objects should have.
 type ObjectMeta struct {
 	// ID is the id of the object.
@@ -49,4 +70,6 @@ type Object interface {
 	GetObjectKind() Kind
 	// GetObjectVersion returns the version of the object.
 	GetObjectVersion() Version
+	// GetObjectVersion returns the version of the object.
+	GetObjectMetadata() ObjectMeta
 }

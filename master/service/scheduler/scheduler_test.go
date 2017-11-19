@@ -11,8 +11,8 @@ import (
 	"github.com/slok/ragnarok/attack"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service/scheduler"
-	mcliclusterv1 "github.com/slok/ragnarok/mocks/client/cluster/v1"
-	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
+	mclichaosv1 "github.com/slok/ragnarok/mocks/client/api/chaos/v1"
+	mcliclusterv1 "github.com/slok/ragnarok/mocks/client/api/cluster/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -204,12 +204,12 @@ func TestNodeLabelsSchedule(t *testing.T) {
 			assert := assert.New(t)
 
 			// Create mocks.
-			mcn := &mcliclusterv1.Node{}
-			mcn.On("List", mock.Anything).Return(test.nodes, nil)
-			mfr := &mrepository.Failure{}
-			mfr.On("Store", mock.Anything).Return(nil)
+			mnc := &mcliclusterv1.NodeClientInterface{}
+			mnc.On("List", mock.Anything).Return(test.nodes, nil)
+			mfc := &mclichaosv1.FailureClientInterface{}
+			mfc.On("Create", mock.Anything).Return(nil, nil)
 
-			s := scheduler.NewNodeLabels(mfr, mcn, log.Dummy)
+			s := scheduler.NewNodeLabels(mfc, mnc, log.Dummy)
 			flrs, err := s.Schedule(test.experiment)
 
 			if test.expErr {

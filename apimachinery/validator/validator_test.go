@@ -19,6 +19,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "A correct node should not return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID:     "node1",
 					Labels: map[string]string{},
@@ -27,8 +28,19 @@ func TestValidateNode(t *testing.T) {
 			expInvalid: false,
 		},
 		{
+			name: "A node without typemeta should return an error.",
+			node: &clusterv1.Node{
+				Metadata: api.ObjectMeta{
+					ID:     "node1",
+					Labels: map[string]string{},
+				},
+			},
+			expInvalid: true,
+		},
+		{
 			name: "Not Id on a node should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID:     "",
 					Labels: map[string]string{},
@@ -39,6 +51,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "An empty label key should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -51,6 +64,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "An big label key should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -63,6 +77,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "Invalid characters on a label key should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -75,6 +90,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "An empty label value should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -87,6 +103,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "An big label value should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -99,6 +116,7 @@ func TestValidateNode(t *testing.T) {
 		{
 			name: "Invalid characters on a label value should return an error.",
 			node: &clusterv1.Node{
+				TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 				Metadata: api.ObjectMeta{
 					ID: "node1",
 					Labels: map[string]string{
@@ -135,6 +153,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "A correct failure should not return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -146,8 +165,22 @@ func TestValidateFailure(t *testing.T) {
 			expInvalid: false,
 		},
 		{
+			name: "A failure without type metadata should return an error.",
+			failure: &chaosv1.Failure{
+				Metadata: api.ObjectMeta{
+					ID: "failure1",
+					Labels: map[string]string{
+						api.LabelExperiment: "exp1",
+						api.LabelNode:       "node1",
+					},
+				},
+			},
+			expInvalid: true,
+		},
+		{
 			name: "Not Id on a failure should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "",
 					Labels: map[string]string{
@@ -161,6 +194,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "An empty label key should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -175,6 +209,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "An big label key should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -189,6 +224,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "Invalid characters on a label key should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -203,6 +239,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "An empty label value should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -217,6 +254,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "An big label value should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -231,6 +269,7 @@ func TestValidateFailure(t *testing.T) {
 		{
 			name: "Invalid characters on a label value should return an error.",
 			failure: &chaosv1.Failure{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion},
 				Metadata: api.ObjectMeta{
 					ID: "failure1",
 					Labels: map[string]string{
@@ -263,22 +302,34 @@ func TestValidateFailure(t *testing.T) {
 func TestValidateExperiment(t *testing.T) {
 	tests := []struct {
 		name       string
-		failure    *chaosv1.Experiment
+		experiment *chaosv1.Experiment
 		expInvalid bool
 	}{
 		{
-			name: "A correct failure should not return an error.",
-			failure: &chaosv1.Experiment{
+			name: "A correct experiment should not return an error.",
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID:     "failure1",
+					ID:     "experiment1",
 					Labels: map[string]string{},
 				},
 			},
 			expInvalid: false,
 		},
 		{
-			name: "Not Id on a failure should return an error.",
-			failure: &chaosv1.Experiment{
+			name: "A correct experiment without type metadata should return an error.",
+			experiment: &chaosv1.Experiment{
+				Metadata: api.ObjectMeta{
+					ID:     "experiment1",
+					Labels: map[string]string{},
+				},
+			},
+			expInvalid: true,
+		},
+		{
+			name: "Not Id on a experiment should return an error.",
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
 					ID:     "",
 					Labels: map[string]string{},
@@ -288,9 +339,10 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "An empty label key should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
 						"": "something",
 					},
@@ -300,9 +352,10 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "An big label key should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
 						"qwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyui": "something",
 					},
@@ -312,9 +365,10 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "Invalid characters on a label key should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
 						"my label !": "something",
 					},
@@ -324,9 +378,10 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "An empty label value should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
 						"something": "",
 					},
@@ -336,11 +391,12 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "An big label value should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
-						"failure1": "qwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyui",
+						"experiment1": "qwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyuiqwertyuiopqawertyuiopqwertyuiopqwertyuiopwertyuiopqwertyuiopwertyuiopwertyuioqwertyui",
 					},
 				},
 			},
@@ -348,9 +404,10 @@ func TestValidateExperiment(t *testing.T) {
 		},
 		{
 			name: "Invalid characters on a label value should return an error.",
-			failure: &chaosv1.Experiment{
+			experiment: &chaosv1.Experiment{
+				TypeMeta: api.TypeMeta{Kind: chaosv1.ExperimentKind, Version: chaosv1.ExperimentVersion},
 				Metadata: api.ObjectMeta{
-					ID: "failure1",
+					ID: "experiment1",
 					Labels: map[string]string{
 						"something": "my label !",
 					},
@@ -365,7 +422,7 @@ func TestValidateExperiment(t *testing.T) {
 			assert := assert.New(t)
 
 			ov := validator.NewObject()
-			errs := ov.Validate(test.failure)
+			errs := ov.Validate(test.experiment)
 
 			if test.expInvalid {
 				assert.NotEmpty(errs)

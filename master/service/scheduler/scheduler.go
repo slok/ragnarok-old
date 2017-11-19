@@ -8,9 +8,9 @@ import (
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
-	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
+	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
+	cliclusterv1 "github.com/slok/ragnarok/client/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/service/repository"
 )
 
 const (
@@ -55,17 +55,17 @@ type Scheduler interface {
 // NodeLabels is an scheduler that will schedule the failures based on the labels of an experiment.
 // appart from returning the failures it will store them on the repository based on the required node.
 type NodeLabels struct {
-	nodecli     cliclusterv1.Node
-	failureRepo repository.Failure
-	logger      log.Logger
+	nodecli    cliclusterv1.NodeClientInterface
+	failurecli clichaosv1.FailureClientInterface
+	logger     log.Logger
 }
 
 // NewNodeLabels will return a new NodeLabels scheduler.
-func NewNodeLabels(failureRepo repository.Failure, nodecli cliclusterv1.Node, logger log.Logger) *NodeLabels {
+func NewNodeLabels(failurecli clichaosv1.FailureClientInterface, nodecli cliclusterv1.NodeClientInterface, logger log.Logger) *NodeLabels {
 	return &NodeLabels{
-		nodecli:     nodecli,
-		failureRepo: failureRepo,
-		logger:      logger,
+		nodecli:    nodecli,
+		failurecli: failurecli,
+		logger:     logger,
 	}
 }
 
@@ -74,8 +74,8 @@ func (n *NodeLabels) Schedule(experiment *chaosv1.Experiment) ([]*chaosv1.Failur
 	flrs := []*chaosv1.Failure{}
 
 	// Get all the nodes of the experiment based on the experiment labels.
-	opts := cliclusterv1.NodeListOptions{
-		Selector: experiment.Spec.Selector,
+	opts := api.ListOptions{
+		LabelSelector: experiment.Spec.Selector,
 	}
 	nodes, err := n.nodecli.List(opts)
 	if err != nil {
@@ -87,7 +87,7 @@ func (n *NodeLabels) Schedule(experiment *chaosv1.Experiment) ([]*chaosv1.Failur
 		// Create the node and save.
 		flr := createFailureFromExperiment(experiment, node)
 		flrs = append(flrs, flr)
-		err := n.failureRepo.Store(flr)
+		_, err := n.failurecli.Create(flr)
 		if err != nil {
 			return flrs, err
 		}

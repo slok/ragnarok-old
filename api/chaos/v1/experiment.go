@@ -56,3 +56,8 @@ func NewExperiment() Experiment {
 		},
 	}
 }
+
+// GetObjectMetadata satisfies object interface.
+func (e *Experiment) GetObjectMetadata() api.ObjectMeta {
+	return e.Metadata
+}

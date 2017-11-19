@@ -6,14 +6,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
+	"github.com/slok/ragnarok/apimachinery/validator"
+	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
+	cliclusterv1 "github.com/slok/ragnarok/client/api/cluster/v1"
+	memrepository "github.com/slok/ragnarok/client/repository/memory"
 	"github.com/slok/ragnarok/clock"
 	"github.com/slok/ragnarok/cmd/master/flags"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
 	"github.com/slok/ragnarok/master/server"
 	"github.com/slok/ragnarok/master/service"
-	"github.com/slok/ragnarok/master/service/repository"
 	"github.com/slok/ragnarok/master/service/scheduler"
 	"github.com/slok/ragnarok/master/web"
 	webapiv1 "github.com/slok/ragnarok/master/web/handler/api/v1"
@@ -22,8 +24,8 @@ import (
 // master dependencies is a helper object to group all the app dependencies
 type masterDependencies struct {
 	scheduler     scheduler.Scheduler
-	nodeClient    cliclusterv1.Node
-	failureRepo   repository.Failure
+	nodeClient    cliclusterv1.NodeClientInterface
+	failureClient clichaosv1.FailureClientInterface
 	logger        log.Logger
 	nodeStatus    service.NodeStatusService
 	failureStatus service.FailureStatusService
@@ -73,14 +75,17 @@ func Main() error {
 	}
 
 	// Create dependencies
-	nodeCli := cliclusterv1.NewDefaultNodeMem()
-	failureRepo := repository.NewMemFailure()
+	memoryRepoClient := memrepository.NewDefaultClient(logger)
+	validator := validator.DefaultObject
+	nodeCli := cliclusterv1.NewNodeClient(validator, memoryRepoClient)
+	failureCli := clichaosv1.NewFailureClient(validator, memoryRepoClient)
+
 	deps := masterDependencies{
 		nodeClient:    nodeCli,
-		failureRepo:   failureRepo,
+		failureClient: failureCli,
 		nodeStatus:    service.NewNodeStatus(*cfg, nodeCli, logger),
-		failureStatus: service.NewFailureStatus(failureRepo, logger),
-		scheduler:     scheduler.NewNodeLabels(failureRepo, nodeCli, logger),
+		failureStatus: service.NewFailureStatus(failureCli, logger),
+		scheduler:     scheduler.NewNodeLabels(failureCli, nodeCli, logger),
 	}
 
 	// TODO: Autoregister this node as a master node.

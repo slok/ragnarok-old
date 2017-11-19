@@ -107,8 +107,24 @@ func (o *Object) validateExperiment(exp *chaosv1.Experiment) ErrorList {
 	return errors
 }
 
+func (o *Object) validateObject(obj api.Object) ErrorList {
+	errs := []error{}
+	if err := errorIfWrongTypeMeta(obj); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
 // Validate satisfies ObjectValidator.
 func (o *Object) Validate(obj api.Object) ErrorList {
+
+	// Common object validation
+	if errs := o.validateObject(obj); len(errs) > 0 {
+		return errs
+	}
+
+	// Validation per type.
 	switch v := obj.(type) {
 	case *clusterv1.Node:
 		return o.validateNode(v)

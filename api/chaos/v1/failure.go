@@ -99,3 +99,8 @@ func NewFailure() Failure {
 		},
 	}
 }
+
+// GetObjectMetadata satisfies object interface.
+func (f *Failure) GetObjectMetadata() api.ObjectMeta {
+	return f.Metadata
+}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/slok/ragnarok/api"
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
-	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
+	cliclusterv1 "github.com/slok/ragnarok/client/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
 )
@@ -22,14 +22,14 @@ type NodeStatusService interface {
 
 // NodeStatus is the implementation of node status service.
 type NodeStatus struct {
-	client cliclusterv1.Node // client will manage the node object operations.
+	client cliclusterv1.NodeClientInterface // Client will manage the node object operations.
 	logger log.Logger
 
 	nodeLock sync.Mutex
 }
 
 // NewNodeStatus returns a new node status service.
-func NewNodeStatus(_ config.Config, client cliclusterv1.Node, logger log.Logger) *NodeStatus {
+func NewNodeStatus(_ config.Config, client cliclusterv1.NodeClientInterface, logger log.Logger) *NodeStatus {
 	return &NodeStatus{
 		client: client,
 		logger: logger,
@@ -42,14 +42,13 @@ func (f *NodeStatus) Register(id string, labels map[string]string) error {
 	f.nodeLock.Lock()
 	defer f.nodeLock.Unlock()
 
-	n := clusterv1.Node{
-		Metadata: api.ObjectMeta{
-			ID:     id,
-			Labels: labels,
-		},
-		Status: clusterv1.NodeStatus{
-			State: clusterv1.UnknownNodeState,
-		},
+	n := clusterv1.NewNode()
+	n.Metadata = api.ObjectMeta{
+		ID:     id,
+		Labels: labels,
+	}
+	n.Status = clusterv1.NodeStatus{
+		State: clusterv1.UnknownNodeState,
 	}
 	_, err := f.client.Create(&n)
 	return err

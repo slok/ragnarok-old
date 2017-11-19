@@ -72,3 +72,8 @@ type Node struct {
 	Spec     NodeSpec       `json:"spec,omitempty"`
 	Status   NodeStatus     `json:"status,omitempty"`
 }
+
+// GetObjectMetadata satisfies object interface.
+func (n *Node) GetObjectMetadata() api.ObjectMeta {
+	return n.Metadata
+}

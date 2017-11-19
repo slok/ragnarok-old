@@ -3,6 +3,8 @@ package validator
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/slok/ragnarok/api"
 )
 
 var (
@@ -57,4 +59,13 @@ func errorIfNoLabelKeys(labels map[string]string, keys []string) []error {
 		}
 	}
 	return errors
+}
+
+// errorIfWrongTypeMeta will check if the object has a correct type meta
+func errorIfWrongTypeMeta(obj api.Object) error {
+	// TODO: check also a valid type.
+	if obj.GetObjectKind() == "" || obj.GetObjectVersion() == "" {
+		return fmt.Errorf("object type metadata is missing")
+	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
+	mclichaosv1 "github.com/slok/ragnarok/mocks/client/api/chaos/v1"
 )
 
 type testNodeFailures map[string][]*v1.Failure
@@ -40,15 +41,20 @@ func TestGetNodeFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
+		mcli := &mclichaosv1.FailureClientInterface{}
 
 		// Mock the call.
 		for nID, expfs := range test.expectedFailures {
-			mrepo.On("GetAllByNode", nID).Once().Return(expfs)
+			opts := api.ListOptions{
+				LabelSelector: map[string]string{
+					api.LabelNode: nID,
+				},
+			}
+			mcli.On("List", opts).Once().Return(expfs, nil)
 		}
 
 		// Create the service.
-		fs := service.NewFailureStatus(mrepo, log.Dummy)
+		fs := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Loop on every node.
 		for nID, expfs := range test.expectedFailures {
@@ -122,11 +128,11 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("List", mock.Anything).Once().Return(test.failures, nil)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		gotFs := fss.GetNodeExpectedEnabledFailures("test")
@@ -194,11 +200,11 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("List", mock.Anything).Once().Return(test.failures, nil)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		gotFs := fss.GetNodeExpectedDisabledFailures("test")
@@ -211,31 +217,37 @@ func TestGetFailure(t *testing.T) {
 
 	tests := []struct {
 		expFailure *v1.Failure
+		getError   bool
 		expErr     bool
 	}{
 		{
 			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test1"}},
+			getError:   false,
 			expErr:     false,
 		},
 		{
 			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test2"}},
+			getError:   true,
 			expErr:     true,
 		},
 		{
 			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test3"}},
+			getError:   false,
 			expErr:     false,
 		},
 	}
 
 	for _, test := range tests {
-		var err error
-
+		var getError error
+		if test.getError {
+			getError = errors.New("wanted error")
+		}
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("Get", mock.Anything).Once().Return(test.expFailure, !test.expErr)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("Get", mock.Anything).Once().Return(test.expFailure, getError)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		f, err := fss.GetFailure(test.expFailure.Metadata.ID)

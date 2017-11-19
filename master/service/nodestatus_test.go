@@ -10,37 +10,30 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/ragnarok/api"
-	"github.com/slok/ragnarok/api/cluster/v1"
-	cliclusterv1 "github.com/slok/ragnarok/client/cluster/v1"
+	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/config"
 	"github.com/slok/ragnarok/master/service"
-	mcliclusterv1 "github.com/slok/ragnarok/mocks/client/cluster/v1"
+	mcliclusterv1 "github.com/slok/ragnarok/mocks/client/api/cluster/v1"
 )
-
-func TestNodeStatusCreation(t *testing.T) {
-	assert := assert.New(t)
-	client := cliclusterv1.NewDefaultNodeMem()
-	m := service.NewNodeStatus(config.Config{}, client, log.Dummy)
-	assert.NotNil(m)
-}
 
 func TestNodeStatusNodeRegistration(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &v1.Node{
+	n := &clusterv1.Node{
+		TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 		Metadata: api.ObjectMeta{
 			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
-		Status: v1.NodeStatus{
-			State: v1.UnknownNodeState,
+		Status: clusterv1.NodeStatus{
+			State: clusterv1.UnknownNodeState,
 		},
 	}
 
 	// Get our registry mock.
-	mcli := &mcliclusterv1.Node{}
+	mcli := &mcliclusterv1.NodeClientInterface{}
 	mcli.On("Create", n).Once().Return(nil, nil)
 
 	// Create the service.
@@ -58,18 +51,19 @@ func TestNodeStatusNodeRegistrationError(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	n := &v1.Node{
+	n := &clusterv1.Node{
+		TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 		Metadata: api.ObjectMeta{
 			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
-		Status: v1.NodeStatus{
-			State: v1.UnknownNodeState,
+		Status: clusterv1.NodeStatus{
+			State: clusterv1.UnknownNodeState,
 		},
 	}
 
 	// Get our registry mock.
-	mcli := &mcliclusterv1.Node{}
+	mcli := &mcliclusterv1.NodeClientInterface{}
 	mcli.On("Create", n).Once().Return(nil, errors.New("want error"))
 
 	// Create the service.
@@ -87,27 +81,29 @@ func TestNodeStatusNodeHeartbeat(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	stubN := v1.Node{
+	stubN := clusterv1.Node{
+		TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 		Metadata: api.ObjectMeta{
 			ID:     "test1",
 			Labels: map[string]string{"address": "127.0.0.45"},
 		},
-		Status: v1.NodeStatus{
-			State: v1.UnknownNodeState,
+		Status: clusterv1.NodeStatus{
+			State: clusterv1.UnknownNodeState,
 		},
 	}
-	expN := &v1.Node{
+	expN := &clusterv1.Node{
+		TypeMeta: api.TypeMeta{Kind: clusterv1.NodeKind, Version: clusterv1.NodeVersion},
 		Metadata: api.ObjectMeta{
 			ID:     stubN.Metadata.ID,
 			Labels: stubN.Metadata.Labels,
 		},
-		Status: v1.NodeStatus{
-			State: v1.ReadyNodeState,
+		Status: clusterv1.NodeStatus{
+			State: clusterv1.ReadyNodeState,
 		},
 	}
 
 	// Get our repository mock.
-	mcli := &mcliclusterv1.Node{}
+	mcli := &mcliclusterv1.NodeClientInterface{}
 	mcli.On("Get", expN.Metadata.ID).Once().Return(&stubN, nil)
 	mcli.On("Update", expN).Once().Return(nil, nil)
 
@@ -127,7 +123,7 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	require := require.New(t)
 
 	// Get our repository mock.
-	mcli := &mcliclusterv1.Node{}
+	mcli := &mcliclusterv1.NodeClientInterface{}
 	mcli.On("Get", mock.Anything).Return(nil, fmt.Errorf("wanted error"))
 
 	// Create the service.
@@ -135,7 +131,7 @@ func TestNodeStatusNodeHeartbeatNotRegistered(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := ns.Heartbeat("test1", v1.ReadyNodeState)
+	err := ns.Heartbeat("test1", clusterv1.ReadyNodeState)
 	assert.Error(err)
 }
 
@@ -144,8 +140,8 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	require := require.New(t)
 
 	// Get our repository mock.
-	mcli := &mcliclusterv1.Node{}
-	mcli.On("Get", mock.Anything).Return(&v1.Node{}, nil)
+	mcli := &mcliclusterv1.NodeClientInterface{}
+	mcli.On("Get", mock.Anything).Return(&clusterv1.Node{}, nil)
 	mcli.On("Update", mock.Anything, mock.Anything).Return(nil, errors.New("wanted error"))
 
 	// Create the service.
@@ -153,6 +149,6 @@ func TestNodeStatusNodeHeartbeatStoreFailure(t *testing.T) {
 	require.NotNil(ns)
 
 	// Check our heartbeat node
-	err := ns.Heartbeat("test1", v1.ReadyNodeState)
+	err := ns.Heartbeat("test1", clusterv1.ReadyNodeState)
 	assert.Error(err)
 }
