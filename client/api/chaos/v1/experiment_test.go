@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestMemFailureCliCreate(t *testing.T) {
+func TestMemExperimentCliCreate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -22,19 +22,19 @@ func TestMemFailureCliCreate(t *testing.T) {
 		expErr      bool
 	}{
 		{
-			name:        "One new failure should be created without error.",
+			name:        "One new experiment should be created without error.",
 			invalidObj:  false,
 			createError: false,
 			expErr:      false,
 		},
 		{
-			name:        "Creating an invalid failure should return an error.",
+			name:        "Creating an invalid experiment should return an error.",
 			invalidObj:  true,
 			createError: false,
 			expErr:      true,
 		},
 		{
-			name:        "Creation failure error on repository should return an error.",
+			name:        "Creation experiment error on repository should return an error.",
 			invalidObj:  false,
 			createError: true,
 			expErr:      true,
@@ -55,7 +55,7 @@ func TestMemFailureCliCreate(t *testing.T) {
 				createError = errors.New("wanted error")
 			}
 
-			f := &chaosv1.Failure{
+			e := &chaosv1.Experiment{
 				Metadata: api.ObjectMeta{
 					ID:     "test",
 					Labels: map[string]string{"id": "test"},
@@ -66,13 +66,13 @@ func TestMemFailureCliCreate(t *testing.T) {
 			mv := &mvalidator.ObjectValidator{}
 			mv.On("Validate", mock.Anything).Return(validator.ErrorList(validationErrs))
 			mr := &mrepository.Client{}
-			mr.On("Create", mock.Anything).Return(f, createError)
+			mr.On("Create", mock.Anything).Return(e, createError)
 
 			// Create our client.
-			cli := clichaosv1.NewFailureClient(mv, mr)
+			cli := clichaosv1.NewExperimentClient(mv, mr)
 
-			// Create the failure and check.
-			_, err := cli.Create(f)
+			// Create the experiment and check.
+			_, err := cli.Create(e)
 			if test.expErr {
 				assert.Error(err)
 			} else {
@@ -83,7 +83,7 @@ func TestMemFailureCliCreate(t *testing.T) {
 	}
 }
 
-func TestMemFailureCliUpdate(t *testing.T) {
+func TestMemExperimentCliUpdate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -91,19 +91,19 @@ func TestMemFailureCliUpdate(t *testing.T) {
 		expErr      bool
 	}{
 		{
-			name:        "Updating failure should be updated without error.",
+			name:        "Updating experiment should be updated without error.",
 			invalidObj:  false,
 			updateError: false,
 			expErr:      false,
 		},
 		{
-			name:        "Updating an invalid failure should return an error.",
+			name:        "Updating an invalid experiment should return an error.",
 			invalidObj:  true,
 			updateError: false,
 			expErr:      true,
 		},
 		{
-			name:        "Updating failure error on repository should return an error.",
+			name:        "Updating experiment error on repository should return an error.",
 			invalidObj:  false,
 			updateError: true,
 			expErr:      true,
@@ -124,7 +124,7 @@ func TestMemFailureCliUpdate(t *testing.T) {
 				updateError = errors.New("wanted error")
 			}
 
-			f := &chaosv1.Failure{
+			e := &chaosv1.Experiment{
 				Metadata: api.ObjectMeta{
 					ID:     "test",
 					Labels: map[string]string{"id": "test"},
@@ -135,13 +135,13 @@ func TestMemFailureCliUpdate(t *testing.T) {
 			mv := &mvalidator.ObjectValidator{}
 			mv.On("Validate", mock.Anything).Return(validator.ErrorList(validationErrs))
 			mr := &mrepository.Client{}
-			mr.On("Update", mock.Anything).Return(f, updateError)
+			mr.On("Update", mock.Anything).Return(e, updateError)
 
 			// Create our client.
-			cli := clichaosv1.NewFailureClient(mv, mr)
+			cli := clichaosv1.NewExperimentClient(mv, mr)
 
-			// Create the failure and check.
-			_, err := cli.Update(f)
+			// Create the experiment and check.
+			_, err := cli.Update(e)
 			if test.expErr {
 				assert.Error(err)
 			} else {
@@ -152,7 +152,7 @@ func TestMemFailureCliUpdate(t *testing.T) {
 	}
 }
 
-func TestMemFailureCliDelete(t *testing.T) {
+func TestMemExperimentCliDelete(t *testing.T) {
 	tests := []struct {
 		name        string
 		id          string
@@ -161,16 +161,16 @@ func TestMemFailureCliDelete(t *testing.T) {
 		expErr      bool
 	}{
 		{
-			name:        "Deleting failure should be deleted without error.",
+			name:        "Deleting experiment should be deleted without error.",
 			id:          "test1",
-			expFullID:   "chaos/v1/failure/test1",
+			expFullID:   "chaos/v1/experiment/test1",
 			deleteError: false,
 			expErr:      false,
 		},
 		{
-			name:        "Deleting failure with an error on the repository should return an error.",
+			name:        "Deleting experiment with an error on the repository should return an error.",
 			id:          "test1",
-			expFullID:   "chaos/v1/failure/test1",
+			expFullID:   "chaos/v1/experiment/test1",
 			deleteError: true,
 			expErr:      true,
 		},
@@ -192,9 +192,9 @@ func TestMemFailureCliDelete(t *testing.T) {
 			mr.On("Delete", test.expFullID).Once().Return(deleteError)
 
 			// Create our client.
-			cli := clichaosv1.NewFailureClient(mv, mr)
+			cli := clichaosv1.NewExperimentClient(mv, mr)
 
-			// Create the failure and check.
+			// Create the experiment and check.
 			err := cli.Delete(test.id)
 			if test.expErr {
 				assert.Error(err)
@@ -206,7 +206,7 @@ func TestMemFailureCliDelete(t *testing.T) {
 	}
 }
 
-func TestMemFailureCliGet(t *testing.T) {
+func TestMemExperimentCliGet(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        string
@@ -215,16 +215,16 @@ func TestMemFailureCliGet(t *testing.T) {
 		expErr    bool
 	}{
 		{
-			name:      "Getting failure should retrieive without error.",
+			name:      "Getting experiment should retrieive without error.",
 			id:        "test1",
-			expFullID: "chaos/v1/failure/test1",
+			expFullID: "chaos/v1/experiment/test1",
 			getError:  false,
 			expErr:    false,
 		},
 		{
-			name:      "Getting a failure with an error from the repository should return an error.",
+			name:      "Getting a experiment with an error from the repository should return an error.",
 			id:        "test1",
-			expFullID: "chaos/v1/failure/test1",
+			expFullID: "chaos/v1/experiment/test1",
 			getError:  true,
 			expErr:    true,
 		},
@@ -240,7 +240,7 @@ func TestMemFailureCliGet(t *testing.T) {
 				getError = errors.New("wanted error")
 			}
 
-			f := &chaosv1.Failure{
+			e := &chaosv1.Experiment{
 				Metadata: api.ObjectMeta{
 					ID:     "test",
 					Labels: map[string]string{"id": "test"},
@@ -250,49 +250,49 @@ func TestMemFailureCliGet(t *testing.T) {
 			// Mocks.
 			mv := &mvalidator.ObjectValidator{}
 			mr := &mrepository.Client{}
-			mr.On("Get", test.expFullID).Once().Return(f, getError)
+			mr.On("Get", test.expFullID).Once().Return(e, getError)
 
 			// Create our client.
-			cli := clichaosv1.NewFailureClient(mv, mr)
+			cli := clichaosv1.NewExperimentClient(mv, mr)
 
-			// Create the failure and check.
+			// Create the experiment and check.
 			gotN, err := cli.Get(test.id)
 			if test.expErr {
 				assert.Error(err)
 			} else {
 				assert.NoError(err)
 				mr.AssertExpectations(t)
-				assert.Equal(f, gotN)
+				assert.Equal(e, gotN)
 			}
 		})
 	}
 }
 
-func TestMemFailureCliList(t *testing.T) {
+func TestMemExperimentCliList(t *testing.T) {
 	tests := []struct {
-		name           string
-		objList        []api.Object
-		expFailureList []*chaosv1.Failure
-		listError      bool
-		expErr         bool
+		name              string
+		objList           []api.Object
+		expExperimentList []*chaosv1.Experiment
+		listError         bool
+		expErr            bool
 	}{
 		{
-			name: "Getting failure List should retrieive without error.",
+			name: "Getting experiment List should retrieive without error.",
 			objList: []api.Object{
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure1"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure2"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure3"}},
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment1"}},
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment2"}},
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment3"}},
 			},
-			expFailureList: []*chaosv1.Failure{
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure1"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure2"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure3"}},
+			expExperimentList: []*chaosv1.Experiment{
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment1"}},
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment2"}},
+				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment3"}},
 			},
 			listError: false,
 			expErr:    false,
 		},
 		{
-			name:      "Getting a failure list with an error from the repository should return an error.",
+			name:      "Getting a experiment list with an error from the repository should return an error.",
 			listError: true,
 			expErr:    true,
 		},
@@ -314,16 +314,16 @@ func TestMemFailureCliList(t *testing.T) {
 			mr.On("List", mock.Anything).Return(test.objList, listError)
 
 			// Create our client.
-			cli := clichaosv1.NewFailureClient(mv, mr)
+			cli := clichaosv1.NewExperimentClient(mv, mr)
 
-			// Create the failure and check.
-			gotFailures, err := cli.List(api.ListOptions{})
+			// Create the experiment and check.
+			gotExperiments, err := cli.List(api.ListOptions{})
 			if test.expErr {
 				assert.Error(err)
 			} else {
 				assert.NoError(err)
 				mr.AssertExpectations(t)
-				assert.Equal(test.expFailureList, gotFailures)
+				assert.Equal(test.expExperimentList, gotExperiments)
 			}
 		})
 	}

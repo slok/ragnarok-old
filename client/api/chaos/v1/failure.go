@@ -11,7 +11,7 @@ import (
 	"github.com/slok/ragnarok/client/repository"
 )
 
-var objType = api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion}
+var failureObjType = api.TypeMeta{Kind: chaosv1.FailureKind, Version: chaosv1.FailureVersion}
 
 // FailureClientInterface has the required logic to manage Failure.
 type FailureClientInterface interface {
@@ -85,13 +85,13 @@ func (f *FailureClient) Update(failure *chaosv1.Failure) (*chaosv1.Failure, erro
 // Delete satisfies FailureClientInterface interface.
 func (f *FailureClient) Delete(id string) error {
 	// get the full ID
-	fullID := apiutil.GetFullIDFromType(objType, id)
+	fullID := apiutil.GetFullIDFromType(failureObjType, id)
 	return f.repoCli.Delete(fullID)
 }
 
 // Get satisfies FailureClientInterface interface.
 func (f *FailureClient) Get(id string) (*chaosv1.Failure, error) {
-	fullID := apiutil.GetFullIDFromType(objType, id)
+	fullID := apiutil.GetFullIDFromType(failureObjType, id)
 	obj, err := f.repoCli.Get(fullID)
 	if err != nil {
 		return nil, err
