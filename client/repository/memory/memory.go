@@ -160,6 +160,6 @@ func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
 }
 
 // Watch will watch object events from memory operations.
-func (c *Client) Watch(opts api.ListOptions) (watch.Watch, error) {
+func (c *Client) Watch(opts api.ListOptions) (watch.Watcher, error) {
 	return nil, fmt.Errorf("not implemented")
 }

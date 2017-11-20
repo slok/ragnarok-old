@@ -20,7 +20,7 @@ type FailureClientInterface interface {
 	Delete(id string) error
 	Get(id string) (*chaosv1.Failure, error)
 	List(opts api.ListOptions) ([]*chaosv1.Failure, error)
-	Watch(opts api.ListOptions) (watch.Watch, error)
+	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
 
@@ -121,6 +121,6 @@ func (f *FailureClient) List(opts api.ListOptions) ([]*chaosv1.Failure, error) {
 }
 
 // Watch satisfies FailureClientInterface interface.
-func (f *FailureClient) Watch(opts api.ListOptions) (watch.Watch, error) {
+func (f *FailureClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
 	return nil, nil
 }

@@ -20,7 +20,7 @@ type ExperimentClientInterface interface {
 	Delete(id string) error
 	Get(id string) (*chaosv1.Experiment, error)
 	List(opts api.ListOptions) ([]*chaosv1.Experiment, error)
-	Watch(opts api.ListOptions) (watch.Watch, error)
+	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
 
@@ -121,6 +121,6 @@ func (e *ExperimentClient) List(opts api.ListOptions) ([]*chaosv1.Experiment, er
 }
 
 // Watch satisfies ExperimentClientInterface interface.
-func (e *ExperimentClient) Watch(opts api.ListOptions) (watch.Watch, error) {
+func (e *ExperimentClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
 	return nil, nil
 }

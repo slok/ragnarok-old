@@ -26,10 +26,22 @@ type Event struct {
 	Object api.Object
 }
 
-// Watch will be implemented by any one that wants to expose events on object.
-type Watch interface {
+// Watcher will be implemented by any one that wants to expose events on object.
+type Watcher interface {
 	// Stop will close the result chanel.
 	Stop()
 	// GetChan will return the channel that will notify the events
 	GetChan() <-chan Event
+}
+
+// Multiplexer will multiplex the received events into multiple watchers.
+type Multiplexer interface {
+	// SendEvent will send an event on the to the desired watchers.
+	SendEvent(Event)
+	// StartWatcher will cretae new a watcher.
+	StartWatcher() (Watcher, error)
+	// CloseWatcher will stop a new watcher.
+	StopWatcher(string)
+	// StopAll will stop all the watchers.
+	StopAll()
 }

@@ -13,6 +13,6 @@ type Client interface {
 	Delete(id string) error
 	Get(id string) (api.Object, error)
 	List(opts api.ListOptions) ([]api.Object, error)
-	Watch(opts api.ListOptions) (watch.Watch, error)
+	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }

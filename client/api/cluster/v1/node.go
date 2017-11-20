@@ -20,7 +20,7 @@ type NodeClientInterface interface {
 	Delete(id string) error
 	Get(id string) (*clusterv1.Node, error)
 	List(opts api.ListOptions) ([]*clusterv1.Node, error)
-	Watch(opts api.ListOptions) (watch.Watch, error)
+	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
 
@@ -121,6 +121,6 @@ func (n *NodeClient) List(opts api.ListOptions) ([]*clusterv1.Node, error) {
 }
 
 // Watch satisfies NodeClientInterface interface.
-func (n *NodeClient) Watch(opts api.ListOptions) (watch.Watch, error) {
+func (n *NodeClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
 	return nil, nil
 }

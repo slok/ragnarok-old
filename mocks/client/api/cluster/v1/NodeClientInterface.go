@@ -119,15 +119,15 @@ func (_m *NodeClientInterface) Update(node *v1.Node) (*v1.Node, error) {
 }
 
 // Watch provides a mock function with given fields: opts
-func (_m *NodeClientInterface) Watch(opts api.ListOptions) (watch.Watch, error) {
+func (_m *NodeClientInterface) Watch(opts api.ListOptions) (watch.Watcher, error) {
 	ret := _m.Called(opts)
 
-	var r0 watch.Watch
-	if rf, ok := ret.Get(0).(func(api.ListOptions) watch.Watch); ok {
+	var r0 watch.Watcher
+	if rf, ok := ret.Get(0).(func(api.ListOptions) watch.Watcher); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(watch.Watch)
+			r0 = ret.Get(0).(watch.Watcher)
 		}
 	}
 
