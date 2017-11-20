@@ -77,3 +77,8 @@ type Node struct {
 func (n *Node) GetObjectMetadata() api.ObjectMeta {
 	return n.Metadata
 }
+
+// GetListMetadata satisfies object interface.
+func (n *Node) GetListMetadata() api.ListMeta {
+	return api.NoListMeta
+}

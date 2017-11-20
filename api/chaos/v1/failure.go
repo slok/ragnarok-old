@@ -104,3 +104,8 @@ func NewFailure() Failure {
 func (f *Failure) GetObjectMetadata() api.ObjectMeta {
 	return f.Metadata
 }
+
+// GetListMetadata satisfies object interface.
+func (f *Failure) GetListMetadata() api.ListMeta {
+	return api.NoListMeta
+}

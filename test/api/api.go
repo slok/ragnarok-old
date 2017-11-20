@@ -16,3 +16,4 @@ func (t *TestObj) GetObjectVersion() api.Version { return t.Version }
 func (t *TestObj) GetObjectMetadata() api.ObjectMeta {
 	return api.ObjectMeta{ID: t.ID, Labels: t.Labels}
 }
+func (t *TestObj) GetListMetadata() api.ListMeta { return api.NoListMeta }
