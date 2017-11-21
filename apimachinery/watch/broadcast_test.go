@@ -1,79 +1,131 @@
 package watch_test
 
 import (
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/slok/ragnarok/apimachinery/watch"
 	"github.com/slok/ragnarok/log"
-	mwatch "github.com/slok/ragnarok/mocks/apimachinery/watch"
-	"github.com/stretchr/testify/assert"
+	testapi "github.com/slok/ragnarok/test/api"
 )
 
-func TestBroadcastWatcherSendEvent(t *testing.T) {
+func TestBroadcasSendEventOnWatchers(t *testing.T) {
 	tests := []struct {
 		name     string
 		expEvent watch.Event
 	}{
 		{
-			name:     "Sending and event over channel should be sent over the channel.",
-			expEvent: watch.Event{},
+			name: "Starting a watcher and sending an event should be received by multiple watchers.",
+			expEvent: watch.Event{
+				Type: watch.AddedEvent,
+				Object: &testapi.TestObj{
+					Labels: map[string]string{"test-event": "test1"},
+				},
+			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
+			require := require.New(t)
 
-			// mocks.
-			mm := &mwatch.Multiplexer{}
+			numberWatchers := 5
+			watchers := make([]watch.Watcher, numberWatchers)
+			gotEvents := make([]watch.Event, numberWatchers)
 
-			// Buffered channel so we don't block waiting for the result at the end of the test.
-			ec := make(chan watch.Event, 1)
+			// Create the broadcaster and the watchers.
+			b := watch.NewBroadcaster(log.Dummy)
+			for i := 0; i < numberWatchers; i++ {
+				w, err := b.StartWatcher()
+				require.NoError(err)
+				require.NotNil(w)
+				watchers[i] = w
+			}
 
-			// Create the watcher.
-			w := watch.NewBroadcastWatcher("id1", ec, mm, log.Dummy)
+			var wg sync.WaitGroup
+			wg.Add(numberWatchers)
+			// Start getting events from the watchers.
+			for i := 0; i < numberWatchers; i++ {
+				i := i
+				go func() {
+					defer wg.Done()
+					c := watchers[i].GetChan()
+					select {
+					case <-time.After(10 * time.Millisecond): // If timeout don't add to the got events.
+					case ev := <-c:
+						gotEvents[i] = ev
+					}
+				}()
+			}
 
-			// Send the event.
-			go func() {
-				w.SendEvent(test.expEvent)
-			}()
-			select {
-			case <-time.After(5 * time.Millisecond):
-				assert.Fail("timeout receiving result")
-			case gotEvent := <-ec:
-				assert.Equal(test.expEvent, gotEvent)
+			// Add an event.
+			b.SendEvent(test.expEvent)
+
+			// Wait until all events consumed
+			wg.Wait()
+			// Check every watcher has received the event.
+			for i := 0; i < numberWatchers; i++ {
+				assert.Equal(test.expEvent, gotEvents[i])
 			}
 		})
 	}
 }
 
-func TestBroadcastWatcherStop(t *testing.T) {
+func TestBroadcasStopAllWatchers(t *testing.T) {
 	tests := []struct {
-		name string
-		id   string
+		name     string
+		expEvent watch.Event
 	}{
 		{
-			name: "Sending and event over channel should be sent over the channel.",
-			id:   "test1",
+			name: "Stopping all watchers Should stop all the registered watchers.",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// mocks.
-			mm := &mwatch.Multiplexer{}
-			mm.On("StopWatcher", test.id).Once()
+			assert := assert.New(t)
+			require := require.New(t)
 
-			// Buffered channel so we don't block waiting for the result at the end of the test.
-			ec := make(chan watch.Event, 1)
+			numberWatchers := 5
+			watchers := make([]watch.Watcher, numberWatchers)
 
-			// Create the watcher.
-			w := watch.NewBroadcastWatcher(test.id, ec, mm, log.Dummy)
+			// Create the broadcaster and the watchers.
+			b := watch.NewBroadcaster(log.Dummy)
+			for i := 0; i < numberWatchers; i++ {
+				w, err := b.StartWatcher()
+				require.NoError(err)
+				require.NotNil(w)
+				watchers[i] = w
+			}
 
-			// Send the event.
-			w.Stop()
-			mm.AssertExpectations(t)
+			// Stop all watchers.
+			b.StopAll()
+
+			// Check it has unregistered all the watchers (should not panic sending an event).
+			assert.NotPanics(func() {
+				ev := watch.Event{
+					Type: watch.AddedEvent,
+					Object: &testapi.TestObj{
+						Labels: map[string]string{"test-event": "test1"},
+					},
+				}
+				b.SendEvent(ev)
+			})
+
+			// Check all the channels are closed.
+			for _, w := range watchers {
+				watcher := w.GetChan()
+				select {
+				case <-time.After(10 * time.Millisecond):
+					assert.Fail("not closed channel")
+				case <-watcher: // Closed channel is instant, so if it's closed should enter here (and should be closed).
+				}
+			}
 		})
 	}
 }
