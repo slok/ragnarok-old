@@ -14,13 +14,13 @@ func (_m *Multiplexer) SendEvent(_a0 watch.Event) {
 	_m.Called(_a0)
 }
 
-// StartWatcher provides a mock function with given fields:
-func (_m *Multiplexer) StartWatcher() (watch.Watcher, error) {
-	ret := _m.Called()
+// StartWatcher provides a mock function with given fields: f
+func (_m *Multiplexer) StartWatcher(f watch.ObjectFilter) (watch.Watcher, error) {
+	ret := _m.Called(f)
 
 	var r0 watch.Watcher
-	if rf, ok := ret.Get(0).(func() watch.Watcher); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(watch.ObjectFilter) watch.Watcher); ok {
+		r0 = rf(f)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(watch.Watcher)
@@ -28,8 +28,8 @@ func (_m *Multiplexer) StartWatcher() (watch.Watcher, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(watch.ObjectFilter) error); ok {
+		r1 = rf(f)
 	} else {
 		r1 = ret.Error(1)
 	}
