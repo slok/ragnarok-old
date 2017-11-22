@@ -27,22 +27,23 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			node: &clusterv1.Node{
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","master":true},"spec":{"labels":{"id":"testNode1","kind":"node"}},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
+			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","labels":{"id":"testNode1","kind":"node"},"annotations":{"name":"my node"}},"spec":{},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 		{
@@ -52,22 +53,23 @@ func TestJSONEncodeCluserV1Node(t *testing.T) {
 					Kind:    clusterv1.NodeKind,
 					Version: clusterv1.NodeVersion,
 				},
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","master":true},"spec":{"labels":{"id":"testNode1","kind":"node"}},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
+			expEncNode: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","labels":{"id":"testNode1","kind":"node"},"annotations":{"name":"my node"}},"spec":{},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 	}
@@ -107,14 +109,15 @@ func TestJSONDecodeCluserV1Node(t *testing.T) {
 	"kind": "node",
 	"metadata":{
 		"id": "testNode1",
-		"master": true
-	},
-	"spec":{
 		"labels":{
 			"id": "testNode1",
 			"kind": "node"
+		},
+		"annotations":{
+			"name": "my node"
 		}
 	},
+	"spec":{},
 	"status":{
 		"state": 1,
 		"creation": "2012-11-01T22:08:41Z"
@@ -122,16 +125,17 @@ func TestJSONDecodeCluserV1Node(t *testing.T) {
 }`,
 			expNode: &clusterv1.Node{
 				TypeMeta: api.TypeMeta{Version: clusterv1.NodeVersion, Kind: clusterv1.NodeKind},
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
@@ -145,14 +149,15 @@ func TestJSONDecodeCluserV1Node(t *testing.T) {
 {
 	"metadata":{
 		"id": "testNode1",
-		"master": true
-	},
-	"spec":{
 		"labels":{
 			"id": "testNode1",
 			"kind": "node"
+		},
+		"annotations":{
+			"name": "my node"
 		}
 	},
+	"spec":{},
 	"status":{
 		"state": 1,
 		"creation": "2012-11-01T22:08:41Z"
@@ -192,22 +197,20 @@ func TestYAMLEncodeCluserV1Node(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			node: &clusterv1.Node{
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: "kind: node\nmetadata:\n  id: testNode1\n  master: true\nspec:\n  labels:\n    id: testNode1\n    kind: node\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  state: 1\nversion: cluster/v1",
+			expEncNode: "kind: node\nmetadata:\n  id: testNode1\n  labels:\n    id: testNode1\n    kind: node\nspec: {}\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  state: 1\nversion: cluster/v1",
 			expErr:     false,
 		},
 		{
@@ -217,22 +220,20 @@ func TestYAMLEncodeCluserV1Node(t *testing.T) {
 					Kind:    clusterv1.NodeKind,
 					Version: clusterv1.NodeVersion,
 				},
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
-			expEncNode: "kind: node\nmetadata:\n  id: testNode1\n  master: true\nspec:\n  labels:\n    id: testNode1\n    kind: node\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  state: 1\nversion: cluster/v1",
+			expEncNode: "kind: node\nmetadata:\n  id: testNode1\n  labels:\n    id: testNode1\n    kind: node\nspec: {}\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  state: 1\nversion: cluster/v1",
 			expErr:     false,
 		},
 	}
@@ -271,26 +272,28 @@ kind: node
 version: cluster/v1
 metadata:
   id: testNode1
-  master: true
-spec:
   labels:
     id: testNode1
     kind: node
+  annotations:
+    name: "my node"
+spec:
 status:
   creation: 2012-11-01T22:08:41Z
   state: 1`,
 			expNode: &clusterv1.Node{
 				TypeMeta: api.TypeMeta{Version: clusterv1.NodeVersion, Kind: clusterv1.NodeKind},
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
@@ -303,11 +306,12 @@ status:
 			nodeYAML: `
 metadata:
   id: testNode1
-  master: true
-spec:
   labels:
     id: testNode1
-    kind: node
+	kind: node
+  annotations:
+    name: "my node"
+spec:
 status:
   creation: 2012-11-01T22:08:41Z
   state: 1`,
@@ -344,23 +348,24 @@ func TestPBEncodeCluserV1Node(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			node: &clusterv1.Node{
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
 				},
 			},
 			expEncNode: &clusterv1pb.Node{
-				SerializedData: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","master":true},"spec":{"labels":{"id":"testNode1","kind":"node"}},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
+				SerializedData: `{"kind":"node","version":"cluster/v1","metadata":{"id":"testNode1","labels":{"id":"testNode1","kind":"node"},"annotations":{"name":"my node"}},"spec":{},"status":{"state":1,"creation":"2012-11-01T22:08:41Z"}}`,
 			},
 			expErr: false,
 		},
@@ -404,14 +409,15 @@ func TestPBDecodeCluserV1Node(t *testing.T) {
 	"kind": "node",
 	"metadata":{
 		"id": "testNode1",
-		"master": true
-	},
-	"spec":{
 		"labels":{
 			"id": "testNode1",
 			"kind": "node"
+		},
+		"annotations":{
+			"name": "my node"
 		}
 	},
+	"spec":{},
 	"status":{
 		"state": 1,
 		"creation": "2012-11-01T22:08:41Z"
@@ -420,16 +426,17 @@ func TestPBDecodeCluserV1Node(t *testing.T) {
 			},
 			expNode: &clusterv1.Node{
 				TypeMeta: api.TypeMeta{Version: clusterv1.NodeVersion, Kind: clusterv1.NodeKind},
-				Metadata: clusterv1.NodeMetadata{
-					ID:     "testNode1",
-					Master: true,
-				},
-				Spec: clusterv1.NodeSpec{
+				Metadata: api.ObjectMeta{
+					ID: "testNode1",
 					Labels: map[string]string{
 						"kind": "node",
 						"id":   "testNode1",
 					},
+					Annotations: map[string]string{
+						"name": "my node",
+					},
 				},
+				Spec: clusterv1.NodeSpec{},
 				Status: clusterv1.NodeStatus{
 					Creation: t1,
 					State:    clusterv1.ReadyNodeState,
@@ -444,14 +451,15 @@ func TestPBDecodeCluserV1Node(t *testing.T) {
 {
 	"metadata":{
 		"id": "testNode1",
-		"master": true
-	},
-	"spec":{
 		"labels":{
 			"id": "testNode1",
 			"kind": "node"
+		},
+		"annotations":{
+			"name": "my node"
 		}
 	},
+	"spec":{},
 	"status":{
 		"state": 1,
 		"creation": "2012-11-01T22:08:41Z"

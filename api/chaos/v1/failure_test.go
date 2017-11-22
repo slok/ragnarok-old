@@ -30,9 +30,8 @@ func TestJSONEncodeChaosV1Failure(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			failure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -63,7 +62,7 @@ func TestJSONEncodeChaosV1Failure(t *testing.T) {
 					Finished:      t3,
 				},
 			},
-			expEncFailure: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+			expEncFailure: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
 			expErr:        false,
 		},
 		{
@@ -73,9 +72,8 @@ func TestJSONEncodeChaosV1Failure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -106,7 +104,7 @@ func TestJSONEncodeChaosV1Failure(t *testing.T) {
 					Finished:      t3,
 				},
 			},
-			expEncFailure: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+			expEncFailure: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
 			expErr:        false,
 		},
 	}
@@ -142,9 +140,8 @@ func TestYAMLEncodeChaosV1Failure(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			failure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -175,7 +172,7 @@ func TestYAMLEncodeChaosV1Failure(t *testing.T) {
 					Finished:      t3,
 				},
 			},
-			expEncFailure: "kind: failure\nmetadata:\n  id: flr-001\n  nodeid: nd-034\nspec:\n  attacks:\n  - attack1:\n      size: 524288000\n  - attack2: null\n  - attack3:\n      pace: 10m\n      quantity: 10\n      rest: 30s\n      target: myTarget\n  timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  currentState: 1\n  executed: 2012-11-01T22:18:41Z\n  expectedState: 4\n  finished: 2012-11-01T22:28:41Z\nversion: chaos/v1",
+			expEncFailure: "kind: failure\nmetadata:\n  id: flr-001\nspec:\n  attacks:\n  - attack1:\n      size: 524288000\n  - attack2: null\n  - attack3:\n      pace: 10m\n      quantity: 10\n      rest: 30s\n      target: myTarget\n  timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  currentState: 1\n  executed: 2012-11-01T22:18:41Z\n  expectedState: 4\n  finished: 2012-11-01T22:28:41Z\nversion: chaos/v1",
 			expErr:        false,
 		},
 		{
@@ -185,9 +182,8 @@ func TestYAMLEncodeChaosV1Failure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -218,7 +214,7 @@ func TestYAMLEncodeChaosV1Failure(t *testing.T) {
 					Finished:      t3,
 				},
 			},
-			expEncFailure: "kind: failure\nmetadata:\n  id: flr-001\n  nodeid: nd-034\nspec:\n  attacks:\n  - attack1:\n      size: 524288000\n  - attack2: null\n  - attack3:\n      pace: 10m\n      quantity: 10\n      rest: 30s\n      target: myTarget\n  timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  currentState: 1\n  executed: 2012-11-01T22:18:41Z\n  expectedState: 4\n  finished: 2012-11-01T22:28:41Z\nversion: chaos/v1",
+			expEncFailure: "kind: failure\nmetadata:\n  id: flr-001\nspec:\n  attacks:\n  - attack1:\n      size: 524288000\n  - attack2: null\n  - attack3:\n      pace: 10m\n      quantity: 10\n      rest: 30s\n      target: myTarget\n  timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  currentState: 1\n  executed: 2012-11-01T22:18:41Z\n  expectedState: 4\n  finished: 2012-11-01T22:28:41Z\nversion: chaos/v1",
 			expErr:        false,
 		},
 	}
@@ -261,8 +257,7 @@ func TestJSONDecodeChaosV1Failure(t *testing.T) {
    "kind":"failure",
    "version":"chaos/v1",
    "metadata":{  
-      "id":"flr-001",
-      "nodeid":"nd-034"
+      "id":"flr-001"
    },
    "spec":{  
       "timeout":300000000000,
@@ -298,9 +293,8 @@ func TestJSONDecodeChaosV1Failure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -378,7 +372,6 @@ kind: failure
 version: chaos/v1
 metadata:
   id: flr-001
-  nodeid: nd-034
 spec:
   timeout: 300000000000
   attacks:
@@ -401,9 +394,8 @@ status:
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -474,9 +466,8 @@ func TestPBEncodeChaosV1Failure(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			failure: &chaosv1.Failure{
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -508,7 +499,7 @@ func TestPBEncodeChaosV1Failure(t *testing.T) {
 				},
 			},
 			expEncFailure: &chaosv1pb.Failure{
-				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
 			},
 
 			expErr: false,
@@ -520,9 +511,8 @@ func TestPBEncodeChaosV1Failure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,
@@ -554,7 +544,7 @@ func TestPBEncodeChaosV1Failure(t *testing.T) {
 				},
 			},
 			expEncFailure: &chaosv1pb.Failure{
-				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001","nodeid":"nd-034"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
+				SerializedData: `{"kind":"failure","version":"chaos/v1","metadata":{"id":"flr-001"},"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]},"status":{"currentState":1,"expectedState":4,"creation":"2012-11-01T22:08:41Z","executed":"2012-11-01T22:18:41Z","finished":"2012-11-01T22:28:41Z"}}`,
 			},
 			expErr: false,
 		},
@@ -601,8 +591,7 @@ func TestPBDecodeChaosV1Failure(t *testing.T) {
    "kind":"failure",
    "version":"chaos/v1",
    "metadata":{  
-      "id":"flr-001",
-      "nodeid":"nd-034"
+      "id":"flr-001"
    },
    "spec":{  
       "timeout":300000000000,
@@ -639,9 +628,8 @@ func TestPBDecodeChaosV1Failure(t *testing.T) {
 					Kind:    chaosv1.FailureKind,
 					Version: chaosv1.FailureVersion,
 				},
-				Metadata: chaosv1.FailureMetadata{
-					ID:     "flr-001",
-					NodeID: "nd-034",
+				Metadata: api.ObjectMeta{
+					ID: "flr-001",
 				},
 				Spec: chaosv1.FailureSpec{
 					Timeout: 5 * time.Minute,

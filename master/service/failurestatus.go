@@ -1,53 +1,69 @@
 package service
 
 import (
-	"fmt"
-
-	"github.com/slok/ragnarok/api/chaos/v1"
+	"github.com/slok/ragnarok/api"
+	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
+	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/service/repository"
 )
 
 // FailureStatusService is how the master manages, enables, disables... attacks on the nodes.
 type FailureStatusService interface {
 	// GetNodeFailures returns all the failures of a given node.
-	GetNodeFailures(nodeID string) []*v1.Failure
+	GetNodeFailures(nodeID string) []*chaosv1.Failure
 	// GetNodeExpectedEnabledFailures returns all the failures in enabled state of a given node.
-	GetNodeExpectedEnabledFailures(nodeID string) []*v1.Failure
+	GetNodeExpectedEnabledFailures(nodeID string) []*chaosv1.Failure
 	// GetNodeExpectedDisabledFailures returns all the failures in disabled state of a given node.
-	GetNodeExpectedDisabledFailures(nodeID string) []*v1.Failure
+	GetNodeExpectedDisabledFailures(nodeID string) []*chaosv1.Failure
 	// GetFailure returns an specific failure.
-	GetFailure(id string) (*v1.Failure, error)
+	GetFailure(id string) (*chaosv1.Failure, error)
 }
 
 // FailureStatus is the implementation of failure status service.
 type FailureStatus struct {
-	repo   repository.Failure // Repo is the failure repository.
+	client clichaosv1.FailureClientInterface // client is the client to manage failure objects.
 	logger log.Logger
 }
 
 // NewFailureStatus returns a new FailureStatus
-func NewFailureStatus(repository repository.Failure, logger log.Logger) *FailureStatus {
+func NewFailureStatus(client clichaosv1.FailureClientInterface, logger log.Logger) *FailureStatus {
 	return &FailureStatus{
-		repo:   repository,
+		client: client,
 		logger: logger,
 	}
 }
 
+func (f *FailureStatus) listFailuresByNode(nodeID string) ([]*chaosv1.Failure, error) {
+	opts := api.ListOptions{
+		LabelSelector: map[string]string{
+			api.LabelNode: nodeID,
+		},
+	}
+	return f.client.List(opts)
+}
+
 // GetNodeFailures implements FailureStatusService interface.
-func (f *FailureStatus) GetNodeFailures(nodeID string) []*v1.Failure {
-	return f.repo.GetAllByNode(nodeID)
+func (f *FailureStatus) GetNodeFailures(nodeID string) []*chaosv1.Failure {
+	flrs, err := f.listFailuresByNode(nodeID)
+	if err != nil {
+		f.logger.Errorf("error retrieving failures of node %s", nodeID)
+	}
+
+	return flrs
 }
 
 // GetNodeExpectedEnabledFailures implements FailureStatusService interface.
-func (f *FailureStatus) GetNodeExpectedEnabledFailures(nodeID string) []*v1.Failure {
+func (f *FailureStatus) GetNodeExpectedEnabledFailures(nodeID string) []*chaosv1.Failure {
 	// Get all.
 	// TODO: Ask filtered directly to the repository.
-	fs := f.repo.GetAllByNode(nodeID)
-	res := []*v1.Failure{}
+	flrs, err := f.listFailuresByNode(nodeID)
+	if err != nil {
+		f.logger.Errorf("error retrieving failures of node %s", nodeID)
+	}
+	res := []*chaosv1.Failure{}
 	// Filter them by status.
-	for _, flr := range fs {
-		if flr.Status.ExpectedState == v1.EnabledFailureState {
+	for _, flr := range flrs {
+		if flr.Status.ExpectedState == chaosv1.EnabledFailureState {
 			res = append(res, flr)
 		}
 	}
@@ -55,14 +71,17 @@ func (f *FailureStatus) GetNodeExpectedEnabledFailures(nodeID string) []*v1.Fail
 }
 
 // GetNodeExpectedDisabledFailures implements FailureStatusService interface.
-func (f *FailureStatus) GetNodeExpectedDisabledFailures(nodeID string) []*v1.Failure {
+func (f *FailureStatus) GetNodeExpectedDisabledFailures(nodeID string) []*chaosv1.Failure {
 	// Get all.
 	// TODO: Ask filtered directly to the repository.
-	fs := f.repo.GetAllByNode(nodeID)
-	res := []*v1.Failure{}
+	flrs, err := f.listFailuresByNode(nodeID)
+	if err != nil {
+		f.logger.Errorf("error retrieving failures of node %s", nodeID)
+	}
+	res := []*chaosv1.Failure{}
 	// Filter them by status.
-	for _, flr := range fs {
-		if flr.Status.ExpectedState == v1.DisabledFailureState {
+	for _, flr := range flrs {
+		if flr.Status.ExpectedState == chaosv1.DisabledFailureState {
 			res = append(res, flr)
 		}
 	}
@@ -70,10 +89,10 @@ func (f *FailureStatus) GetNodeExpectedDisabledFailures(nodeID string) []*v1.Fai
 }
 
 // GetFailure implements FailureStatusService interface.
-func (f *FailureStatus) GetFailure(id string) (*v1.Failure, error) {
-	flr, ok := f.repo.Get(id)
-	if !ok {
-		return nil, fmt.Errorf("failure %s can't be retrieved", id)
+func (f *FailureStatus) GetFailure(id string) (*chaosv1.Failure, error) {
+	flr, err := f.client.Get(id)
+	if err != nil {
+		return nil, err
 	}
 	return flr, nil
 }

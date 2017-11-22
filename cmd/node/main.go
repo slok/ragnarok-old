@@ -60,7 +60,7 @@ func Main() error {
 	// Create services.
 	apiNode := clusterv1.NewNode()
 	apiNode.Metadata.ID = nodeID
-	apiNode.Spec.Labels = nodeTags
+	apiNode.Metadata.Labels = nodeTags
 	stSrv := service.NewNodeStatus(&apiNode, nsCli, clock.Base(), logger)
 	fSrv := service.NewLogFailureState(nodeID, fCli, clock.Base(), logger)
 

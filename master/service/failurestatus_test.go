@@ -1,15 +1,17 @@
 package service_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
 	"github.com/slok/ragnarok/master/service"
-	mrepository "github.com/slok/ragnarok/mocks/master/service/repository"
+	mclichaosv1 "github.com/slok/ragnarok/mocks/client/api/chaos/v1"
 )
 
 type testNodeFailures map[string][]*v1.Failure
@@ -26,11 +28,11 @@ func TestGetNodeFailures(t *testing.T) {
 		{
 			expectedFailures: testNodeFailures{
 				"node1": {
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f11", NodeID: "node1"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f11"}},
 				},
 				"node2": {
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
-					&v1.Failure{Metadata: v1.FailureMetadata{ID: "f21", NodeID: "node2"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f21"}},
+					&v1.Failure{Metadata: api.ObjectMeta{ID: "f21"}},
 				},
 				"node3": {},
 			},
@@ -39,15 +41,20 @@ func TestGetNodeFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
+		mcli := &mclichaosv1.FailureClientInterface{}
 
 		// Mock the call.
 		for nID, expfs := range test.expectedFailures {
-			mrepo.On("GetAllByNode", nID).Once().Return(expfs)
+			opts := api.ListOptions{
+				LabelSelector: map[string]string{
+					api.LabelNode: nID,
+				},
+			}
+			mcli.On("List", opts).Once().Return(expfs, nil)
 		}
 
 		// Create the service.
-		fs := service.NewFailureStatus(mrepo, log.Dummy)
+		fs := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Loop on every node.
 		for nID, expfs := range test.expectedFailures {
@@ -67,7 +74,7 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -76,13 +83,13 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -90,29 +97,29 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f3"},
+					Metadata: api.ObjectMeta{ID: "f3"},
 					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -121,11 +128,11 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("List", mock.Anything).Once().Return(test.failures, nil)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		gotFs := fss.GetNodeExpectedEnabledFailures("test")
@@ -143,7 +150,7 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
@@ -152,13 +159,13 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -166,25 +173,25 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 		{
 			failures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f2"},
+					Metadata: api.ObjectMeta{ID: "f2"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f3"},
+					Metadata: api.ObjectMeta{ID: "f3"},
 					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
 				},
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f4"},
+					Metadata: api.ObjectMeta{ID: "f4"},
 					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
 				},
 			},
 			expFailures: []*v1.Failure{
 				&v1.Failure{
-					Metadata: v1.FailureMetadata{ID: "f1"},
+					Metadata: api.ObjectMeta{ID: "f1"},
 					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
 				},
 			},
@@ -193,11 +200,11 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 
 	for _, test := range tests {
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("GetAllByNode", mock.Anything).Once().Return(test.failures)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("List", mock.Anything).Once().Return(test.failures, nil)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		gotFs := fss.GetNodeExpectedDisabledFailures("test")
@@ -210,31 +217,37 @@ func TestGetFailure(t *testing.T) {
 
 	tests := []struct {
 		expFailure *v1.Failure
+		getError   bool
 		expErr     bool
 	}{
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test1"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test1"}},
+			getError:   false,
 			expErr:     false,
 		},
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test2"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test2"}},
+			getError:   true,
 			expErr:     true,
 		},
 		{
-			expFailure: &v1.Failure{Metadata: v1.FailureMetadata{ID: "test3"}},
+			expFailure: &v1.Failure{Metadata: api.ObjectMeta{ID: "test3"}},
+			getError:   false,
 			expErr:     false,
 		},
 	}
 
 	for _, test := range tests {
-		var err error
-
+		var getError error
+		if test.getError {
+			getError = errors.New("wanted error")
+		}
 		// Create mocks.
-		mrepo := &mrepository.Failure{}
-		mrepo.On("Get", mock.Anything).Once().Return(test.expFailure, !test.expErr)
+		mcli := &mclichaosv1.FailureClientInterface{}
+		mcli.On("Get", mock.Anything).Once().Return(test.expFailure, getError)
 
 		// Create the service.
-		fss := service.NewFailureStatus(mrepo, log.Dummy)
+		fss := service.NewFailureStatus(mcli, log.Dummy)
 
 		// Get & check.
 		f, err := fss.GetFailure(test.expFailure.Metadata.ID)

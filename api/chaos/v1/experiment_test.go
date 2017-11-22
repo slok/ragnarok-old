@@ -27,10 +27,12 @@ func TestJSONEncodeChaosV1Experiment(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			experiment: &chaosv1.Experiment{
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: " first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
@@ -63,7 +65,7 @@ func TestJSONEncodeChaosV1Experiment(t *testing.T) {
 					Creation:   t1,
 				},
 			},
-			expEncNode: `{"kind":"experiment","version":"chaos/v1","metadata":{"id":"exp-001","name":"first experiment","description":" first experiment is the first experiment :|"},"spec":{"selector":{"az":"eu-west-1a","kind":"master"},"template":{"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]}}},"status":{"failureIDs":["node1","node3","node4"],"creation":"2012-11-01T22:08:41Z"}}`,
+			expEncNode: `{"kind":"experiment","version":"chaos/v1","metadata":{"id":"exp-001","annotations":{"description":"first experiment is the first experiment :|","name":"first experiment"}},"spec":{"selector":{"az":"eu-west-1a","kind":"master"},"template":{"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]}}},"status":{"failureIDs":["node1","node3","node4"],"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 		{
@@ -73,10 +75,12 @@ func TestJSONEncodeChaosV1Experiment(t *testing.T) {
 					Kind:    chaosv1.ExperimentKind,
 					Version: chaosv1.ExperimentVersion,
 				},
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: " first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
@@ -109,7 +113,7 @@ func TestJSONEncodeChaosV1Experiment(t *testing.T) {
 					Creation:   t1,
 				},
 			},
-			expEncNode: `{"kind":"experiment","version":"chaos/v1","metadata":{"id":"exp-001","name":"first experiment","description":" first experiment is the first experiment :|"},"spec":{"selector":{"az":"eu-west-1a","kind":"master"},"template":{"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]}}},"status":{"failureIDs":["node1","node3","node4"],"creation":"2012-11-01T22:08:41Z"}}`,
+			expEncNode: `{"kind":"experiment","version":"chaos/v1","metadata":{"id":"exp-001","annotations":{"description":"first experiment is the first experiment :|","name":"first experiment"}},"spec":{"selector":{"az":"eu-west-1a","kind":"master"},"template":{"spec":{"timeout":300000000000,"attacks":[{"attack1":{"size":524288000}},{"attack2":null},{"attack3":{"pace":"10m","quantity":10,"rest":"30s","target":"myTarget"}}]}}},"status":{"failureIDs":["node1","node3","node4"],"creation":"2012-11-01T22:08:41Z"}}`,
 			expErr:     false,
 		},
 	}
@@ -148,10 +152,12 @@ func TestJSONDecodeChaosV1Experiment(t *testing.T) {
    "kind":"experiment",
    "version":"chaos/v1",
    "metadata":{
-      "id":"exp-001",
-      "name":"first experiment",
-      "description":" first experiment is the first experiment :|"
-   },
+	  "id":"exp-001",
+	  "annotations":{
+		 "name":"first experiment",
+		 "description": "first experiment is the first experiment :|"
+	  }
+	},
    "spec":{
       "selector":{
          "az":"eu-west-1a",
@@ -195,10 +201,12 @@ func TestJSONDecodeChaosV1Experiment(t *testing.T) {
 					Kind:    chaosv1.ExperimentKind,
 					Version: chaosv1.ExperimentVersion,
 				},
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: " first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
@@ -269,10 +277,12 @@ func TestYAMLEncodeChaosV1Experiment(t *testing.T) {
 		{
 			name: "Simple object encoding shouldn't return an error if doesn't have kind or version",
 			experiment: &chaosv1.Experiment{
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: "first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
@@ -305,7 +315,7 @@ func TestYAMLEncodeChaosV1Experiment(t *testing.T) {
 					Creation:   t1,
 				},
 			},
-			expEncNode: "kind: experiment\nmetadata:\n  description: first experiment is the first experiment :|\n  id: exp-001\n  name: first experiment\nspec:\n  selector:\n    az: eu-west-1a\n    kind: master\n  template:\n    spec:\n      attacks:\n      - attack1:\n          size: 524288000\n      - attack2: null\n      - attack3:\n          pace: 10m\n          quantity: 10\n          rest: 30s\n          target: myTarget\n      timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  failureIDs:\n  - node1\n  - node3\n  - node4\nversion: chaos/v1",
+			expEncNode: "kind: experiment\nmetadata:\n  annotations:\n    description: first experiment is the first experiment :|\n    name: first experiment\n  id: exp-001\nspec:\n  selector:\n    az: eu-west-1a\n    kind: master\n  template:\n    spec:\n      attacks:\n      - attack1:\n          size: 524288000\n      - attack2: null\n      - attack3:\n          pace: 10m\n          quantity: 10\n          rest: 30s\n          target: myTarget\n      timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  failureIDs:\n  - node1\n  - node3\n  - node4\nversion: chaos/v1",
 			expErr:     false,
 		},
 		{
@@ -315,10 +325,12 @@ func TestYAMLEncodeChaosV1Experiment(t *testing.T) {
 					Kind:    chaosv1.ExperimentKind,
 					Version: chaosv1.ExperimentVersion,
 				},
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: "first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
@@ -351,7 +363,7 @@ func TestYAMLEncodeChaosV1Experiment(t *testing.T) {
 					Creation:   t1,
 				},
 			},
-			expEncNode: "kind: experiment\nmetadata:\n  description: first experiment is the first experiment :|\n  id: exp-001\n  name: first experiment\nspec:\n  selector:\n    az: eu-west-1a\n    kind: master\n  template:\n    spec:\n      attacks:\n      - attack1:\n          size: 524288000\n      - attack2: null\n      - attack3:\n          pace: 10m\n          quantity: 10\n          rest: 30s\n          target: myTarget\n      timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  failureIDs:\n  - node1\n  - node3\n  - node4\nversion: chaos/v1",
+			expEncNode: "kind: experiment\nmetadata:\n  annotations:\n    description: first experiment is the first experiment :|\n    name: first experiment\n  id: exp-001\nspec:\n  selector:\n    az: eu-west-1a\n    kind: master\n  template:\n    spec:\n      attacks:\n      - attack1:\n          size: 524288000\n      - attack2: null\n      - attack3:\n          pace: 10m\n          quantity: 10\n          rest: 30s\n          target: myTarget\n      timeout: 300000000000\nstatus:\n  creation: 2012-11-01T22:08:41Z\n  failureIDs:\n  - node1\n  - node3\n  - node4\nversion: chaos/v1",
 			expErr:     false,
 		},
 	}
@@ -389,9 +401,10 @@ func TestYAMLDecodeChaosV1Experiment(t *testing.T) {
 kind: experiment
 version: chaos/v1
 metadata:
-  description: first experiment is the first experiment :|
   id: exp-001
-  name: first experiment
+  annotations:
+    description: first experiment is the first experiment :|
+    name: first experiment
 spec:
   selector:
     az: eu-west-1a
@@ -420,10 +433,12 @@ status:
 					Kind:    chaosv1.ExperimentKind,
 					Version: chaosv1.ExperimentVersion,
 				},
-				Metadata: chaosv1.ExperimentMetadata{
-					ID:          "exp-001",
-					Name:        "first experiment",
-					Description: "first experiment is the first experiment :|",
+				Metadata: api.ObjectMeta{
+					ID: "exp-001",
+					Annotations: map[string]string{
+						"name":        "first experiment",
+						"description": "first experiment is the first experiment :|",
+					},
 				},
 				Spec: chaosv1.ExperimentSpec{
 					Selector: map[string]string{"kind": "master", "az": "eu-west-1a"},
