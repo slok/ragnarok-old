@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/slok/ragnarok/apimachinery/validator"
+	"github.com/slok/ragnarok/apimachinery/watch"
 	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
 	cliclusterv1 "github.com/slok/ragnarok/client/api/cluster/v1"
 	memrepository "github.com/slok/ragnarok/client/repository/memory"
@@ -75,7 +76,8 @@ func Main() error {
 	}
 
 	// Create dependencies
-	memoryRepoClient := memrepository.NewDefaultClient(logger)
+	eventMux := watch.NewDefaultBroadcasterFactory(logger)
+	memoryRepoClient := memrepository.NewDefaultClient(eventMux, logger)
 	validator := validator.DefaultObject
 	nodeCli := cliclusterv1.NewNodeClient(validator, memoryRepoClient)
 	failureCli := clichaosv1.NewFailureClient(validator, memoryRepoClient)
