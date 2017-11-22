@@ -13,6 +13,12 @@ const (
 	ExperimentVersion = "chaos/v1"
 )
 
+// ExperimentTypeMeta is the experiment type metadata.
+var ExperimentTypeMeta = api.TypeMeta{
+	Kind:    ExperimentKind,
+	Version: ExperimentVersion,
+}
+
 // ExperimentStatus is the status after the creation of the Experiment.
 type ExperimentStatus struct {
 	// FailureIDs are the IDs of the failures that have been created.

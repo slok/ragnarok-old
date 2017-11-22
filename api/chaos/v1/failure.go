@@ -14,6 +14,12 @@ const (
 	FailureVersion = "chaos/v1"
 )
 
+// FailureTypeMeta is the failure type metadata.
+var FailureTypeMeta = api.TypeMeta{
+	Kind:    FailureKind,
+	Version: FailureVersion,
+}
+
 // FailureState is the state a failure can be.
 type FailureState int
 

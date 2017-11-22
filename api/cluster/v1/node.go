@@ -13,6 +13,12 @@ const (
 	NodeVersion = "cluster/v1"
 )
 
+// NodeTypeMeta is the node type metadata.
+var NodeTypeMeta = api.TypeMeta{
+	Kind:    NodeKind,
+	Version: NodeVersion,
+}
+
 // NodeState is the reprensetation of the node state.
 type NodeState int
 
