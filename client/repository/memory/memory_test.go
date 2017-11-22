@@ -7,8 +7,10 @@ import (
 	"github.com/slok/ragnarok/api"
 	"github.com/slok/ragnarok/client/repository/memory"
 	"github.com/slok/ragnarok/log"
+	mwatch "github.com/slok/ragnarok/mocks/apimachinery/watch"
 	testapi "github.com/slok/ragnarok/test/api"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestMemoryRepositoryCreate(t *testing.T) {
@@ -38,10 +40,14 @@ func TestMemoryRepositoryCreate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			assert := assert.New(t)
 
-			cli := memory.NewClient(test.registry, log.Dummy)
+			// Mocks.
+			mm := &mwatch.Multiplexer{}
+			mm.On("SendEvent", mock.Anything, mock.Anything)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
 			_, err := cli.Create(test.obj)
 			if test.expErr {
 				assert.Error(err)
@@ -97,7 +103,12 @@ func TestMemoryRepositoryUdate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			cli := memory.NewClient(test.registry, log.Dummy)
+			// Mocks.
+			mm := &mwatch.Multiplexer{}
+			mm.On("SendEvent", mock.Anything, mock.Anything)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
 			_, err := cli.Update(test.obj)
 			if test.expErr {
 				assert.Error(err)
@@ -146,7 +157,12 @@ func TestMemoryRepositoryDelete(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			cli := memory.NewClient(test.registry, log.Dummy)
+			// Mocks.
+			mm := &mwatch.Multiplexer{}
+			mm.On("SendEvent", mock.Anything, mock.Anything)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
 			err := cli.Delete(test.deleteFullID)
 			if test.expErr {
 				assert.Error(err)
@@ -190,7 +206,12 @@ func TestMemoryRepositoryGet(t *testing.T) {
 
 			assert := assert.New(t)
 
-			cli := memory.NewClient(test.registry, log.Dummy)
+			// Mocks.
+			mm := &mwatch.Multiplexer{}
+			mm.On("SendEvent", mock.Anything, mock.Anything)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
 			obj, err := cli.Get(test.getFullID)
 			if test.expErr {
 				assert.Error(err)
@@ -310,7 +331,12 @@ func TestMemoryRepositoryList(t *testing.T) {
 
 			assert := assert.New(t)
 
-			cli := memory.NewClient(test.registry, log.Dummy)
+			// Mocks.
+			mm := &mwatch.Multiplexer{}
+			mm.On("SendEvent", mock.Anything, mock.Anything)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
 			objs, err := cli.List(test.opts)
 			if test.expErr {
 				assert.Error(err)
@@ -324,6 +350,40 @@ func TestMemoryRepositoryList(t *testing.T) {
 					oss[i] = obj.(*testapi.TestObj)
 				}
 				assert.Equal(test.expObjs, oss)
+			}
+		})
+	}
+}
+
+func TestMemoryRepositoryWatch(t *testing.T) {
+	tests := []struct {
+		name     string
+		registry map[string]map[string]api.Object
+		opts     api.ListOptions
+		expObjs  []*testapi.TestObj
+		expErr   bool
+	}{
+		{
+			name: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			// Mocks.
+			mw := &mwatch.Watcher{}
+			mm := &mwatch.Multiplexer{}
+			mm.On("StartWatcher", mock.AnythingOfType("*watch.ListOptionsFilter")).Once().Return(mw, nil)
+			mmf := &mwatch.MultiplexerFactory{}
+			mmf.On("Get", mock.Anything).Return(mm)
+			cli := memory.NewClient(mmf, test.registry, log.Dummy)
+			_, err := cli.Watch(test.opts)
+			if test.expErr {
+				assert.Error(err)
+			} else {
+				assert.NoError(err)
+				mm.AssertExpectations(t)
 			}
 		})
 	}

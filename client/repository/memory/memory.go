@@ -7,29 +7,40 @@ import (
 	"github.com/slok/ragnarok/api"
 	apiutil "github.com/slok/ragnarok/api/util"
 	"github.com/slok/ragnarok/apimachinery/watch"
-	"github.com/slok/ragnarok/client/util"
 	"github.com/slok/ragnarok/log"
 )
 
 // Client is an instance that saves objects in memory.
 type Client struct {
-	reg    map[string]map[string]api.Object
-	logger log.Logger
+	reg             map[string]map[string]api.Object
+	logger          log.Logger
+	eventMuxFactory watch.MultiplexerFactory
 	sync.Mutex
 }
 
 // NewDefaultClient returns a default object memory repository.
-func NewDefaultClient(logger log.Logger) *Client {
-	return NewClient(map[string]map[string]api.Object{}, logger)
+func NewDefaultClient(eventMux watch.MultiplexerFactory, logger log.Logger) *Client {
+	return NewClient(eventMux, map[string]map[string]api.Object{}, logger)
 }
 
 // NewClient returns an object memory repository.
-func NewClient(registry map[string]map[string]api.Object, logger log.Logger) *Client {
+func NewClient(eventMuxFactory watch.MultiplexerFactory, registry map[string]map[string]api.Object, logger log.Logger) *Client {
 	logger = logger.WithField("repository", "memory")
 	return &Client{
-		logger: logger,
-		reg:    registry,
+		logger:          logger,
+		eventMuxFactory: eventMuxFactory,
+		reg:             registry,
 	}
+}
+
+func (c *Client) sendEvent(evType watch.EventType, obj api.Object) {
+	ft := apiutil.GetFullType(obj)
+	muxer := c.eventMuxFactory.Get(ft)
+	event := watch.Event{
+		Type:   evType,
+		Object: obj,
+	}
+	muxer.SendEvent(event)
 }
 
 // safeGet will get an object using a fullID safely from the registry.
@@ -80,6 +91,7 @@ func (c *Client) Create(obj api.Object) (api.Object, error) {
 		return nil, fmt.Errorf("node %s already present", obj.GetObjectMetadata().ID)
 	}
 	c.safeSet(obj)
+	c.sendEvent(watch.AddedEvent, obj)
 	return obj, nil
 }
 
@@ -92,6 +104,7 @@ func (c *Client) Update(obj api.Object) (api.Object, error) {
 		return nil, fmt.Errorf("node %s not present", obj.GetObjectMetadata().ID)
 	}
 	c.safeSet(obj)
+	c.sendEvent(watch.UpdatedEvent, obj)
 	return obj, nil
 }
 
@@ -99,7 +112,11 @@ func (c *Client) Update(obj api.Object) (api.Object, error) {
 func (c *Client) Delete(fullID string) error {
 	c.Lock()
 	defer c.Unlock()
-	c.safeDelete(fullID)
+	obj := c.safeGet(fullID)
+	if obj != nil {
+		c.safeDelete(fullID)
+		c.sendEvent(watch.DeletedEvent, obj)
+	}
 	return nil
 }
 
@@ -114,7 +131,8 @@ func (c *Client) Get(fullID string) (api.Object, error) {
 	return o, nil
 }
 
-func (c *Client) listAll(opts api.ListOptions) ([]api.Object, error) {
+// List will retrieve a list of objects in memory.
+func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
 	c.Lock()
 	defer c.Unlock()
 	ol := []api.Object{}
@@ -122,24 +140,11 @@ func (c *Client) listAll(opts api.ListOptions) ([]api.Object, error) {
 	ft := apiutil.GetFullType(opts)
 	reg, ok := c.reg[ft]
 	if ok {
+		// Create a filter using the selector.
+		f := watch.NewListOptionsFilter(opts)
 		for _, obj := range reg {
-			ol = append(ol, obj)
-		}
-	}
-
-	return ol, nil
-}
-
-func (c *Client) listBySelector(opts api.ListOptions) ([]api.Object, error) {
-	c.Lock()
-	defer c.Unlock()
-	ol := []api.Object{}
-
-	ft := apiutil.GetFullType(opts)
-	reg, ok := c.reg[ft]
-	if ok {
-		for _, obj := range reg {
-			if util.SelectorMatchesLabels(obj.GetObjectMetadata().Labels, opts.LabelSelector) {
+			// If not need to filter add.
+			if !f.Filter(obj) {
 				ol = append(ol, obj)
 			}
 		}
@@ -147,19 +152,15 @@ func (c *Client) listBySelector(opts api.ListOptions) ([]api.Object, error) {
 	return ol, nil
 }
 
-// List will retrieve a list of objects in memory.
-func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
-
-	// Return all
-	if len(opts.LabelSelector) == 0 {
-		return c.listAll(opts)
-	}
-
-	// Return filtered.
-	return c.listBySelector(opts)
-}
-
 // Watch will watch object events from memory operations.
 func (c *Client) Watch(opts api.ListOptions) (watch.Watcher, error) {
-	return nil, fmt.Errorf("not implemented")
+	// Create the watcher.
+	ft := apiutil.GetFullType(opts)
+	muxer := c.eventMuxFactory.Get(ft)
+	filter := watch.NewListOptionsFilter(opts)
+	watcher, err := muxer.StartWatcher(filter)
+	if err != nil {
+		return nil, fmt.Errorf("could not create the watcher: %s", err)
+	}
+	return watcher, nil
 }
