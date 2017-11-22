@@ -101,6 +101,7 @@ func (e *ExperimentClient) Get(id string) (*chaosv1.Experiment, error) {
 
 // List satisfies ExperimentClientInterface interface.
 func (e *ExperimentClient) List(opts api.ListOptions) ([]*chaosv1.Experiment, error) {
+	opts.TypeMeta = chaosv1.ExperimentTypeMeta
 	experiments := []*chaosv1.Experiment{}
 
 	objs, err := e.repoCli.List(opts)
@@ -122,5 +123,6 @@ func (e *ExperimentClient) List(opts api.ListOptions) ([]*chaosv1.Experiment, er
 
 // Watch satisfies ExperimentClientInterface interface.
 func (e *ExperimentClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
-	return nil, nil
+	opts.TypeMeta = chaosv1.ExperimentTypeMeta
+	return e.repoCli.Watch(opts)
 }

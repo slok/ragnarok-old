@@ -101,6 +101,7 @@ func (n *NodeClient) Get(id string) (*clusterv1.Node, error) {
 
 // List satisfies NodeClientInterface interface.
 func (n *NodeClient) List(opts api.ListOptions) ([]*clusterv1.Node, error) {
+	opts.TypeMeta = clusterv1.NodeTypeMeta
 	nodes := []*clusterv1.Node{}
 
 	objs, err := n.repoCli.List(opts)
@@ -122,5 +123,6 @@ func (n *NodeClient) List(opts api.ListOptions) ([]*clusterv1.Node, error) {
 
 // Watch satisfies NodeClientInterface interface.
 func (n *NodeClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
-	return nil, nil
+	opts.TypeMeta = clusterv1.NodeTypeMeta
+	return n.repoCli.Watch(opts)
 }

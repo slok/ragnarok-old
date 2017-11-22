@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestMemNodeCliCreate(t *testing.T) {
+func TestNodeCliCreate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -83,7 +83,7 @@ func TestMemNodeCliCreate(t *testing.T) {
 	}
 }
 
-func TestMemNodeCliUpdate(t *testing.T) {
+func TestNodeCliUpdate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -152,7 +152,7 @@ func TestMemNodeCliUpdate(t *testing.T) {
 	}
 }
 
-func TestMemNodeCliDelete(t *testing.T) {
+func TestNodeCliDelete(t *testing.T) {
 	tests := []struct {
 		name        string
 		id          string
@@ -206,7 +206,7 @@ func TestMemNodeCliDelete(t *testing.T) {
 	}
 }
 
-func TestMemNodeCliGet(t *testing.T) {
+func TestNodeCliGet(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        string
@@ -268,7 +268,7 @@ func TestMemNodeCliGet(t *testing.T) {
 	}
 }
 
-func TestMemNodeCliList(t *testing.T) {
+func TestNodeCliList(t *testing.T) {
 	tests := []struct {
 		name        string
 		objList     []api.Object
@@ -325,6 +325,34 @@ func TestMemNodeCliList(t *testing.T) {
 				mr.AssertExpectations(t)
 				assert.Equal(test.expNodeList, gotNodes)
 			}
+		})
+	}
+}
+
+func TestNodeCliWatch(t *testing.T) {
+	tests := []struct {
+		name   string
+		expErr bool
+	}{
+		{
+			name:   "Watch should not return an error.",
+			expErr: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Mocks.
+			mv := &mvalidator.ObjectValidator{}
+			mr := &mrepository.Client{}
+			mr.On("Watch", mock.Anything).Once().Return(nil, nil)
+
+			// Create our client.
+			cli := cliclusterv1.NewNodeClient(mv, mr)
+
+			// Create the node and check.
+			cli.Watch(api.ListOptions{})
+			mr.AssertExpectations(t)
 		})
 	}
 }

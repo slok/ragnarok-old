@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestMemExperimentCliCreate(t *testing.T) {
+func TestExperimentCliCreate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -83,7 +83,7 @@ func TestMemExperimentCliCreate(t *testing.T) {
 	}
 }
 
-func TestMemExperimentCliUpdate(t *testing.T) {
+func TestExperimentCliUpdate(t *testing.T) {
 	tests := []struct {
 		name        string
 		invalidObj  bool
@@ -152,7 +152,7 @@ func TestMemExperimentCliUpdate(t *testing.T) {
 	}
 }
 
-func TestMemExperimentCliDelete(t *testing.T) {
+func TestExperimentCliDelete(t *testing.T) {
 	tests := []struct {
 		name        string
 		id          string
@@ -206,7 +206,7 @@ func TestMemExperimentCliDelete(t *testing.T) {
 	}
 }
 
-func TestMemExperimentCliGet(t *testing.T) {
+func TestExperimentCliGet(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        string
@@ -268,7 +268,7 @@ func TestMemExperimentCliGet(t *testing.T) {
 	}
 }
 
-func TestMemExperimentCliList(t *testing.T) {
+func TestExperimentCliList(t *testing.T) {
 	tests := []struct {
 		name              string
 		objList           []api.Object
@@ -325,6 +325,34 @@ func TestMemExperimentCliList(t *testing.T) {
 				mr.AssertExpectations(t)
 				assert.Equal(test.expExperimentList, gotExperiments)
 			}
+		})
+	}
+}
+
+func TestExperimentCliWatch(t *testing.T) {
+	tests := []struct {
+		name   string
+		expErr bool
+	}{
+		{
+			name:   "Watch should not return an error.",
+			expErr: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Mocks.
+			mv := &mvalidator.ObjectValidator{}
+			mr := &mrepository.Client{}
+			mr.On("Watch", mock.Anything).Once().Return(nil, nil)
+
+			// Create our client.
+			cli := clichaosv1.NewExperimentClient(mv, mr)
+
+			// Create the experiment and check.
+			cli.Watch(api.ListOptions{})
+			mr.AssertExpectations(t)
 		})
 	}
 }

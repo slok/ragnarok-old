@@ -101,6 +101,7 @@ func (f *FailureClient) Get(id string) (*chaosv1.Failure, error) {
 
 // List satisfies FailureClientInterface interface.
 func (f *FailureClient) List(opts api.ListOptions) ([]*chaosv1.Failure, error) {
+	opts.TypeMeta = chaosv1.FailureTypeMeta
 	failures := []*chaosv1.Failure{}
 
 	objs, err := f.repoCli.List(opts)
@@ -122,5 +123,6 @@ func (f *FailureClient) List(opts api.ListOptions) ([]*chaosv1.Failure, error) {
 
 // Watch satisfies FailureClientInterface interface.
 func (f *FailureClient) Watch(opts api.ListOptions) (watch.Watcher, error) {
-	return nil, nil
+	opts.TypeMeta = chaosv1.FailureTypeMeta
+	return f.repoCli.Watch(opts)
 }
