@@ -13,7 +13,7 @@ import (
 	testapi "github.com/slok/ragnarok/test/api"
 )
 
-func TestBroadcasSendEventOnWatchers(t *testing.T) {
+func TestBroadcasterSendEventOnWatchers(t *testing.T) {
 	tests := []struct {
 		name     string
 		expEvent watch.Event
@@ -41,7 +41,7 @@ func TestBroadcasSendEventOnWatchers(t *testing.T) {
 			// Create the broadcaster and the watchers.
 			b := watch.NewBroadcaster(log.Dummy)
 			for i := 0; i < numberWatchers; i++ {
-				w, err := b.StartWatcher()
+				w, err := b.StartWatcher(watch.NoFilter)
 				require.NoError(err)
 				require.NotNil(w)
 				watchers[i] = w
@@ -76,10 +76,9 @@ func TestBroadcasSendEventOnWatchers(t *testing.T) {
 	}
 }
 
-func TestBroadcasStopAllWatchers(t *testing.T) {
+func TestBroadcasterStopAllWatchers(t *testing.T) {
 	tests := []struct {
-		name     string
-		expEvent watch.Event
+		name string
 	}{
 		{
 			name: "Stopping all watchers Should stop all the registered watchers.",
@@ -97,7 +96,7 @@ func TestBroadcasStopAllWatchers(t *testing.T) {
 			// Create the broadcaster and the watchers.
 			b := watch.NewBroadcaster(log.Dummy)
 			for i := 0; i < numberWatchers; i++ {
-				w, err := b.StartWatcher()
+				w, err := b.StartWatcher(watch.NoFilter)
 				require.NoError(err)
 				require.NotNil(w)
 				watchers[i] = w
@@ -126,6 +125,55 @@ func TestBroadcasStopAllWatchers(t *testing.T) {
 				case <-watcher: // Closed channel is instant, so if it's closed should enter here (and should be closed).
 				}
 			}
+		})
+	}
+}
+
+func TestBroadcasterFactory(t *testing.T) {
+	tests := []struct {
+		name   string
+		reg    map[string]*watch.Broadcaster
+		id     string
+		expReg map[string]*watch.Broadcaster
+	}{
+		{
+			name: "Creating a not present broadcaster should return a new broadcaster.",
+			reg:  map[string]*watch.Broadcaster{},
+			id:   "test/v1/test1",
+			expReg: map[string]*watch.Broadcaster{
+				"test/v1/test1": watch.NewBroadcaster(log.Dummy),
+			},
+		},
+		{
+			name: "Already present broadcaster shouldn't create a new one.",
+			reg: map[string]*watch.Broadcaster{
+				"test/v1/test1": watch.NewBroadcaster(log.Dummy),
+			},
+			id: "test/v1/test1",
+			expReg: map[string]*watch.Broadcaster{
+				"test/v1/test1": watch.NewBroadcaster(log.Dummy),
+			},
+		},
+		{
+			name: "Already present broadcaster with a new one should create a new one.",
+			reg: map[string]*watch.Broadcaster{
+				"test/v1/test2": watch.NewBroadcaster(log.Dummy),
+			},
+			id: "test/v1/test1",
+			expReg: map[string]*watch.Broadcaster{
+				"test/v1/test1": watch.NewBroadcaster(log.Dummy),
+				"test/v1/test2": watch.NewBroadcaster(log.Dummy),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			bf := watch.NewBroadcasterFactory(test.reg, log.Dummy)
+			eventMux := bf.Get(test.id)
+			assert.NotNil(eventMux)
+			assert.Equal(test.expReg, test.reg)
 		})
 	}
 }
