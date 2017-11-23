@@ -88,3 +88,9 @@ func (n *Node) GetObjectMetadata() api.ObjectMeta {
 func (n *Node) GetListMetadata() api.ListMeta {
 	return api.NoListMeta
 }
+
+// DeepCopy satisfies object interface.
+func (n *Node) DeepCopy() api.Object {
+	copy := *n
+	return &copy
+}

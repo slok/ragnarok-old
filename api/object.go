@@ -58,6 +58,12 @@ func (l ListOptions) GetListMetadata() ListMeta {
 	return NoListMeta
 }
 
+// DeepCopy satisfies object interface.
+func (l ListOptions) DeepCopy() Object {
+	copy := l
+	return &copy
+}
+
 // ObjectMeta is the metadata all the objects should have.
 type ObjectMeta struct {
 	// ID is the id of the object.
@@ -93,4 +99,6 @@ type Object interface {
 	GetObjectMetadata() ObjectMeta
 	// GetListMeta returns the metadata of the object list, if not an object list it will be an object.
 	GetListMetadata() ListMeta
+	// DeepCopy makes a copy of the object.
+	DeepCopy() Object
 }

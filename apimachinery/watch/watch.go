@@ -26,6 +26,15 @@ type Event struct {
 	Object api.Object
 }
 
+// DeepCopy makes a deep copy of this event.
+func (e *Event) DeepCopy() Event {
+	copy := Event{
+		Type:   e.Type,
+		Object: e.Object.DeepCopy(),
+	}
+	return copy
+}
+
 // Watcher will be implemented by any one that wants to expose events on object.
 type Watcher interface {
 	// Stop will close the result chanel.
