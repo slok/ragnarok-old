@@ -115,3 +115,9 @@ func (f *Failure) GetObjectMetadata() api.ObjectMeta {
 func (f *Failure) GetListMetadata() api.ListMeta {
 	return api.NoListMeta
 }
+
+// DeepCopy satisfies object interface.
+func (f *Failure) DeepCopy() api.Object {
+	copy := *f
+	return &copy
+}

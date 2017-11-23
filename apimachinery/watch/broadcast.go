@@ -71,7 +71,7 @@ func (b *Broadcaster) SendEvent(e Event) {
 			continue
 		}
 
-		e := e // Make a copy of each event so each watcher has its own event.
+		e := e.DeepCopy() // Make a copy of each event so each watcher has its own event and don't share the objects.
 		select {
 		// Don't block if event can't be sent.
 		case <-time.After(sendEventTimeout):
