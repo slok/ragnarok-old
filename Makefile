@@ -29,7 +29,8 @@ COMMIT=$(shell git rev-parse --short HEAD)
 TAG ?= $(shell git describe --tags --exact-match)
 
 # Commands
-TEST_CMD := go test `go list ./... | grep -v vendor` -v -tags='integration'
+TEST_UNIT_CMD := go test `go list ./... | grep -v vendor` -v
+TEST_INTEGRATION_CMD := go test `go list ./... | grep -v vendor` -v -tags='integration'
 VET_CMD := go vet `go list ./... | grep -v vendor`
 
 # The default action of this Makefile is to build the release
@@ -84,8 +85,13 @@ vet: build
 	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(VET_CMD)'
 
 # Execute unit tests
-test:build
-	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(TEST_CMD)'
+test-unit:build
+	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(TEST_UNIT_CMD)'
+
+test-integration:build
+	cd environment/dev && docker-compose run --rm $(SERVICE_NAME) /bin/bash -c '$(TEST_INTEGRATION_CMD)'
+
+test:test-integration
 
 # Generate required code (mocks...)
 gogen: build
