@@ -1,4 +1,4 @@
-package informer_test
+package store_test
 
 import (
 	"errors"
@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/slok/ragnarok/api"
-	"github.com/slok/ragnarok/client/informer"
+	"github.com/slok/ragnarok/client/util/store"
 	"github.com/slok/ragnarok/log"
-	minformer "github.com/slok/ragnarok/mocks/client/informer"
+	mstore "github.com/slok/ragnarok/mocks/client/util/store"
 	testapi "github.com/slok/ragnarok/test/api"
 )
 
@@ -49,12 +49,12 @@ func TestIndexedStoreAdd(t *testing.T) {
 			}
 
 			// Mocks.
-			mi := &minformer.ObjectIndexKeyer{}
+			mi := &mstore.ObjectIndexKeyer{}
 			mi.On("GetKey", mock.Anything).Return(test.indexKey, keyErr)
 
 			// Create store.
 			reg := &sync.Map{}
-			store := informer.NewIndexedStore(mi, reg, log.Dummy)
+			store := store.NewIndexedStore(mi, reg, log.Dummy)
 
 			// Add the required objects
 			err := store.Add(test.obj)
@@ -106,12 +106,12 @@ func TestIndexedStoreUpdate(t *testing.T) {
 			}
 
 			// Mocks.
-			mi := &minformer.ObjectIndexKeyer{}
+			mi := &mstore.ObjectIndexKeyer{}
 			mi.On("GetKey", mock.Anything).Return(test.indexKey, keyErr)
 
 			// Create store.
 			reg := &sync.Map{}
-			store := informer.NewIndexedStore(mi, reg, log.Dummy)
+			store := store.NewIndexedStore(mi, reg, log.Dummy)
 
 			// Add the required objects
 			err := store.Update(test.obj)
@@ -188,7 +188,7 @@ func TestIndexedStoreGet(t *testing.T) {
 			}
 
 			// Mocks.
-			mi := &minformer.ObjectIndexKeyer{}
+			mi := &mstore.ObjectIndexKeyer{}
 			mi.On("GetKey", mock.Anything).Return(test.indexKey, keyErr)
 
 			// Create store.
@@ -196,7 +196,7 @@ func TestIndexedStoreGet(t *testing.T) {
 			for k, v := range test.registry {
 				reg.Store(k, v)
 			}
-			store := informer.NewIndexedStore(mi, reg, log.Dummy)
+			store := store.NewIndexedStore(mi, reg, log.Dummy)
 
 			// Add the required objects
 			gotObj, ex, err := store.Get(test.obj)
@@ -282,7 +282,7 @@ func TestIndexedStoreDelete(t *testing.T) {
 			}
 
 			// Mocks.
-			mi := &minformer.ObjectIndexKeyer{}
+			mi := &mstore.ObjectIndexKeyer{}
 			mi.On("GetKey", mock.Anything).Return(test.indexKey, keyErr)
 
 			// Create store.
@@ -291,7 +291,7 @@ func TestIndexedStoreDelete(t *testing.T) {
 				v := *(v.(*testapi.TestObj))
 				reg.Store(k, &v)
 			}
-			store := informer.NewIndexedStore(mi, reg, log.Dummy)
+			store := store.NewIndexedStore(mi, reg, log.Dummy)
 
 			// Add the required objects
 			err := store.Delete(test.obj)

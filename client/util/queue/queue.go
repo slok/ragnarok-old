@@ -17,7 +17,7 @@ type Queue interface {
 	// Len will get the length of the queue.
 	Len() int
 	// ShutDown will stop and close the queue.
-	ShutDown()
+	ShutDown() error
 	// IsShutDown will return true if the queue has been shut down.
 	IsShutDown() bool
 }
