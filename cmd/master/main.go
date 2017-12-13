@@ -10,6 +10,7 @@ import (
 	"github.com/slok/ragnarok/api"
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	apiutil "github.com/slok/ragnarok/api/util"
+	"github.com/slok/ragnarok/apimachinery/serializer"
 	"github.com/slok/ragnarok/apimachinery/validator"
 	"github.com/slok/ragnarok/apimachinery/watch"
 	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
@@ -29,7 +30,6 @@ import (
 	"github.com/slok/ragnarok/master/service"
 	"github.com/slok/ragnarok/master/service/experiment"
 	"github.com/slok/ragnarok/master/web"
-	webapiv1 "github.com/slok/ragnarok/master/web/handler/api/v1"
 )
 
 // master dependencies is a helper object to group all the app dependencies
@@ -40,6 +40,7 @@ type masterDependencies struct {
 	logger           log.Logger
 	nodeStatus       service.NodeStatusService
 	failureStatus    service.FailureStatusService
+	serializer       serializer.Serializer
 }
 
 func createGRPCServer(cfg config.Config, deps masterDependencies, logger log.Logger) (*server.MasterGRPCServiceServer, error) {
@@ -60,13 +61,7 @@ func createHTTPServer(cfg config.Config, deps masterDependencies, logger log.Log
 		return nil, err
 	}
 
-	handler := struct {
-		webapiv1.Handler
-	}{
-		Handler: webapiv1.NewJSONHandler(deps.experimentClient, logger),
-	}
-	server := web.NewHTTPServer(web.DefaultHTTPRoutes, handler, l, logger)
-	return server, nil
+	return web.NewDefaultHTTPServer(deps.serializer, deps.nodeClient, l, logger)
 }
 
 // TODO: Debugging stuff, remove.
@@ -118,6 +113,7 @@ func Main() error {
 		experimentClient: experimentCli,
 		nodeStatus:       service.NewNodeStatus(*cfg, nodeCli, logger),
 		failureStatus:    service.NewFailureStatus(failureCli, logger),
+		serializer:       serializer.DefaultSerializer,
 	}
 
 	// Start dummy controller.
