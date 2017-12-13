@@ -8,8 +8,8 @@ import (
 
 	chaosv1 "github.com/slok/ragnarok/api/chaos/v1"
 	"github.com/slok/ragnarok/apimachinery/serializer"
+	clichaosv1 "github.com/slok/ragnarok/client/api/chaos/v1"
 	"github.com/slok/ragnarok/log"
-	"github.com/slok/ragnarok/master/service/scheduler"
 )
 
 // Handler is the handler that has all the required handlers to create the rest api V1
@@ -23,17 +23,17 @@ type Handler interface {
 
 // JSONHandler is the base implementation of Handler using JSON format. Satisfies Handler interface.
 type JSONHandler struct {
-	scheduler  scheduler.Scheduler
-	serializer serializer.Serializer
-	logger     log.Logger
+	experimentCli clichaosv1.ExperimentClientInterface
+	serializer    serializer.Serializer
+	logger        log.Logger
 }
 
 // NewJSONHandler returns a new api v1 JSON handler.
-func NewJSONHandler(scheduler scheduler.Scheduler, logger log.Logger) *JSONHandler {
+func NewJSONHandler(experimentCli clichaosv1.ExperimentClientInterface, logger log.Logger) *JSONHandler {
 	return &JSONHandler{
-		serializer: serializer.JSONSerializerDefault,
-		scheduler:  scheduler,
-		logger:     logger,
+		experimentCli: experimentCli,
+		serializer:    serializer.JSONSerializerDefault,
+		logger:        logger,
 	}
 }
 
@@ -98,7 +98,7 @@ func (j *JSONHandler) WriteExperiment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if _, err := j.scheduler.Schedule(exp); err != nil {
+		if _, err := j.experimentCli.Create(exp); err != nil {
 			j.setInternalError(w, err.Error())
 			return
 		}

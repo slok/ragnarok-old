@@ -10,7 +10,7 @@ import (
 
 	"github.com/slok/ragnarok/log"
 	webapiv1 "github.com/slok/ragnarok/master/web/handler/api/v1"
-	mscheduler "github.com/slok/ragnarok/mocks/master/service/scheduler"
+	mclichaosv1 "github.com/slok/ragnarok/mocks/client/api/chaos/v1"
 )
 
 func TestJSONHandlerDebug(t *testing.T) {
@@ -45,9 +45,10 @@ func TestJSONHandlerDebug(t *testing.T) {
 			assert := assert.New(t)
 
 			// Mocks.
-			ms := &mscheduler.Scheduler{}
+			mce := &mclichaosv1.ExperimentClientInterface{}
+			mce.On("Create", mock.Anything).Return(nil, nil)
 
-			h := webapiv1.NewJSONHandler(ms, log.Dummy)
+			h := webapiv1.NewJSONHandler(mce, log.Dummy)
 
 			b := bytes.NewBufferString(test.reqBody)
 			req := httptest.NewRequest(test.reqMethod, test.reqURL, b)
@@ -108,10 +109,10 @@ func TestJSONHandlerCreateExperiment(t *testing.T) {
 			assert := assert.New(t)
 
 			// Mocks.
-			ms := &mscheduler.Scheduler{}
-			ms.On("Schedule", mock.Anything).Return(nil, nil)
+			mce := &mclichaosv1.ExperimentClientInterface{}
+			mce.On("Create", mock.Anything).Return(nil, nil)
 
-			h := webapiv1.NewJSONHandler(ms, log.Dummy)
+			h := webapiv1.NewJSONHandler(mce, log.Dummy)
 
 			b := bytes.NewBufferString(test.reqBody)
 			req := httptest.NewRequest(test.reqMethod, test.reqURL, b)

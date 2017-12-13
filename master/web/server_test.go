@@ -18,11 +18,13 @@ func TestServerServe(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{name: "Real routing should call the handlers."},
+		{name: "Real routing should call the registered handlers."},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			resourcePath := "/api/test/v1/serve"
+
 			require := require.New(t)
 			assert := assert.New(t)
 
@@ -31,25 +33,20 @@ func TestServerServe(t *testing.T) {
 			require.NoError(err)
 
 			// Mocks.
-			mh := &mhandler.Handler{}
-			mh.On("Debug", mock.Anything, mock.Anything).Once().Return()
-			mh.On("WriteExperiment", mock.Anything, mock.Anything).Once().Return()
+			mrh := &mhandler.ResourceHandler{}
+			mrh.On("GetRoute").Return(resourcePath)
+			mrh.On("List", mock.Anything, mock.Anything, mock.Anything).Return()
 
-			server := web.NewHTTPServer(web.DefaultHTTPRoutes, mh, l, log.Dummy)
+			server := web.NewHTTPServer(l, log.Dummy)
+			server.HandleResource(mrh)
 			go func() {
 				server.Serve()
 			}()
 
-			// API v1
-			apiV1DebugURL := fmt.Sprintf("http://%s%s", l.Addr(), web.DefaultHTTPRoutes.APIV1.Debug)
-			_, err = http.Get(apiV1DebugURL)
+			// API test
+			apiURL := fmt.Sprintf("http://%s%s", l.Addr(), resourcePath)
+			_, err = http.Get(apiURL)
 			assert.NoError(err)
-			apiV1CreateExperimentURL := fmt.Sprintf("http://%s%s", l.Addr(), web.DefaultHTTPRoutes.APIV1.WriteExperiment)
-			_, err = http.Get(apiV1CreateExperimentURL)
-			assert.NoError(err)
-
-			// Assert handlders where called.
-			mh.AssertExpectations(t)
 		})
 	}
 }

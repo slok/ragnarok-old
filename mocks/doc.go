@@ -25,7 +25,6 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 // Services mocks
 //go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name NodeStatusService
 //go:generate mockery -output ./master/service -outpkg service -dir ../master/service -name FailureStatusService
-//go:generate mockery -output ./master/service/scheduler -outpkg service -dir ../master/service/scheduler -name Scheduler
 
 // GRPC proto clients
 //go:generate mockery -output ./grpc/nodestatus -outpkg nodestatus -dir ../grpc/nodestatus -name NodeStatusClient
@@ -44,6 +43,11 @@ package mocks // import "github.com/slok/ragnarok/mocks"
 //go:generate mockery -output ./client/repository -outpkg v1 -dir ../client/repository -name Client
 //go:generate mockery -output ./client/api/cluster/v1 -outpkg v1 -dir ../client/api/cluster/v1 -name NodeClientInterface
 //go:generate mockery -output ./client/api/chaos/v1 -outpkg v1 -dir ../client/api/chaos/v1 -name FailureClientInterface
+//go:generate mockery -output ./client/api/chaos/v1 -outpkg v1 -dir ../client/api/chaos/v1 -name ExperimentClientInterface
+//go:generate mockery -output ./client/util/store -outpkg store -dir ../client/util/store -name ObjectIndexKeyer
+//go:generate mockery -output ./client/util/store -outpkg store -dir ../client/util/store -name Store
+//go:generate mockery -output ./client/util/queue -outpkg queue -dir ../client/util/queue -name Queue
+//go:generate mockery -output ./client/informer -outpkg informer -dir ../client/informer -name ListerWatcher
 
 // web mocks
-//go:generate mockery -output ./master/web/handler -outpkg serializer -dir ../master/web/handler -name Handler
+//go:generate mockery -output ./master/web/handler -outpkg handler -dir ../master/web/handler -name ResourceHandler
