@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	joinChar = "/"
+	joinChar  = "/"
+	apiPrefix = "/api"
 )
 
 // GetFullIDFromType will return the full id of a type and an id.
@@ -33,6 +34,12 @@ func GetFullID(obj api.Object) string {
 // GetFullType will return the object id of an object.
 func GetFullType(obj api.Object) string {
 	strs := []string{string(obj.GetObjectVersion()), string(obj.GetObjectKind())}
+	return strings.Join(strs, joinChar)
+}
+
+// GetTypeAPIPath returns the object API path/route.
+func GetTypeAPIPath(t api.TypeMeta) string {
+	strs := []string{apiPrefix, string(t.GetObjectVersion()), string(t.GetObjectKind())}
 	return strings.Join(strs, joinChar)
 }
 

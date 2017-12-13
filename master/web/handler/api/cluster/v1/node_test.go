@@ -271,3 +271,14 @@ func TestNodeHandlerWatch(t *testing.T) {
 		})
 	}
 }
+
+func TestNodeHandlerRoute(t *testing.T) {
+	assert := assert.New(t)
+	expRoute := "/api/cluster/v1/node"
+
+	// Mocks.
+	mcv1 := &mcliclusterv1.NodeClientInterface{}
+
+	nh := webapiclusterv1.NewNodeHandler(serializer.DefaultSerializer, mcv1)
+	assert.Equal(expRoute, nh.GetRoute())
+}

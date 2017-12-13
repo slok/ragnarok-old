@@ -6,13 +6,10 @@ import (
 	"net/http"
 
 	clusterv1 "github.com/slok/ragnarok/api/cluster/v1"
+	apiutil "github.com/slok/ragnarok/api/util"
 	"github.com/slok/ragnarok/apimachinery/serializer"
 	cliclusterv1 "github.com/slok/ragnarok/client/api/cluster/v1"
 	"github.com/slok/ragnarok/master/web/handler/util"
-)
-
-const (
-	nodeRoute = "/api/cluster/v1/node"
 )
 
 // NodeHandler is the handler that handlers Node resources.
@@ -88,5 +85,5 @@ func (n *NodeHandler) Watch(w http.ResponseWriter, r *http.Request, opts map[str
 
 // GetRoute returns the route where teh handlers of nodes will listen.
 func (n *NodeHandler) GetRoute() string {
-	return nodeRoute
+	return apiutil.GetTypeAPIPath(clusterv1.NodeTypeMeta)
 }
