@@ -11,7 +11,7 @@ import (
 
 // JSONSerializer knows how to serialize objects back and forth using JSON style.
 type JSONSerializer struct {
-	asseter    TypeAsserter
+	asserter   TypeAsserter
 	factory    Factory
 	discoverer TypeDiscoverer
 	typer      Typer
@@ -21,7 +21,7 @@ type JSONSerializer struct {
 // NewJSONSerializer returns a new JSONSerializer object
 func NewJSONSerializer(typer Typer, factory Factory, logger log.Logger) *JSONSerializer {
 	return &JSONSerializer{
-		asseter:    SafeTypeAsserter,
+		asserter:   SafeTypeAsserter,
 		factory:    factory,
 		typer:      typer,
 		discoverer: JSONTypeDiscoverer,
@@ -32,7 +32,7 @@ func NewJSONSerializer(typer Typer, factory Factory, logger log.Logger) *JSONSer
 // Encode will encode in JSON the received object in the out argument (Writer interface).
 // Satisfies Serializer interface.
 func (j *JSONSerializer) Encode(obj api.Object, out interface{}) error {
-	w, err := j.asseter.Writer(out)
+	w, err := j.asserter.Writer(out)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (j *JSONSerializer) Encode(obj api.Object, out interface{}) error {
 // Satisfies Serializer interface.
 func (j *JSONSerializer) Decode(data interface{}) (api.Object, error) {
 	// Get correct data type.
-	bdata, err := j.asseter.ByteArray(data)
+	bdata, err := j.asserter.ByteArray(data)
 	if err != nil {
 		return nil, err
 	}
