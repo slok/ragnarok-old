@@ -64,13 +64,16 @@ var ObjFactory = &objFactory{}
 func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 	// TODO: Make more elegant way of registering object creators.
 	switch {
-	case t.Kind == clusterv1.NodeKind && t.Version == clusterv1.NodeVersion:
+	case t == clusterv1.NodeTypeMeta:
 		n := clusterv1.NewNode()
 		return &n, nil
-	case t.Kind == chaosv1.FailureKind && t.Version == chaosv1.FailureVersion:
+	case t == clusterv1.NodeListTypeMeta:
+		n := clusterv1.NewNodeList([]*clusterv1.Node{}, "")
+		return &n, nil
+	case t == chaosv1.FailureTypeMeta:
 		n := chaosv1.NewFailure()
 		return &n, nil
-	case t.Kind == chaosv1.ExperimentKind && t.Version == chaosv1.ExperimentVersion:
+	case t == chaosv1.ExperimentTypeMeta:
 		n := chaosv1.NewExperiment()
 		return &n, nil
 	default:
@@ -96,19 +99,29 @@ type objTyper struct{}
 // ObjTyper is a handy instance of the default object typer.
 var ObjTyper = &objTyper{}
 
+// setTypesOnListObjects sets the typeMeta of the objects in a ObjectList.
+func (o *objTyper) setTypesOnListObjects(list api.ObjectList, t api.TypeMeta) error {
+	for _, item := range list.GetItems() {
+		if err := o.SetType(item); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SetType implements Typer interface.
 func (o *objTyper) SetType(obj api.Object) error {
 	// TODO: Make more elegant way of setting correct types.
 	switch v := obj.(type) {
 	case *clusterv1.Node:
-		v.Kind = clusterv1.NodeKind
-		v.Version = clusterv1.NodeVersion
+		v.TypeMeta = clusterv1.NodeTypeMeta
+	case *clusterv1.NodeList:
+		v.TypeMeta = clusterv1.NodeListTypeMeta
+		o.setTypesOnListObjects(v, clusterv1.NodeTypeMeta)
 	case *chaosv1.Failure:
-		v.Kind = chaosv1.FailureKind
-		v.Version = chaosv1.FailureVersion
+		v.TypeMeta = chaosv1.FailureTypeMeta
 	case *chaosv1.Experiment:
-		v.Kind = chaosv1.ExperimentKind
-		v.Version = chaosv1.ExperimentVersion
+		v.TypeMeta = chaosv1.ExperimentTypeMeta
 	default:
 		return fmt.Errorf("could not set the type of object because isn't a valid object type")
 	}
