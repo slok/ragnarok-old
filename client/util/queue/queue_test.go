@@ -177,7 +177,6 @@ func TestSimpleQueueMultiplePushAndPop(t *testing.T) {
 
 			// Dequeue items.
 			for i := 0; i < times; i++ {
-				fmt.Println(i)
 				go pop()
 				// Check if had a result.
 				select {
