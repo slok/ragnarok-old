@@ -68,11 +68,6 @@ func (e *Experiment) GetObjectMetadata() api.ObjectMeta {
 	return e.Metadata
 }
 
-// GetListMetadata satisfies object interface.
-func (e *Experiment) GetListMetadata() api.ListMeta {
-	return api.NoListMeta
-}
-
 // DeepCopy satisfies object interface.
 func (e *Experiment) DeepCopy() api.Object {
 	copy := *e
