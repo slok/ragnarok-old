@@ -73,6 +73,9 @@ func (o *objFactory) NewPlainObject(t api.TypeMeta) (api.Object, error) {
 	case t == chaosv1.FailureTypeMeta:
 		n := chaosv1.NewFailure()
 		return &n, nil
+	case t == chaosv1.FailureListTypeMeta:
+		n := chaosv1.NewFailureList([]*chaosv1.Failure{}, "")
+		return &n, nil
 	case t == chaosv1.ExperimentTypeMeta:
 		n := chaosv1.NewExperiment()
 		return &n, nil
@@ -120,6 +123,9 @@ func (o *objTyper) SetType(obj api.Object) error {
 		o.setTypesOnListObjects(v, clusterv1.NodeTypeMeta)
 	case *chaosv1.Failure:
 		v.TypeMeta = chaosv1.FailureTypeMeta
+	case *chaosv1.FailureList:
+		v.TypeMeta = chaosv1.FailureListTypeMeta
+		o.setTypesOnListObjects(v, chaosv1.FailureTypeMeta)
 	case *chaosv1.Experiment:
 		v.TypeMeta = chaosv1.ExperimentTypeMeta
 	default:

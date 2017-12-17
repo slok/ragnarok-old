@@ -12,12 +12,21 @@ const (
 	FailureKind = "failure"
 	// FailureVersion is the version of the failure
 	FailureVersion = "chaos/v1"
+
+	failureListKind    = "failureList"
+	failureListVersion = "chaos/v1"
 )
 
 // FailureTypeMeta is the failure type metadata.
 var FailureTypeMeta = api.TypeMeta{
 	Kind:    FailureKind,
 	Version: FailureVersion,
+}
+
+// FailureListTypeMeta is the failure list type metadata.
+var FailureListTypeMeta = api.TypeMeta{
+	Kind:    failureListKind,
+	Version: failureListVersion,
 }
 
 // FailureState is the state a failure can be.
@@ -114,5 +123,53 @@ func (f *Failure) GetObjectMetadata() api.ObjectMeta {
 // DeepCopy satisfies object interface.
 func (f *Failure) DeepCopy() api.Object {
 	copy := *f
+	return &copy
+}
+
+// FailureList is a failure list.
+type FailureList struct {
+	api.TypeMeta `json:",inline"`
+	ListMetadata api.ListMeta `json:"listMetadata,omitempty"`
+	Items        []*Failure   `json:"items,omitempty"`
+}
+
+// NewFailureList returns a new FailureList.
+func NewFailureList(failures []*Failure, continueList string) FailureList {
+	return FailureList{
+		TypeMeta: FailureListTypeMeta,
+		ListMetadata: api.ListMeta{
+			Continue: continueList,
+		},
+		Items: failures,
+	}
+}
+
+// GetObjectMetadata satisfies object interface.
+func (f *FailureList) GetObjectMetadata() api.ObjectMeta {
+	return api.NoObjectMeta
+}
+
+// GetListMetadata satisfies objectList interface.
+func (f *FailureList) GetListMetadata() api.ListMeta {
+	return f.ListMetadata
+}
+
+// GetItems satisfies ObjectList interface.
+func (f *FailureList) GetItems() []api.Object {
+	res := make([]api.Object, len(f.Items))
+	for i, item := range f.Items {
+		res[i] = api.Object(item)
+	}
+	return res
+}
+
+// DeepCopy satisfies object interface.
+func (f *FailureList) DeepCopy() api.Object {
+	fs := []*Failure{}
+	for i, failure := range f.Items {
+		n := *failure
+		fs[i] = &n
+	}
+	copy := NewFailureList(fs, f.ListMetadata.Continue)
 	return &copy
 }
