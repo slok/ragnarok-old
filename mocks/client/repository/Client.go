@@ -72,15 +72,15 @@ func (_m *Client) Get(id string) (api.Object, error) {
 }
 
 // List provides a mock function with given fields: opts
-func (_m *Client) List(opts api.ListOptions) ([]api.Object, error) {
+func (_m *Client) List(opts api.ListOptions) (api.ObjectList, error) {
 	ret := _m.Called(opts)
 
-	var r0 []api.Object
-	if rf, ok := ret.Get(0).(func(api.ListOptions) []api.Object); ok {
+	var r0 api.ObjectList
+	if rf, ok := ret.Get(0).(func(api.ListOptions) api.ObjectList); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]api.Object)
+			r0 = ret.Get(0).(api.ObjectList)
 		}
 	}
 

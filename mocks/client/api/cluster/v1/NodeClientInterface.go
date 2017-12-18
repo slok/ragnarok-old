@@ -73,15 +73,15 @@ func (_m *NodeClientInterface) Get(id string) (*v1.Node, error) {
 }
 
 // List provides a mock function with given fields: opts
-func (_m *NodeClientInterface) List(opts api.ListOptions) ([]*v1.Node, error) {
+func (_m *NodeClientInterface) List(opts api.ListOptions) (*v1.NodeList, error) {
 	ret := _m.Called(opts)
 
-	var r0 []*v1.Node
-	if rf, ok := ret.Get(0).(func(api.ListOptions) []*v1.Node); ok {
+	var r0 *v1.NodeList
+	if rf, ok := ret.Get(0).(func(api.ListOptions) *v1.NodeList); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*v1.Node)
+			r0 = ret.Get(0).(*v1.NodeList)
 		}
 	}
 
