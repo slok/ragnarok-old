@@ -168,7 +168,6 @@ func TestSimpleQueueMultiplePushAndPop(t *testing.T) {
 				item := fmt.Sprintf("this is a test %d", i)
 				assert.NoError(q.Push(item))
 			}
-			fmt.Println(q.Len())
 			c := make(chan interface{})
 			pop := func() {
 				res, _ := q.Pop()
