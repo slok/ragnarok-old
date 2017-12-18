@@ -167,8 +167,8 @@ func (f *FailureList) GetItems() []api.Object {
 func (f *FailureList) DeepCopy() api.Object {
 	fs := []*Failure{}
 	for i, failure := range f.Items {
-		n := *failure
-		fs[i] = &n
+		f := *failure
+		fs[i] = &f
 	}
 	copy := NewFailureList(fs, f.ListMetadata.Continue)
 	return &copy
