@@ -19,7 +19,7 @@ type ExperimentClientInterface interface {
 	Update(experiment *chaosv1.Experiment) (*chaosv1.Experiment, error)
 	Delete(id string) error
 	Get(id string) (*chaosv1.Experiment, error)
-	List(opts api.ListOptions) ([]*chaosv1.Experiment, error)
+	List(opts api.ListOptions) (*chaosv1.ExperimentList, error)
 	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
@@ -38,12 +38,25 @@ func NewExperimentClient(validator validator.ObjectValidator, repoCli repository
 	}
 }
 
-func (e *ExperimentClient) typeAssert(obj api.Object) (*chaosv1.Experiment, error) {
+func (e *ExperimentClient) typeAssertExperiment(obj api.Object) (*chaosv1.Experiment, error) {
 	experiment, ok := obj.(*chaosv1.Experiment)
 	if !ok {
 		return nil, fmt.Errorf("could not make the type assertion from obj to experiment. Wrong type")
 	}
 	return experiment, nil
+}
+
+func (e *ExperimentClient) typeAssertExperimentList(objs api.ObjectList) (*chaosv1.ExperimentList, error) {
+	exps := make([]*chaosv1.Experiment, len(objs.GetItems()))
+	for i, obj := range objs.GetItems() {
+		exp, ok := obj.(*chaosv1.Experiment)
+		if !ok {
+			return nil, fmt.Errorf("could not make the type assertion from obj to experiment. Wrong type")
+		}
+		exps[i] = exp
+	}
+	eList := chaosv1.NewExperimentList(exps, objs.GetListMetadata().Continue)
+	return &eList, nil
 }
 
 func (e *ExperimentClient) validate(experiment *chaosv1.Experiment) error {
@@ -65,7 +78,7 @@ func (e *ExperimentClient) Create(experiment *chaosv1.Experiment) (*chaosv1.Expe
 	if err != nil {
 		return nil, err
 	}
-	return e.typeAssert(obj)
+	return e.typeAssertExperiment(obj)
 }
 
 // Update satisfies ExperimentClientInterface interface.
@@ -79,7 +92,7 @@ func (e *ExperimentClient) Update(experiment *chaosv1.Experiment) (*chaosv1.Expe
 	if err != nil {
 		return nil, err
 	}
-	return e.typeAssert(obj)
+	return e.typeAssertExperiment(obj)
 }
 
 // Delete satisfies ExperimentClientInterface interface.
@@ -96,29 +109,17 @@ func (e *ExperimentClient) Get(id string) (*chaosv1.Experiment, error) {
 	if err != nil {
 		return nil, err
 	}
-	return e.typeAssert(obj)
+	return e.typeAssertExperiment(obj)
 }
 
 // List satisfies ExperimentClientInterface interface.
-func (e *ExperimentClient) List(opts api.ListOptions) ([]*chaosv1.Experiment, error) {
+func (e *ExperimentClient) List(opts api.ListOptions) (*chaosv1.ExperimentList, error) {
 	opts.TypeMeta = chaosv1.ExperimentTypeMeta
-	experiments := []*chaosv1.Experiment{}
-
 	objs, err := e.repoCli.List(opts)
 	if err != nil {
-		return experiments, err
+		return nil, err
 	}
-
-	experiments = make([]*chaosv1.Experiment, len(objs))
-	for i, obj := range objs {
-		experiment, err := e.typeAssert(obj)
-		if err != nil {
-			return experiments, err
-		}
-		experiments[i] = experiment
-	}
-
-	return experiments, nil
+	return e.typeAssertExperimentList(objs)
 }
 
 // Watch satisfies ExperimentClientInterface interface.

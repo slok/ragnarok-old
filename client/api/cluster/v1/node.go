@@ -19,7 +19,7 @@ type NodeClientInterface interface {
 	Update(node *clusterv1.Node) (*clusterv1.Node, error)
 	Delete(id string) error
 	Get(id string) (*clusterv1.Node, error)
-	List(opts api.ListOptions) ([]*clusterv1.Node, error)
+	List(opts api.ListOptions) (*clusterv1.NodeList, error)
 	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
@@ -38,12 +38,24 @@ func NewNodeClient(validator validator.ObjectValidator, repoCli repository.Clien
 	}
 }
 
-func (n *NodeClient) typeAssert(obj api.Object) (*clusterv1.Node, error) {
+func (n *NodeClient) typeAssertNode(obj api.Object) (*clusterv1.Node, error) {
 	node, ok := obj.(*clusterv1.Node)
 	if !ok {
 		return nil, fmt.Errorf("could not make the type assertion from obj to node. Wrong type")
 	}
 	return node, nil
+}
+func (n *NodeClient) typeAssertNodeList(objs api.ObjectList) (*clusterv1.NodeList, error) {
+	nodes := make([]*clusterv1.Node, len(objs.GetItems()))
+	for i, obj := range objs.GetItems() {
+		node, ok := obj.(*clusterv1.Node)
+		if !ok {
+			return nil, fmt.Errorf("could not make the type assertion from obj to node. Wrong type")
+		}
+		nodes[i] = node
+	}
+	nList := clusterv1.NewNodeList(nodes, objs.GetListMetadata().Continue)
+	return &nList, nil
 }
 
 func (n *NodeClient) validate(node *clusterv1.Node) error {
@@ -65,7 +77,7 @@ func (n *NodeClient) Create(node *clusterv1.Node) (*clusterv1.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	return n.typeAssert(obj)
+	return n.typeAssertNode(obj)
 }
 
 // Update satisfies NodeClientInterface interface.
@@ -79,7 +91,7 @@ func (n *NodeClient) Update(node *clusterv1.Node) (*clusterv1.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	return n.typeAssert(obj)
+	return n.typeAssertNode(obj)
 }
 
 // Delete satisfies NodeClientInterface interface.
@@ -96,29 +108,17 @@ func (n *NodeClient) Get(id string) (*clusterv1.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	return n.typeAssert(obj)
+	return n.typeAssertNode(obj)
 }
 
 // List satisfies NodeClientInterface interface.
-func (n *NodeClient) List(opts api.ListOptions) ([]*clusterv1.Node, error) {
+func (n *NodeClient) List(opts api.ListOptions) (*clusterv1.NodeList, error) {
 	opts.TypeMeta = clusterv1.NodeTypeMeta
-	nodes := []*clusterv1.Node{}
-
 	objs, err := n.repoCli.List(opts)
 	if err != nil {
-		return nodes, err
+		return nil, err
 	}
-
-	nodes = make([]*clusterv1.Node, len(objs))
-	for i, obj := range objs {
-		node, err := n.typeAssert(obj)
-		if err != nil {
-			return nodes, err
-		}
-		nodes[i] = node
-	}
-
-	return nodes, nil
+	return n.typeAssertNodeList(objs)
 }
 
 // Watch satisfies NodeClientInterface interface.

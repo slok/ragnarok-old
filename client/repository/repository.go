@@ -12,7 +12,7 @@ type Client interface {
 	Update(obj api.Object) (api.Object, error)
 	Delete(id string) error
 	Get(id string) (api.Object, error)
-	List(opts api.ListOptions) ([]api.Object, error)
+	List(opts api.ListOptions) (api.ObjectList, error)
 	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }

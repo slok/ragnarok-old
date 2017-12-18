@@ -113,10 +113,10 @@ func (w *WorkQueueInformer) setInitialState() error {
 	if err != nil {
 		return err
 	}
-	w.logger.Debugf("list got %d objects", len(objs))
+	w.logger.Debugf("list got %d objects", len(objs.GetItems()))
 
 	// Set state on cache.
-	for _, obj := range objs {
+	for _, obj := range objs.GetItems() {
 		w.store.Add(obj)
 		// Send a job to the queue so they check all the objects at the begginning.
 		key, err := w.indexer.GetKey(obj)

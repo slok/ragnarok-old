@@ -20,18 +20,20 @@ import (
 func TestWorkQueueInformerInitialState(t *testing.T) {
 	tests := []struct {
 		name    string
-		objList []api.Object
+		objList api.ObjectList
 	}{
 		{
 			name: "Initial state should populate the cache store and push the first jobs.",
-			objList: []api.Object{
-				&testapi.TestObj{ID: "test0"},
-				&testapi.TestObj{ID: "test1"},
-				&testapi.TestObj{ID: "test2"},
-				&testapi.TestObj{ID: "test3"},
-				&testapi.TestObj{ID: "test4"},
-				&testapi.TestObj{ID: "test5"},
-				&testapi.TestObj{ID: "test6"},
+			objList: &testapi.TestObjList{
+				Items: []*testapi.TestObj{
+					&testapi.TestObj{ID: "test0"},
+					&testapi.TestObj{ID: "test1"},
+					&testapi.TestObj{ID: "test2"},
+					&testapi.TestObj{ID: "test3"},
+					&testapi.TestObj{ID: "test4"},
+					&testapi.TestObj{ID: "test5"},
+					&testapi.TestObj{ID: "test6"},
+				},
 			},
 		},
 	}
@@ -59,7 +61,7 @@ func TestWorkQueueInformerInitialState(t *testing.T) {
 			})
 
 			// Mock calls of resources on the mocks.
-			for _, obj := range test.objList {
+			for _, obj := range test.objList.GetItems() {
 				id := obj.GetObjectMetadata().ID
 				mindex.On("GetKey", mock.Anything).Once().Return(id, nil)
 				mqueue.On("Push", id).Once().Return(nil) // This kind of informer sets the index Key.
@@ -207,7 +209,7 @@ func TestWorkQueueInformerWatchEvents(t *testing.T) {
 			mwatcher := &mwatch.Watcher{}
 			mwatcher.On("GetChan").Return((<-chan watch.Event)(watchC))
 			mlw := &minformer.ListerWatcher{}
-			mlw.On("List", mock.Anything).Return([]api.Object{}, nil)
+			mlw.On("List", mock.Anything).Return(&testapi.TestObjList{}, nil)
 			mlw.On("Watch", mock.Anything).Return(mwatcher, nil)
 
 			// Mock calls of resources on the mocks.
@@ -288,7 +290,7 @@ func TestWorkQueueInformerStop(t *testing.T) {
 			mwatcher := &mwatch.Watcher{}
 			mwatcher.On("GetChan").Return((<-chan watch.Event)(watchC))
 			mlw := &minformer.ListerWatcher{}
-			mlw.On("List", mock.Anything).Return([]api.Object{}, nil)
+			mlw.On("List", mock.Anything).Return(&testapi.TestObjList{}, nil)
 			mlw.On("Watch", mock.Anything).Return(mwatcher, nil)
 
 			lOpts := api.ListOptions{}

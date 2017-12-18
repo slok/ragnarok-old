@@ -107,7 +107,7 @@ func (c *Client) Get(id string) (api.Object, error) {
 }
 
 // List will list objects using the HTTP rest API. Satisfies repository.Client interface.
-func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
+func (c *Client) List(opts api.ListOptions) (api.ObjectList, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

@@ -51,8 +51,7 @@ func TestMemoryRepositoryCreate(t *testing.T) {
 			_, err := cli.Create(test.obj)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
 				nGot, ok := test.registry["testing/v1/test"][test.obj.ID]
 				if assert.True(ok) {
 					assert.Equal(test.obj, nGot)
@@ -112,8 +111,7 @@ func TestMemoryRepositoryUdate(t *testing.T) {
 			_, err := cli.Update(test.obj)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
 				assert.Equal(test.expRegistry, test.registry)
 			}
 		})
@@ -166,8 +164,7 @@ func TestMemoryRepositoryDelete(t *testing.T) {
 			err := cli.Delete(test.deleteFullID)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
 				assert.Equal(test.expRegistry, test.registry)
 			}
 		})
@@ -215,8 +212,7 @@ func TestMemoryRepositoryGet(t *testing.T) {
 			obj, err := cli.Get(test.getFullID)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
 				assert.Equal(test.expObj, obj)
 			}
 		})
@@ -340,8 +336,8 @@ func TestMemoryRepositoryList(t *testing.T) {
 			objs, err := cli.List(test.opts)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
+				objs := objs.GetItems()
 				sort.Slice(objs, func(i, j int) bool {
 					return objs[i].GetObjectMetadata().ID < objs[j].GetObjectMetadata().ID
 				})
@@ -381,8 +377,7 @@ func TestMemoryRepositoryWatch(t *testing.T) {
 			_, err := cli.Watch(test.opts)
 			if test.expErr {
 				assert.Error(err)
-			} else {
-				assert.NoError(err)
+			} else if assert.NoError(err) {
 				mm.AssertExpectations(t)
 			}
 		})
