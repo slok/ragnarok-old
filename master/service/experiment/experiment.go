@@ -62,7 +62,7 @@ func (s *SimpleManager) getNodes(exp *chaosv1.Experiment) (map[string]*clusterv1
 		return res, err
 	}
 
-	for _, node := range nodes {
+	for _, node := range nodes.Items {
 		node := node
 		res[node.Metadata.ID] = node
 	}
@@ -77,8 +77,11 @@ func (s *SimpleManager) getFailures(exp *chaosv1.Experiment) ([]*chaosv1.Failure
 			api.LabelExperiment: exp.Metadata.ID,
 		},
 	}
-
-	return s.failureCli.List(opts)
+	fs, err := s.failureCli.List(opts)
+	if err != nil {
+		return nil, err
+	}
+	return fs.Items, nil
 }
 
 // indexedFailuresByNode will get a list of failures and set in a map identified by the assigned node.

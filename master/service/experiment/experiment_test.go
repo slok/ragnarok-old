@@ -23,8 +23,8 @@ func TestEnsureFailures(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		nodes            []*clusterv1.Node
-		failures         []*chaosv1.Failure
+		nodes            *clusterv1.NodeList
+		failures         *chaosv1.FailureList
 		experiment       *chaosv1.Experiment
 		expDeletedFlrIDs []string
 		expNewFlrs       []*chaosv1.Failure
@@ -32,18 +32,20 @@ func TestEnsureFailures(t *testing.T) {
 	}{
 		{
 			name: "A new Experiment should create failures to all available nodes that match the selector",
-			nodes: []*clusterv1.Node{
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode0"},
-				},
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode1"},
-				},
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode2"},
+			nodes: &clusterv1.NodeList{
+				Items: []*clusterv1.Node{
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode0"},
+					},
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode1"},
+					},
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode2"},
+					},
 				},
 			},
-			failures: []*chaosv1.Failure{},
+			failures: &chaosv1.FailureList{},
 			experiment: &chaosv1.Experiment{
 				Metadata: api.ObjectMeta{
 					ID: "exp-001",
@@ -109,31 +111,35 @@ func TestEnsureFailures(t *testing.T) {
 		},
 		{
 			name: "An already created experiment should create failures only on the nodes that match the selector and that don't have already the failure",
-			nodes: []*clusterv1.Node{
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode0"},
-				},
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode1"},
-				},
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode2"},
+			nodes: &clusterv1.NodeList{
+				Items: []*clusterv1.Node{
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode0"},
+					},
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode1"},
+					},
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode2"},
+					},
 				},
 			},
-			failures: []*chaosv1.Failure{
-				&chaosv1.Failure{
-					TypeMeta: chaosv1.FailureTypeMeta,
-					Metadata: api.ObjectMeta{
-						ID: "flrid-x",
-						Labels: map[string]string{
-							api.LabelExperiment: "exp-001",
-							api.LabelNode:       "testNode0",
+			failures: &chaosv1.FailureList{
+				Items: []*chaosv1.Failure{
+					&chaosv1.Failure{
+						TypeMeta: chaosv1.FailureTypeMeta,
+						Metadata: api.ObjectMeta{
+							ID: "flrid-x",
+							Labels: map[string]string{
+								api.LabelExperiment: "exp-001",
+								api.LabelNode:       "testNode0",
+							},
 						},
-					},
-					Status: chaosv1.FailureStatus{
-						CurrentState:  4,
-						ExpectedState: 1,
-						Creation:      mockCreationTime,
+						Status: chaosv1.FailureStatus{
+							CurrentState:  4,
+							ExpectedState: 1,
+							Creation:      mockCreationTime,
+						},
 					},
 				},
 			},
@@ -187,43 +193,47 @@ func TestEnsureFailures(t *testing.T) {
 		},
 		{
 			name: "An already created experiment should create failures only on the nodes that match the selector and that don't have already the failure and delete the ones that don't have nodes",
-			nodes: []*clusterv1.Node{
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode0"},
-				},
-				&clusterv1.Node{
-					Metadata: api.ObjectMeta{ID: "testNode1"},
+			nodes: &clusterv1.NodeList{
+				Items: []*clusterv1.Node{
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode0"},
+					},
+					&clusterv1.Node{
+						Metadata: api.ObjectMeta{ID: "testNode1"},
+					},
 				},
 			},
-			failures: []*chaosv1.Failure{
-				&chaosv1.Failure{
-					TypeMeta: chaosv1.FailureTypeMeta,
-					Metadata: api.ObjectMeta{
-						ID: "flrid-x",
-						Labels: map[string]string{
-							api.LabelExperiment: "exp-001",
-							api.LabelNode:       "testNode0",
+			failures: &chaosv1.FailureList{
+				Items: []*chaosv1.Failure{
+					&chaosv1.Failure{
+						TypeMeta: chaosv1.FailureTypeMeta,
+						Metadata: api.ObjectMeta{
+							ID: "flrid-x",
+							Labels: map[string]string{
+								api.LabelExperiment: "exp-001",
+								api.LabelNode:       "testNode0",
+							},
+						},
+						Status: chaosv1.FailureStatus{
+							CurrentState:  4,
+							ExpectedState: 1,
+							Creation:      mockCreationTime,
 						},
 					},
-					Status: chaosv1.FailureStatus{
-						CurrentState:  4,
-						ExpectedState: 1,
-						Creation:      mockCreationTime,
-					},
-				},
-				&chaosv1.Failure{
-					TypeMeta: chaosv1.FailureTypeMeta,
-					Metadata: api.ObjectMeta{
-						ID: "flrid-y",
-						Labels: map[string]string{
-							api.LabelExperiment: "exp-001",
-							api.LabelNode:       "testNode2",
+					&chaosv1.Failure{
+						TypeMeta: chaosv1.FailureTypeMeta,
+						Metadata: api.ObjectMeta{
+							ID: "flrid-y",
+							Labels: map[string]string{
+								api.LabelExperiment: "exp-001",
+								api.LabelNode:       "testNode2",
+							},
 						},
-					},
-					Status: chaosv1.FailureStatus{
-						CurrentState:  4,
-						ExpectedState: 1,
-						Creation:      mockCreationTime,
+						Status: chaosv1.FailureStatus{
+							CurrentState:  4,
+							ExpectedState: 1,
+							Creation:      mockCreationTime,
+						},
 					},
 				},
 			},
