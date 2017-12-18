@@ -271,23 +271,25 @@ func TestNodeCliGet(t *testing.T) {
 func TestNodeCliList(t *testing.T) {
 	tests := []struct {
 		name        string
-		objList     []api.Object
-		expNodeList []*clusterv1.Node
+		objList     api.ObjectList
+		expNodeList clusterv1.NodeList
 		listError   bool
 		expErr      bool
 	}{
 		{
 			name: "Getting node List should retrieive without error.",
-			objList: []api.Object{
+			objList: &clusterv1.NodeList{
+				Items: []*clusterv1.Node{
+					&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node1"}},
+					&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node2"}},
+					&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node3"}},
+				},
+			},
+			expNodeList: clusterv1.NewNodeList([]*clusterv1.Node{
 				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node1"}},
 				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node2"}},
 				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node3"}},
-			},
-			expNodeList: []*clusterv1.Node{
-				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node1"}},
-				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node2"}},
-				&clusterv1.Node{Metadata: api.ObjectMeta{ID: "node3"}},
-			},
+			}, ""),
 			listError: false,
 			expErr:    false,
 		},
@@ -323,7 +325,7 @@ func TestNodeCliList(t *testing.T) {
 			} else {
 				assert.NoError(err)
 				mr.AssertExpectations(t)
-				assert.Equal(test.expNodeList, gotNodes)
+				assert.Equal(&test.expNodeList, gotNodes)
 			}
 		})
 	}

@@ -19,7 +19,7 @@ type FailureClientInterface interface {
 	Update(failure *chaosv1.Failure) (*chaosv1.Failure, error)
 	Delete(id string) error
 	Get(id string) (*chaosv1.Failure, error)
-	List(opts api.ListOptions) ([]*chaosv1.Failure, error)
+	List(opts api.ListOptions) (*chaosv1.FailureList, error)
 	Watch(opts api.ListOptions) (watch.Watcher, error)
 	// TODO Patch
 }
@@ -38,12 +38,25 @@ func NewFailureClient(validator validator.ObjectValidator, repoCli repository.Cl
 	}
 }
 
-func (f *FailureClient) typeAssert(obj api.Object) (*chaosv1.Failure, error) {
+func (f *FailureClient) typeAssertFailure(obj api.Object) (*chaosv1.Failure, error) {
 	failure, ok := obj.(*chaosv1.Failure)
 	if !ok {
 		return nil, fmt.Errorf("could not make the type assertion from obj to failure. Wrong type")
 	}
 	return failure, nil
+}
+
+func (f *FailureClient) typeAssertFailureList(objs api.ObjectList) (*chaosv1.FailureList, error) {
+	failures := make([]*chaosv1.Failure, len(objs.GetItems()))
+	for i, obj := range objs.GetItems() {
+		failure, ok := obj.(*chaosv1.Failure)
+		if !ok {
+			return nil, fmt.Errorf("could not make the type assertion from obj to failure. Wrong type")
+		}
+		failures[i] = failure
+	}
+	fList := chaosv1.NewFailureList(failures, objs.GetListMetadata().Continue)
+	return &fList, nil
 }
 
 func (f *FailureClient) validate(failure *chaosv1.Failure) error {
@@ -65,7 +78,7 @@ func (f *FailureClient) Create(failure *chaosv1.Failure) (*chaosv1.Failure, erro
 	if err != nil {
 		return nil, err
 	}
-	return f.typeAssert(obj)
+	return f.typeAssertFailure(obj)
 }
 
 // Update satisfies FailureClientInterface interface.
@@ -79,7 +92,7 @@ func (f *FailureClient) Update(failure *chaosv1.Failure) (*chaosv1.Failure, erro
 	if err != nil {
 		return nil, err
 	}
-	return f.typeAssert(obj)
+	return f.typeAssertFailure(obj)
 }
 
 // Delete satisfies FailureClientInterface interface.
@@ -96,29 +109,17 @@ func (f *FailureClient) Get(id string) (*chaosv1.Failure, error) {
 	if err != nil {
 		return nil, err
 	}
-	return f.typeAssert(obj)
+	return f.typeAssertFailure(obj)
 }
 
 // List satisfies FailureClientInterface interface.
-func (f *FailureClient) List(opts api.ListOptions) ([]*chaosv1.Failure, error) {
+func (f *FailureClient) List(opts api.ListOptions) (*chaosv1.FailureList, error) {
 	opts.TypeMeta = chaosv1.FailureTypeMeta
-	failures := []*chaosv1.Failure{}
-
 	objs, err := f.repoCli.List(opts)
 	if err != nil {
-		return failures, err
+		return nil, err
 	}
-
-	failures = make([]*chaosv1.Failure, len(objs))
-	for i, obj := range objs {
-		failure, err := f.typeAssert(obj)
-		if err != nil {
-			return failures, err
-		}
-		failures[i] = failure
-	}
-
-	return failures, nil
+	return f.typeAssertFailureList(objs)
 }
 
 // Watch satisfies FailureClientInterface interface.

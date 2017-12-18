@@ -50,7 +50,8 @@ func TestGetNodeFailures(t *testing.T) {
 					api.LabelNode: nID,
 				},
 			}
-			mcli.On("List", opts).Once().Return(expfs, nil)
+			fsList := v1.NewFailureList(expfs, "")
+			mcli.On("List", opts).Once().Return(&fsList, nil)
 		}
 
 		// Create the service.
@@ -68,23 +69,27 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*v1.Failure
+		failures    *v1.FailureList
 		expFailures []*v1.Failure
 	}{
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{},
 		},
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{
@@ -95,22 +100,24 @@ func TestGetNodeExpectedEnabledFailures(t *testing.T) {
 			},
 		},
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f2"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f3"},
-					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f4"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f2"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f3"},
+						Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f4"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{
@@ -144,23 +151,27 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		failures    []*v1.Failure
+		failures    *v1.FailureList
 		expFailures []*v1.Failure
 	}{
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{},
 		},
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{
@@ -171,22 +182,24 @@ func TestGetNodeExpectedDisabledFailures(t *testing.T) {
 			},
 		},
 		{
-			failures: []*v1.Failure{
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f1"},
-					Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f2"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f3"},
-					Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
-				},
-				&v1.Failure{
-					Metadata: api.ObjectMeta{ID: "f4"},
-					Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+			failures: &v1.FailureList{
+				Items: []*v1.Failure{
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f1"},
+						Status:   v1.FailureStatus{ExpectedState: v1.DisabledFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f2"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f3"},
+						Status:   v1.FailureStatus{ExpectedState: v1.RevertingFailureState},
+					},
+					&v1.Failure{
+						Metadata: api.ObjectMeta{ID: "f4"},
+						Status:   v1.FailureStatus{ExpectedState: v1.EnabledFailureState},
+					},
 				},
 			},
 			expFailures: []*v1.Failure{

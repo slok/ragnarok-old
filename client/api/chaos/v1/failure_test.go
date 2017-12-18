@@ -271,23 +271,25 @@ func TestFailureCliGet(t *testing.T) {
 func TestFailureCliList(t *testing.T) {
 	tests := []struct {
 		name           string
-		objList        []api.Object
-		expFailureList []*chaosv1.Failure
+		objList        api.ObjectList
+		expFailureList chaosv1.FailureList
 		listError      bool
 		expErr         bool
 	}{
 		{
 			name: "Getting failure List should retrieive without error.",
-			objList: []api.Object{
+			objList: &chaosv1.FailureList{
+				Items: []*chaosv1.Failure{
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure1"}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure2"}},
+					&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure3"}},
+				},
+			},
+			expFailureList: chaosv1.NewFailureList([]*chaosv1.Failure{
 				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure1"}},
 				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure2"}},
 				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure3"}},
-			},
-			expFailureList: []*chaosv1.Failure{
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure1"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure2"}},
-				&chaosv1.Failure{Metadata: api.ObjectMeta{ID: "failure3"}},
-			},
+			}, ""),
 			listError: false,
 			expErr:    false,
 		},
@@ -323,7 +325,7 @@ func TestFailureCliList(t *testing.T) {
 			} else {
 				assert.NoError(err)
 				mr.AssertExpectations(t)
-				assert.Equal(test.expFailureList, gotFailures)
+				assert.Equal(&test.expFailureList, gotFailures)
 			}
 		})
 	}

@@ -39,7 +39,11 @@ func (f *FailureStatus) listFailuresByNode(nodeID string) ([]*chaosv1.Failure, e
 			api.LabelNode: nodeID,
 		},
 	}
-	return f.client.List(opts)
+	fs, err := f.client.List(opts)
+	if err != nil {
+		return nil, err
+	}
+	return fs.Items, nil
 }
 
 // GetNodeFailures implements FailureStatusService interface.

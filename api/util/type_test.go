@@ -129,6 +129,38 @@ func TestGetFullType(t *testing.T) {
 	}
 }
 
+func TestGetTypeAPIPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		typeMeta api.TypeMeta
+		expPath  string
+	}{
+		{
+			name:     "Node path",
+			typeMeta: clusterv1.NodeTypeMeta,
+			expPath:  "/api/cluster/v1/node",
+		},
+		{
+
+			name:     "Experiment path",
+			typeMeta: chaosv1.ExperimentTypeMeta,
+			expPath:  "/api/chaos/v1/experiment",
+		},
+		{
+			name:     "Failure path",
+			typeMeta: chaosv1.FailureTypeMeta,
+			expPath:  "/api/chaos/v1/failure",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			assert.Equal(test.expPath, util.GetTypeAPIPath(test.typeMeta))
+		})
+	}
+}
+
 func TestSplitFullID(t *testing.T) {
 	tests := []struct {
 		name    string

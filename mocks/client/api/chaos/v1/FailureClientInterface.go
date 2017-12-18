@@ -73,15 +73,15 @@ func (_m *FailureClientInterface) Get(id string) (*v1.Failure, error) {
 }
 
 // List provides a mock function with given fields: opts
-func (_m *FailureClientInterface) List(opts api.ListOptions) ([]*v1.Failure, error) {
+func (_m *FailureClientInterface) List(opts api.ListOptions) (*v1.FailureList, error) {
 	ret := _m.Called(opts)
 
-	var r0 []*v1.Failure
-	if rf, ok := ret.Get(0).(func(api.ListOptions) []*v1.Failure); ok {
+	var r0 *v1.FailureList
+	if rf, ok := ret.Get(0).(func(api.ListOptions) *v1.FailureList); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*v1.Failure)
+			r0 = ret.Get(0).(*v1.FailureList)
 		}
 	}
 

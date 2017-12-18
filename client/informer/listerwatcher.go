@@ -10,19 +10,19 @@ import (
 
 // ListerWatcher is an interface that knows hot to list adn watch objects.
 type ListerWatcher interface {
-	List(opts api.ListOptions) ([]api.Object, error)
+	List(opts api.ListOptions) (api.ObjectList, error)
 	Watch(opts api.ListOptions) (watch.Watcher, error)
 }
 
 // ListerWatcherFuncs implements ListerWatcher using functions, very helpful so we don't need
 // to decaler new types to implement a lister watcher.
 type ListerWatcherFuncs struct {
-	ListFunc  func(opts api.ListOptions) ([]api.Object, error)
+	ListFunc  func(opts api.ListOptions) (api.ObjectList, error)
 	WatchFunc func(opts api.ListOptions) (watch.Watcher, error)
 }
 
 // List will list resources from a repository. List satisfies ListerWatcher interface.
-func (l *ListerWatcherFuncs) List(opts api.ListOptions) ([]api.Object, error) {
+func (l *ListerWatcherFuncs) List(opts api.ListOptions) (api.ObjectList, error) {
 	if l.ListFunc != nil {
 		return l.ListFunc(opts)
 	}
@@ -50,7 +50,7 @@ func NewRepositoryListerWatcher(client repository.Client) *RepositoryListerWatch
 }
 
 // List will list resources from a repository. Satisfies ListerWatcher interface.
-func (m *RepositoryListerWatcher) List(opts api.ListOptions) ([]api.Object, error) {
+func (m *RepositoryListerWatcher) List(opts api.ListOptions) (api.ObjectList, error) {
 	return m.c.List(opts)
 }
 

@@ -271,23 +271,25 @@ func TestExperimentCliGet(t *testing.T) {
 func TestExperimentCliList(t *testing.T) {
 	tests := []struct {
 		name              string
-		objList           []api.Object
-		expExperimentList []*chaosv1.Experiment
+		objList           api.ObjectList
+		expExperimentList chaosv1.ExperimentList
 		listError         bool
 		expErr            bool
 	}{
 		{
 			name: "Getting experiment List should retrieive without error.",
-			objList: []api.Object{
+			objList: &chaosv1.ExperimentList{
+				Items: []*chaosv1.Experiment{
+					&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment1"}},
+					&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment2"}},
+					&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment3"}},
+				},
+			},
+			expExperimentList: chaosv1.NewExperimentList([]*chaosv1.Experiment{
 				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment1"}},
 				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment2"}},
 				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment3"}},
-			},
-			expExperimentList: []*chaosv1.Experiment{
-				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment1"}},
-				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment2"}},
-				&chaosv1.Experiment{Metadata: api.ObjectMeta{ID: "experiment3"}},
-			},
+			}, ""),
 			listError: false,
 			expErr:    false,
 		},
@@ -323,7 +325,7 @@ func TestExperimentCliList(t *testing.T) {
 			} else {
 				assert.NoError(err)
 				mr.AssertExpectations(t)
-				assert.Equal(test.expExperimentList, gotExperiments)
+				assert.Equal(&test.expExperimentList, gotExperiments)
 			}
 		})
 	}

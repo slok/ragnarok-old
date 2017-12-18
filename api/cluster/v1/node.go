@@ -11,12 +11,21 @@ const (
 	NodeKind = "node"
 	// NodeVersion is the version of the node.
 	NodeVersion = "cluster/v1"
+
+	nodeListKind    = "nodeList"
+	nodeListVersion = "cluster/v1"
 )
 
 // NodeTypeMeta is the node type metadata.
 var NodeTypeMeta = api.TypeMeta{
 	Kind:    NodeKind,
 	Version: NodeVersion,
+}
+
+// NodeListTypeMeta is the node list type metadata.
+var NodeListTypeMeta = api.TypeMeta{
+	Kind:    nodeListKind,
+	Version: nodeListVersion,
 }
 
 // NodeState is the reprensetation of the node state.
@@ -84,13 +93,56 @@ func (n *Node) GetObjectMetadata() api.ObjectMeta {
 	return n.Metadata
 }
 
-// GetListMetadata satisfies object interface.
-func (n *Node) GetListMetadata() api.ListMeta {
-	return api.NoListMeta
-}
-
 // DeepCopy satisfies object interface.
 func (n *Node) DeepCopy() api.Object {
 	copy := *n
+	return &copy
+}
+
+// NodeList is a node list.
+type NodeList struct {
+	api.TypeMeta `json:",inline"`
+	ListMetadata api.ListMeta `json:"listMetadata,omitempty"`
+	Items        []*Node      `json:"items,omitempty"`
+}
+
+// NewNodeList returns a new NodeList.
+func NewNodeList(nodes []*Node, continueList string) NodeList {
+	return NodeList{
+		TypeMeta: NodeListTypeMeta,
+		ListMetadata: api.ListMeta{
+			Continue: continueList,
+		},
+		Items: nodes,
+	}
+}
+
+// GetObjectMetadata satisfies object interface.
+func (n *NodeList) GetObjectMetadata() api.ObjectMeta {
+	return api.NoObjectMeta
+}
+
+// GetListMetadata satisfies objectList interface.
+func (n *NodeList) GetListMetadata() api.ListMeta {
+	return n.ListMetadata
+}
+
+// GetItems satisfies ObjectList interface.
+func (n *NodeList) GetItems() []api.Object {
+	res := make([]api.Object, len(n.Items))
+	for i, item := range n.Items {
+		res[i] = api.Object(item)
+	}
+	return res
+}
+
+// DeepCopy satisfies object interface.
+func (n *NodeList) DeepCopy() api.Object {
+	ns := []*Node{}
+	for i, node := range n.Items {
+		n := *node
+		ns[i] = &n
+	}
+	copy := NewNodeList(ns, n.ListMetadata.Continue)
 	return &copy
 }

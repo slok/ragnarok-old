@@ -53,11 +53,6 @@ func (l ListOptions) GetObjectMetadata() ObjectMeta {
 	return NoObjectMeta
 }
 
-// GetListMetadata isn't needed in this kind of object.
-func (l ListOptions) GetListMetadata() ListMeta {
-	return NoListMeta
-}
-
 // DeepCopy satisfies object interface.
 func (l ListOptions) DeepCopy() Object {
 	copy := l
@@ -74,17 +69,6 @@ type ObjectMeta struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
-// ListMeta is the metadata all the objects lists should have.
-type ListMeta struct {
-	// IsList verifies that the object that owns this object is a list (could be an object).
-	IsList bool `json:"IsList,omitempty"`
-	// Continue if not empty means that there are more objects remaining in the list
-	Continue string `json:"continue,omitempty"`
-}
-
-// NoListMeta is a shortcut to specify the object is not a list.
-var NoListMeta = ListMeta{}
-
 // NoObjectMeta is a shortcut to specify the object is not an object.
 var NoObjectMeta = ObjectMeta{}
 
@@ -97,8 +81,19 @@ type Object interface {
 	GetObjectVersion() Version
 	// GetObjectMetadata returns the metadata of the object.
 	GetObjectMetadata() ObjectMeta
-	// GetListMeta returns the metadata of the object list, if not an object list it will be an object.
-	GetListMetadata() ListMeta
 	// DeepCopy makes a copy of the object.
 	DeepCopy() Object
+}
+
+// ListMeta is the metadata all the objects lists should have.
+type ListMeta struct {
+	// Continue if not empty means that there are more objects remaining in the list
+	Continue string `json:"continue,omitempty"`
+}
+
+// ObjectList is an object that is also a list of objects.
+type ObjectList interface {
+	Object
+	GetListMetadata() ListMeta
+	GetItems() []Object
 }

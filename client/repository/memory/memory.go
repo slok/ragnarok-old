@@ -132,7 +132,7 @@ func (c *Client) Get(fullID string) (api.Object, error) {
 }
 
 // List will retrieve a list of objects in memory.
-func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
+func (c *Client) List(opts api.ListOptions) (api.ObjectList, error) {
 	c.Lock()
 	defer c.Unlock()
 	ol := []api.Object{}
@@ -149,7 +149,7 @@ func (c *Client) List(opts api.ListOptions) ([]api.Object, error) {
 			}
 		}
 	}
-	return ol, nil
+	return apiutil.NewObjectList(ol, "")
 }
 
 // Watch will watch object events from memory operations.
