@@ -1,3 +1,5 @@
+**This repository will not have more updates**
+
 # Ragnarok [![CircleCI](https://circleci.com/gh/slok/ragnarok/tree/master.svg?style=shield)](https://circleci.com/gh/slok/ragnarok)
 
 Odin's failure injection tool
